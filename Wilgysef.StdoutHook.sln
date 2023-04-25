@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wilgysef.StdoutHook", "Wilg
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{2E5E022B-151B-4596-9AFD-80429B05A74B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wilgysef.StdoutHook.Cli.Tests", "Tests\Wilgysef.StdoutHook.Cli.Tests\Wilgysef.StdoutHook.Cli.Tests.csproj", "{DE9183D1-7BF7-4CD4-AE94-16AABBA18761}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wilgysef.StdoutHook.Cli.Tests", "Tests\Wilgysef.StdoutHook.Cli.Tests\Wilgysef.StdoutHook.Cli.Tests.csproj", "{DE9183D1-7BF7-4CD4-AE94-16AABBA18761}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wilgysef.StdoutHook.Tests", "Tests\Wilgysef.StdoutHook.Tests\Wilgysef.StdoutHook.Tests.csproj", "{26A28E7D-F5C3-43B9-AA78-528E932FA6B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,12 +31,17 @@ Global
 		{DE9183D1-7BF7-4CD4-AE94-16AABBA18761}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE9183D1-7BF7-4CD4-AE94-16AABBA18761}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE9183D1-7BF7-4CD4-AE94-16AABBA18761}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26A28E7D-F5C3-43B9-AA78-528E932FA6B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26A28E7D-F5C3-43B9-AA78-528E932FA6B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26A28E7D-F5C3-43B9-AA78-528E932FA6B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26A28E7D-F5C3-43B9-AA78-528E932FA6B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DE9183D1-7BF7-4CD4-AE94-16AABBA18761} = {2E5E022B-151B-4596-9AFD-80429B05A74B}
+		{26A28E7D-F5C3-43B9-AA78-528E932FA6B9} = {2E5E022B-151B-4596-9AFD-80429B05A74B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4C12726-17BC-4EE9-B149-7D7481881F12}
