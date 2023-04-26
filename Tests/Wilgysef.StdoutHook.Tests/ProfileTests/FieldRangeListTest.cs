@@ -1,5 +1,5 @@
 ﻿using Shouldly;
-using Wilgysef.StdoutHook.Profiles;
+using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Tests.ProfileTests;
 

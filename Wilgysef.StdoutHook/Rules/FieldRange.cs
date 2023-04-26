@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Wilgysef.StdoutHook.Profiles
+namespace Wilgysef.StdoutHook.Rules
 {
     public class FieldRange
     {

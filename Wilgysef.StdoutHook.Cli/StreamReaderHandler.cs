@@ -13,7 +13,7 @@ public class StreamReaderHandler
         _action = action;
     }
 
-    public async Task ReadLinesAsync(int bufferSize = 1024, CancellationToken cancellationToken = default)
+    public async Task ReadLinesAsync(int bufferSize = 2048, CancellationToken cancellationToken = default)
     {
         await Task.Yield();
 
@@ -24,6 +24,8 @@ public class StreamReaderHandler
 
         do
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             // TODO: cancellation token
             bytesRead = await _reader.ReadAsync(buffer, 0, buffer.Length);
             var index = 0;

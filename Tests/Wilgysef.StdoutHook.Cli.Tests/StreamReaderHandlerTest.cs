@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Wilgysef.StdoutHook.Cli.Tests;
 
-public class UnitTest1
+public class StreamReaderHandlerTest
 {
     [Fact]
     public async Task Newlines()
