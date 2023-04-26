@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Profiles
@@ -16,10 +17,17 @@ namespace Wilgysef.StdoutHook.Profiles
                 var rule = _rules[i];
                 if (rule.IsActive(stdout, state))
                 {
-                    line = rule.Apply(line, stdout, state);
-                    if (rule.Terminal)
+                    try
                     {
-                        return false;
+                        line = rule.Apply(line, stdout, state);
+                        if (rule.Terminal)
+                        {
+                            return false;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+
                     }
                 }
             }

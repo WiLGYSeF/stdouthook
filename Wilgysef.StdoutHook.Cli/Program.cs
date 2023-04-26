@@ -26,7 +26,7 @@ var profile = new Profile();
 var stopwatch = Stopwatch.StartNew();
 var process = Process.Start(processInfo);
 
-var streamOutputHandler = new StreamOutputHandler(profile, process.StandardOutput, process.StandardError);
+using var streamOutputHandler = new StreamOutputHandler(profile, process.StandardOutput, process.StandardError);
 var cancellationTokenSource = new CancellationTokenSource();
 var readStreamTask = streamOutputHandler.ReadLinesAsync(cancellationTokenSource.Token);
 

@@ -2,7 +2,7 @@
 
 namespace Wilgysef.StdoutHook.Cli;
 
-public class StreamOutputHandler
+public class StreamOutputHandler : IDisposable
 {
     private const int BufferSize = 4096;
 
@@ -27,11 +27,17 @@ public class StreamOutputHandler
         await Task.WhenAll(readOutputTask, readErrorTask);
     }
 
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        _profileState.Dispose();
+    }
+
     private void HandleOutput(string line)
     {
         _profileState.StdoutLineCount++;
 
-        if (_profile.ApplyRules(line, true, _profileState))
+        if (_profile.ApplyRules(ref line, true, _profileState))
         {
             WriteConsoleOutput(line);
         }
@@ -41,7 +47,7 @@ public class StreamOutputHandler
     {
         _profileState.StderrLineCount++;
 
-        if (_profile.ApplyRules(line, false, _profileState))
+        if (_profile.ApplyRules(ref line, false, _profileState))
         {
             WriteConsoleError(line);
         }
