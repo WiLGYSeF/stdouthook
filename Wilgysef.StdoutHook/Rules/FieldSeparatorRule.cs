@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Wilgysef.StdoutHook.Extensions;
+using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Rules
@@ -24,10 +25,13 @@ namespace Wilgysef.StdoutHook.Rules
 
         private readonly List<KeyValuePair<FieldRange, string>> _outOfRangeReplaceFields = new List<KeyValuePair<FieldRange, string>>();
 
+        private Formatter _formatter;
         private string?[]? _fieldReplacers;
 
-        public override void Build()
+        internal override void Build(Formatter formatter)
         {
+            base.Build(formatter);
+
             var maxRange = GetMaximumNoninfiniteRange();
             var maxRangeClamped = Math.Min(maxRange, MaximumFieldCount);
 
@@ -47,7 +51,7 @@ namespace Wilgysef.StdoutHook.Rules
             }
         }
 
-        public override string Apply(string data, bool stdout, ProfileState state)
+        internal override string Apply(string data, bool stdout, ProfileState state)
         {
             var splitData = SeparatorRegex.SplitWithSeparators(data, out var splitCount);
 

@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Rules
@@ -7,12 +8,12 @@ namespace Wilgysef.StdoutHook.Rules
     {
         public Regex Regex { get; set; }
 
-        public override void Build()
+        internal override void Build(Formatter formatter)
         {
-
+            base.Build(formatter);
         }
 
-        public override string Apply(string data, bool stdout, ProfileState state)
+        internal override string Apply(string data, bool stdout, ProfileState state)
         {
             throw new System.NotImplementedException();
         }

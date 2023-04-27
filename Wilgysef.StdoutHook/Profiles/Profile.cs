@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Profiles
@@ -12,10 +13,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public void Build()
         {
-            for (var i = 0; i < _rules.Count; i++)
-            {
-                _rules[i].Build();
-            }
+            Build(new Formatter(new FormatFunctionBuilder()));
         }
 
         public bool ApplyRules(ref string line, bool stdout, ProfileState state)
@@ -41,6 +39,14 @@ namespace Wilgysef.StdoutHook.Profiles
             }
 
             return true;
+        }
+
+        internal void Build(Formatter formatter)
+        {
+            for (var i = 0; i < _rules.Count; i++)
+            {
+                _rules[i].Build(formatter);
+            }
         }
     }
 }

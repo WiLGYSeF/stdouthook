@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Rules
@@ -13,12 +14,14 @@ namespace Wilgysef.StdoutHook.Rules
 
         private string _absolutePath;
 
-        public override void Build()
+        internal override void Build(Formatter formatter)
         {
+            base.Build(formatter);
+
             _absolutePath = Path.GetFullPath(Filename);
         }
 
-        public override string Apply(string data, bool stdout, ProfileState state)
+        internal override string Apply(string data, bool stdout, ProfileState state)
         {
             FileStream? factoryStream = null;
             var lockedStream = state.FileStreams.GetOrAdd(_absolutePath, CreateStream);

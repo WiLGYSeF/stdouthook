@@ -1,16 +1,17 @@
 ﻿using System;
+using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Rules
 {
     public class UnconditionalReplaceRule : Rule
     {
-        public override void Build()
+        internal override void Build(Formatter formatter)
         {
-
+            base.Build(formatter);
         }
 
-        public override string Apply(string data, bool stdout, ProfileState state)
+        internal override string Apply(string data, bool stdout, ProfileState state)
         {
             return "test " + data;
         }

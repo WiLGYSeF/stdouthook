@@ -1,5 +1,6 @@
 ﻿using Shouldly;
 using System.Text.RegularExpressions;
+using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Rules;
 
@@ -19,8 +20,7 @@ public class FieldSeparatorRuleTest
             },
         };
 
-        rule.Build();
-
+        rule.Build(GetFormatter());
         rule.Apply("test asdf", true, new ProfileState()).ShouldBe("123 asdf");
     }
 
@@ -36,8 +36,7 @@ public class FieldSeparatorRuleTest
             },
         };
 
-        rule.Build();
-
+        rule.Build(GetFormatter());
         rule.Apply("test asdf abc", true, new ProfileState()).ShouldBe("test 123 abc");
     }
 
@@ -53,8 +52,7 @@ public class FieldSeparatorRuleTest
             },
         };
 
-        rule.Build();
-
+        rule.Build(GetFormatter());
         rule.Apply("test asdf abc", true, new ProfileState()).ShouldBe("test asdf 123");
     }
 
@@ -71,8 +69,7 @@ public class FieldSeparatorRuleTest
             },
         };
 
-        rule.Build();
-
+        rule.Build(GetFormatter());
         rule.Apply("test asdf abc  def   ghi", true, new ProfileState()).ShouldBe("test 123 abc  456   ghi");
     }
 
@@ -88,8 +85,7 @@ public class FieldSeparatorRuleTest
             },
         };
 
-        rule.Build();
-
+        rule.Build(GetFormatter());
         rule.Apply("test asdf abc  def   ghi", true, new ProfileState()).ShouldBe("test 123 123  123   ghi");
     }
 
@@ -106,8 +102,7 @@ public class FieldSeparatorRuleTest
             },
         };
 
-        rule.Build();
-
+        rule.Build(GetFormatter());
         rule.Apply("test asdf abc", true, new ProfileState()).ShouldBe("test 123 abc");
     }
 
@@ -116,6 +111,9 @@ public class FieldSeparatorRuleTest
     {
         var fields = 200;
         var replaceField = 180;
+
+        var data = string.Join(" ", Enumerable.Range(0, fields).Select(_ => "test"));
+        var expected = string.Join(" ", Enumerable.Range(0, fields).Select((_, i) => i == replaceField ? "123" : "test"));
 
         var rule = new FieldSeparatorRule
         {
@@ -126,11 +124,7 @@ public class FieldSeparatorRuleTest
             },
         };
 
-        rule.Build();
-
-        var data = string.Join(" ", Enumerable.Range(0, fields).Select(_ => "test"));
-        var expected = string.Join(" ", Enumerable.Range(0, fields).Select((_, i) => i == replaceField ? "123" : "test"));
-
+        rule.Build(GetFormatter());
         rule.Apply(data, true, new ProfileState()).ShouldBe(expected);
     }
 
@@ -147,7 +141,7 @@ public class FieldSeparatorRuleTest
             },
         };
 
-        rule.Build();
+        rule.Build(GetFormatter());
         rule.Apply("test asdf", true, new ProfileState()).ShouldBe("test asdf");
 
         rule = new FieldSeparatorRule
@@ -160,7 +154,12 @@ public class FieldSeparatorRuleTest
             },
         };
 
-        rule.Build();
+        rule.Build(GetFormatter());
         rule.Apply("test asdf", true, new ProfileState()).ShouldBe("test asdf");
+    }
+
+    private static Formatter GetFormatter()
+    {
+        return new Formatter(new FormatFunctionBuilder());
     }
 }

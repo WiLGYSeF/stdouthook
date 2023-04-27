@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Rules
@@ -28,11 +29,16 @@ namespace Wilgysef.StdoutHook.Rules
 
         public IList<long> DeactivationLinesStderrOnly { get; set; } = new List<long>();
 
-        public abstract void Build();
+        private protected Formatter Formatter { get; private set; } = null!;
 
-        public abstract string Apply(string data, bool stdout, ProfileState state);
+        internal virtual void Build(Formatter formatter)
+        {
+            Formatter = formatter;
+        }
 
-        public virtual bool IsActive(bool stdout, ProfileState state)
+        internal abstract string Apply(string data, bool stdout, ProfileState state);
+
+        internal virtual bool IsActive(bool stdout, ProfileState state)
         {
             if (!Enabled
                 || StdoutOnly && !stdout
