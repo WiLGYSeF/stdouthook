@@ -28,14 +28,20 @@ namespace Wilgysef.StdoutHook.Rules
 
         public IList<long> DeactivationLinesStderrOnly { get; set; } = new List<long>();
 
+        public abstract void Build();
+
         public abstract string Apply(string data, bool stdout, ProfileState state);
 
-        public bool IsActive(bool stdout, ProfileState state)
+        public virtual bool IsActive(bool stdout, ProfileState state)
         {
-            if (!Enabled)
+            if (!Enabled
+                || StdoutOnly && !stdout
+                || StderrOnly && stdout)
             {
                 return false;
             }
+
+
 
             return true;
         }

@@ -10,6 +10,8 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public long StderrLineCount { get; set; }
 
+        public long LineCount => StdoutLineCount + StderrLineCount;
+
         public ConcurrentDictionary<string, LockedFileStream?> FileStreams { get; } = new ConcurrentDictionary<string, LockedFileStream?>();
 
         public void Dispose()

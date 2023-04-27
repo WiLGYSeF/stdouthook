@@ -26,7 +26,7 @@ public class StreamReaderHandler
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            // TODO: cancellation token
+            // TODO: cancellation token?
             bytesRead = await _reader.ReadAsync(buffer, 0, buffer.Length);
             var index = 0;
 

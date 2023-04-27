@@ -7,20 +7,16 @@ namespace Wilgysef.StdoutHook.Rules
 {
     public class TeeRule : Rule
     {
-        public string Filename
-        {
-            get => _filename;
-            set
-            {
-                _filename = value;
-                _absolutePath = Path.GetFullPath(_filename);
-            }
-        }
+        public string Filename { get; set; }
 
         public bool Flush { get; set; }
 
-        private string _filename;
         private string _absolutePath;
+
+        public override void Build()
+        {
+            _absolutePath = Path.GetFullPath(Filename);
+        }
 
         public override string Apply(string data, bool stdout, ProfileState state)
         {

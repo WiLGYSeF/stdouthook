@@ -1,7 +1,7 @@
 using Shouldly;
 using Wilgysef.StdoutHook.Rules;
 
-namespace Wilgysef.StdoutHook.Tests.ProfileTests;
+namespace Wilgysef.StdoutHook.Tests.RuleTests;
 
 public class FieldRangeTest
 {

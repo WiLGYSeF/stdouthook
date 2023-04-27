@@ -7,6 +7,11 @@ namespace Wilgysef.StdoutHook.Rules
     {
         public Regex Regex { get; set; }
 
+        public override void Build()
+        {
+
+        }
+
         public override string Apply(string data, bool stdout, ProfileState state)
         {
             throw new System.NotImplementedException();

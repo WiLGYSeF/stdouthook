@@ -6,6 +6,10 @@ public class StreamOutputHandler : IDisposable
 {
     private const int BufferSize = 4096;
 
+    public bool FlushOutput { get; set; }
+
+    public bool FlushError { get; set; }
+
     private readonly Profile _profile;
     private readonly StreamReaderHandler _outputReaderHandler;
     private readonly StreamReaderHandler _errorReaderHandler;
@@ -53,15 +57,23 @@ public class StreamOutputHandler : IDisposable
         }
     }
 
-    private static void WriteConsoleOutput(string line)
+    private void WriteConsoleOutput(string line)
     {
         Console.Write(line);
-        //Console.Out.Flush();
+
+        if (FlushOutput)
+        {
+            Console.Out.Flush();
+        }
     }
 
-    private static void WriteConsoleError(string line)
+    private void WriteConsoleError(string line)
     {
         Console.Error.Write(line);
-        //Console.Error.Flush();
+
+        if (FlushError)
+        {
+            Console.Error.Flush();
+        }
     }
 }

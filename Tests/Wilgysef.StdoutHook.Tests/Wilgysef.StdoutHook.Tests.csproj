@@ -26,4 +26,8 @@
     <ProjectReference Include="..\..\Wilgysef.StdoutHook\Wilgysef.StdoutHook.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ProfileTests\" />
+  </ItemGroup>
+
 </Project>

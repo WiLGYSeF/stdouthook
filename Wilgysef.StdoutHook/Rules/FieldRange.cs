@@ -7,6 +7,7 @@ namespace Wilgysef.StdoutHook.Rules
     {
         public int Min { get; set; }
 
+        // TODO: handle infinite
         public int Max { get; set; }
 
         public FieldRange(int number) : this(number, number) { }

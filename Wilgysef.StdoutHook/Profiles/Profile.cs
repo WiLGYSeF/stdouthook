@@ -10,6 +10,14 @@ namespace Wilgysef.StdoutHook.Profiles
 
         private readonly List<Rule> _rules = new List<Rule>();
 
+        public void Build()
+        {
+            for (var i = 0; i < _rules.Count; i++)
+            {
+                _rules[i].Build();
+            }
+        }
+
         public bool ApplyRules(ref string line, bool stdout, ProfileState state)
         {
             for (var i = 0; i < _rules.Count; i++)
