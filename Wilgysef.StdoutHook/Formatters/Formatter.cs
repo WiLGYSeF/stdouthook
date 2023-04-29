@@ -5,6 +5,8 @@ namespace Wilgysef.StdoutHook.Formatters
 {
     internal class Formatter
     {
+        public static char Separator = ':';
+
         public bool InvalidFormatBlank { get; set; }
 
         private readonly FormatFunctionBuilder _formatFunctionBuilder;
@@ -61,16 +63,27 @@ namespace Wilgysef.StdoutHook.Formatters
                             if (key.Length == 0)
                             {
                                 var k = 0;
+                                var validKey = true;
+
                                 for (; k < contents.Length; k++)
                                 {
                                     if (!IsNameChar(contents[k]))
                                     {
+                                        validKey = contents[k] == Separator;
                                         break;
                                     }
                                 }
 
-                                key = contents[..k];
-                                contents = contents[k..];
+                                if (k == contents.Length)
+                                {
+                                    key = contents;
+                                    contents = "";
+                                }
+                                else if (validKey)
+                                {
+                                    key = contents[..k];
+                                    contents = contents[(k + 1)..];
+                                }
                             }
 
                             if (key.Length > 0)
