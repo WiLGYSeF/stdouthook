@@ -5,32 +5,32 @@ namespace Wilgysef.StdoutHook.Formatters
 {
     internal class CompiledFormat
     {
-        private readonly string[] _parts;
+        public string[] Parts { get; }
 
-        private readonly Func<string>[] _funcs;
+        public Func<string>[] Funcs { get; }
 
         public CompiledFormat(string[] parts, Func<string>[] funcs)
         {
-            _parts = parts;
-            _funcs = funcs;
+            Parts = parts;
+            Funcs = funcs;
         }
 
         public override string ToString()
         {
             var builder = new StringBuilder();
 
-            for (var i = 0; i < _funcs.Length; i++)
+            for (var i = 0; i < Funcs.Length; i++)
             {
-                var part = _parts[i];
+                var part = Parts[i];
                 if (part.Length > 0)
                 {
                     builder.Append(part);
                 }
 
-                builder.Append(_funcs[i]());
+                builder.Append(Funcs[i]());
             }
 
-            builder.Append(_parts[^1]);
+            builder.Append(Parts[^1]);
             return builder.ToString();
         }
     }

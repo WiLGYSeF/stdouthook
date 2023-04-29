@@ -5,6 +5,8 @@ namespace Wilgysef.StdoutHook.Formatters
 {
     internal class Formatter
     {
+        public bool InvalidFormatBlank { get; set; }
+
         private readonly FormatFunctionBuilder _formatFunctionBuilder;
 
         public Formatter(FormatFunctionBuilder formatFunctionBuilder)
@@ -21,29 +23,30 @@ namespace Wilgysef.StdoutHook.Formatters
 
             for (var i = 0; i < format.Length; i++)
             {
-                if (format[i] == '\\')
-                {
-                    i++;
-                    continue;
-                }
-
                 if (format[i] == '%' && i < format.Length - 1)
                 {
+                    if (format[i + 1] == '%')
+                    {
+                        lastPart += format[last..i];
+                        last = ++i;
+                        continue;
+                    }
+
                     if (format[i + 1] == '('
                         || i < format.Length - 2 && IsKeyChar(format[i + 1]) && format[i + 2] == '(')
                     {
-                        var count = 1;
                         string? key = (format[i + 1] == '(' ? null : format[i + 1].ToString());
                         var start = i + (format[i + 1] == '(' ? 2 : 3);
-                        var j = start;
+                        var endIndex = start;
+                        var count = 1;
 
-                        for (; j < format.Length; j++)
+                        for (; endIndex < format.Length; endIndex++)
                         {
-                            if (format[j] == '(')
+                            if (format[endIndex] == '(')
                             {
                                 count++;
                             }
-                            else if (format[j] == ')')
+                            else if (format[endIndex] == ')')
                             {
                                 count--;
                                 if (count == 0)
@@ -53,9 +56,9 @@ namespace Wilgysef.StdoutHook.Formatters
                             }
                         }
 
-                        if (j < format.Length)
+                        if (endIndex < format.Length)
                         {
-                            var contents = format[start..j];
+                            var contents = format[start..endIndex];
                             if (key == null)
                             {
                                 var k = 0;
@@ -71,66 +74,43 @@ namespace Wilgysef.StdoutHook.Formatters
                                 contents = contents[k..];
                             }
 
-                            try
+                            if (key.Length > 0)
                             {
-                                var func = _formatFunctionBuilder.Build(key, contents, out var isConstant);
-
-                                if (isConstant)
-                                {
-                                    lastPart += format[last..i] + func();
-                                }
-                                else
-                                {
-                                    parts.Add(lastPart + format[last..i]);
-                                    funcs.Add(func);
-                                    lastPart = "";
-                                }
+                                BuildFormat(key, contents, i, endIndex + 1);
                             }
-                            catch
+                            else
                             {
-                                lastPart += format[last..i];
+                                lastPart += format[last..(endIndex + 1)];
+                                last = endIndex + 1;
                             }
-
-                            last = j + 1;
                         }
 
-                        i = j;
+                        i = endIndex;
                     }
                     else
                     {
                         var start = i + 1;
-                        var j = start;
+                        var endIndex = start;
 
-                        for (; j < format.Length; j++)
+                        for (; endIndex < format.Length; endIndex++)
                         {
-                            if (!IsNameChar(format[j]))
+                            if (!IsNameChar(format[endIndex]))
                             {
                                 break;
                             }
                         }
 
-                        try
+                        if (endIndex != start)
                         {
-                            var func = _formatFunctionBuilder.Build(format[start..j], "", out var isConstant);
-
-                            if (isConstant)
-                            {
-                                lastPart += format[last..i] + func();
-                            }
-                            else
-                            {
-                                parts.Add(lastPart + format[last..i]);
-                                funcs.Add(func);
-                                lastPart = "";
-                            }
+                            BuildFormat(format[start..endIndex], "", i, endIndex);
                         }
-                        catch
+                        else
                         {
-                            lastPart += format[last..i];
+                            lastPart += format[last..endIndex];
+                            last = endIndex;
                         }
 
-                        last = j;
-                        i = j;
+                        i = endIndex;
                     }
                 }
             }
@@ -138,6 +118,32 @@ namespace Wilgysef.StdoutHook.Formatters
             parts.Add(lastPart + format[last..]);
 
             return new CompiledFormat(parts.ToArray(), funcs.ToArray());
+
+            void BuildFormat(string key, string contents, int startIndex, int endIndex)
+            {
+                try
+                {
+                    var func = _formatFunctionBuilder.Build(key, contents, out var isConstant);
+
+                    if (isConstant)
+                    {
+                        lastPart += format[last..startIndex] + func();
+                    }
+                    else
+                    {
+                        parts.Add(lastPart + format[last..startIndex]);
+                        funcs.Add(func);
+                        lastPart = "";
+                    }
+                }
+                catch
+                {
+                    var end = InvalidFormatBlank ? startIndex : endIndex;
+                    lastPart += format[last..end];
+                }
+
+                last = endIndex;
+            }
         }
 
         public string Format(string format)
@@ -211,7 +217,7 @@ namespace Wilgysef.StdoutHook.Formatters
                 case '7':
                 case '8':
                 case '9':
-                case '_': // TODO: keep?
+                case '_':
                     return true;
                 default:
                     return false;
