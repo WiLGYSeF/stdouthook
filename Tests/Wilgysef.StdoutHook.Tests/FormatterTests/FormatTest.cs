@@ -182,6 +182,19 @@ public class FormatTest
     }
 
     [Fact]
+    public void Format_Invalid_WithParam()
+    {
+        var formatter = GetFormatter();
+        formatter.InvalidFormatBlank = true;
+
+        var compiledFormat = formatter.CompileFormat("this is a %.(a)");
+
+        compiledFormat.ToString().ShouldBe("this is a %.(a)");
+        compiledFormat.Parts.Length.ShouldBe(1);
+        compiledFormat.Funcs.Length.ShouldBe(0);
+    }
+
+    [Fact]
     public void Format_Invalid_InParentheses()
     {
         var formatter = GetFormatter();

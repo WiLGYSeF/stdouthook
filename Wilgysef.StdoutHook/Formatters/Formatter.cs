@@ -32,15 +32,15 @@ namespace Wilgysef.StdoutHook.Formatters
                         continue;
                     }
 
-                    if (format[i + 1] == '('
+                    var nextCharIsParen = format[i + 1] == '(';
+                    if (nextCharIsParen
                         || i < format.Length - 2 && IsKeyChar(format[i + 1]) && format[i + 2] == '(')
                     {
-                        string? key = (format[i + 1] == '(' ? null : format[i + 1].ToString());
-                        var start = i + (format[i + 1] == '(' ? 2 : 3);
+                        var key = format.AsSpan(i + 1, nextCharIsParen ? 0 : 1);
+                        var start = i + (nextCharIsParen ? 2 : 3);
                         var endIndex = start;
-                        var count = 1;
 
-                        for (; endIndex < format.Length; endIndex++)
+                        for (var count = 1; endIndex < format.Length; endIndex++)
                         {
                             if (format[endIndex] == '(')
                             {
@@ -48,8 +48,7 @@ namespace Wilgysef.StdoutHook.Formatters
                             }
                             else if (format[endIndex] == ')')
                             {
-                                count--;
-                                if (count == 0)
+                                if (--count == 0)
                                 {
                                     break;
                                 }
@@ -58,8 +57,8 @@ namespace Wilgysef.StdoutHook.Formatters
 
                         if (endIndex < format.Length)
                         {
-                            var contents = format[start..endIndex];
-                            if (key == null)
+                            var contents = format.AsSpan(start, endIndex - start);
+                            if (key.Length == 0)
                             {
                                 var k = 0;
                                 for (; k < contents.Length; k++)
@@ -76,7 +75,7 @@ namespace Wilgysef.StdoutHook.Formatters
 
                             if (key.Length > 0)
                             {
-                                BuildFormat(key, contents, i, endIndex + 1);
+                                BuildFormat(key.ToString(), contents.ToString(), i, endIndex + 1);
                             }
                             else
                             {
