@@ -13,7 +13,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public void Build()
         {
-            Build(new Formatter(new FormatFunctionBuilder()));
+            Build(new Formatter(FormatFunctionBuilder.Create()));
         }
 
         public bool ApplyRules(ref string line, bool stdout, ProfileState state)

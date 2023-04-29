@@ -1,4 +1,3 @@
-using Shouldly;
 using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Tests.RuleTests;

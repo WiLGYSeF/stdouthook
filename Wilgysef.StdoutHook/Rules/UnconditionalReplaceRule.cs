@@ -1,5 +1,4 @@
-﻿using System;
-using Wilgysef.StdoutHook.Formatters;
+﻿using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Rules
@@ -13,7 +12,7 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(string data, bool stdout, ProfileState state)
         {
-            return "test " + data;
+            return Formatter.Format(data);
         }
     }
 }

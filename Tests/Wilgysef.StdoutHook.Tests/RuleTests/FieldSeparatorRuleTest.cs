@@ -1,15 +1,13 @@
-﻿using Shouldly;
-using System.Text.RegularExpressions;
-using Wilgysef.StdoutHook.Formatters;
+﻿using System.Text.RegularExpressions;
 using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Tests.RuleTests;
 
-public class FieldSeparatorRuleTest
+public class FieldSeparatorRuleTest : RuleTestBase
 {
     [Fact]
-    public void Apply_FirstField()
+    public void FirstField()
     {
         var rule = new FieldSeparatorRule
         {
@@ -25,7 +23,7 @@ public class FieldSeparatorRuleTest
     }
 
     [Fact]
-    public void Apply_MiddleField()
+    public void MiddleField()
     {
         var rule = new FieldSeparatorRule
         {
@@ -41,7 +39,7 @@ public class FieldSeparatorRuleTest
     }
 
     [Fact]
-    public void Apply_LastField()
+    public void LastField()
     {
         var rule = new FieldSeparatorRule
         {
@@ -57,7 +55,7 @@ public class FieldSeparatorRuleTest
     }
 
     [Fact]
-    public void Apply_MultipleFields()
+    public void MultipleFields()
     {
         var rule = new FieldSeparatorRule
         {
@@ -74,7 +72,7 @@ public class FieldSeparatorRuleTest
     }
 
     [Fact]
-    public void Apply_FieldRange()
+    public void FieldRange()
     {
         var rule = new FieldSeparatorRule
         {
@@ -90,7 +88,7 @@ public class FieldSeparatorRuleTest
     }
 
     [Fact]
-    public void Apply_Override()
+    public void Override()
     {
         var rule = new FieldSeparatorRule
         {
@@ -107,7 +105,7 @@ public class FieldSeparatorRuleTest
     }
 
     [Fact]
-    public void Apply_ExceedMaxFieldCount()
+    public void ExceedMaxFieldCount()
     {
         var fields = 200;
         var replaceField = 180;
@@ -129,7 +127,7 @@ public class FieldSeparatorRuleTest
     }
 
     [Fact]
-    public void Apply_OutOfRange()
+    public void OutOfRange()
     {
         var rule = new FieldSeparatorRule
         {
@@ -156,10 +154,5 @@ public class FieldSeparatorRuleTest
 
         rule.Build(GetFormatter());
         rule.Apply("test asdf", true, new ProfileState()).ShouldBe("test asdf");
-    }
-
-    private static Formatter GetFormatter()
-    {
-        return new Formatter(new FormatFunctionBuilder());
     }
 }
