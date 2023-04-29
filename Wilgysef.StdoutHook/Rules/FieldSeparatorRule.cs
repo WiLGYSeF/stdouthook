@@ -25,7 +25,6 @@ namespace Wilgysef.StdoutHook.Rules
 
         private readonly List<KeyValuePair<FieldRange, string>> _outOfRangeReplaceFields = new List<KeyValuePair<FieldRange, string>>();
 
-        private Formatter _formatter;
         private string?[]? _fieldReplacers;
 
         internal override void Build(Formatter formatter)
@@ -67,7 +66,7 @@ namespace Wilgysef.StdoutHook.Rules
                 var replace = _fieldReplacers[i];
                 if (replace != null)
                 {
-                    splitData[i * 2] = replace;
+                    splitData[i * 2] = Formatter.Format(replace);
                 }
             }
 
@@ -77,7 +76,7 @@ namespace Wilgysef.StdoutHook.Rules
                 {
                     if (range.Contains(i))
                     {
-                        splitData[i * 2] = replace;
+                        splitData[i * 2] = Formatter.Format(replace);
                         break;
                     }
                 }

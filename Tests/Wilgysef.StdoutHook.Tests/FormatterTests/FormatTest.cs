@@ -1,10 +1,6 @@
-﻿using Shouldly;
-using Wilgysef.StdoutHook.Formatters;
-using Wilgysef.StdoutHook.Formatters.FormatBuilders;
+﻿namespace Wilgysef.StdoutHook.Tests.FormatterTests;
 
-namespace Wilgysef.StdoutHook.Tests.FormatterTests;
-
-public class FormatTest
+public class FormatTest : RuleTestBase
 {
     [Fact]
     public void Literal()
@@ -229,42 +225,5 @@ public class FormatTest
         compiledFormat.Funcs.Length.ShouldBe(1);
 
         compiledFormat.Funcs[0]().ShouldBe("(a)");
-    }
-
-    private static Formatter GetFormatter(params FormatBuilder[] formatBuilders)
-    {
-        return new Formatter(new FormatFunctionBuilder(formatBuilders));
-    }
-
-    private class TestFormatBuilder : FormatBuilder
-    {
-        public override string? Key => _key;
-
-        public override char? KeyShort => _keyShort;
-
-        private readonly string? _key;
-        private readonly char? _keyShort;
-        private readonly Func<string, string>? _func;
-        private readonly Func<string, bool>? _constantFunc;
-
-        public TestFormatBuilder(
-            string? key,
-            char? keyShort,
-            Func<string, string>? func = null,
-            Func<string, bool>? constantFunc = null)
-        {
-            _key = key;
-            _keyShort = keyShort;
-            _func = func;
-            _constantFunc = constantFunc;
-        }
-
-        public override Func<string> Build(string format, out bool isConstant)
-        {
-            isConstant = _constantFunc != null && _constantFunc(format);
-            return _func != null
-                ? () => _func(format)
-                : () => format;
-        }
     }
 }

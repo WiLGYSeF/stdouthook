@@ -12,7 +12,7 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(string data, bool stdout, ProfileState state)
         {
-            return "test " + data;
+            return Formatter.Format(data);
         }
     }
 }
