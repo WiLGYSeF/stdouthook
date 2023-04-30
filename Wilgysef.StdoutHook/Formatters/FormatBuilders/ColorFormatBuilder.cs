@@ -84,7 +84,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
             if (state.Contents.StartsWith("raw"))
             {
-                return _ => $@"\x1b[{state.Contents[3..]}m";
+                return _ => $"\x1b[{state.Contents[3..]}m";
             }
 
             var colors = new List<string>(state.Contents.Split(Separator));
@@ -157,7 +157,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             }
 
             // only close over the result
-            var result = $@"\x1b[{string.Join(';', colorResults)}m";
+            var result = $"\x1b[{string.Join(';', colorResults)}m";
             return _ => result;
         }
 
