@@ -8,12 +8,12 @@ namespace Wilgysef.StdoutHook.Rules
     {
         public Regex Regex { get; set; }
 
-        internal override void Build(Formatter formatter)
+        internal override void Build(ProfileState state, Formatter formatter)
         {
-            base.Build(formatter);
+            base.Build(state,formatter);
         }
 
-        internal override string Apply(string data, bool stdout, ProfileState state)
+        internal override string Apply(DataState state)
         {
             throw new System.NotImplementedException();
         }

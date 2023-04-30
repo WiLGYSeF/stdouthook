@@ -8,9 +8,18 @@ public class UnconditionalReplaceRuleTest : RuleTestBase
     [Fact]
     public void UnconditionalRule()
     {
-        var rule = new UnconditionalReplaceRule();
+        var rule = new UnconditionalReplaceRule
+        {
+            Format = "asdf %test abc",
+        };
+        var state = new ProfileState();
 
-        rule.Build(GetFormatter(new TestFormatBuilder("test", null, _ => "123")));
-        rule.Apply("asdf %test abc", true, new ProfileState()).ShouldBe("asdf 123 abc");
+        rule.Build(state, GetFormatter(new TestFormatBuilder("test", null, _ => "123")));
+        rule.Apply(CreateDataState("input")).ShouldBe("asdf 123 abc");
+    }
+
+    private static DataState CreateDataState(string data)
+    {
+        return new DataState(data, true, new ProfileState());
     }
 }

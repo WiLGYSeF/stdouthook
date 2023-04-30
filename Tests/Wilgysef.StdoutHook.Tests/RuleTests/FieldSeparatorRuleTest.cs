@@ -18,8 +18,8 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf", true, new ProfileState()).ShouldBe("123 asdf");
+        rule.Build(new ProfileState(), GetFormatter());
+        rule.Apply(CreateDataState("test asdf")).ShouldBe("123 asdf");
     }
 
     [Fact]
@@ -34,8 +34,8 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf abc", true, new ProfileState()).ShouldBe("test 123 abc");
+        rule.Build(new ProfileState(), GetFormatter());
+        rule.Apply(CreateDataState("test asdf abc")).ShouldBe("test 123 abc");
     }
 
     [Fact]
@@ -50,8 +50,8 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf abc", true, new ProfileState()).ShouldBe("test asdf 123");
+        rule.Build(new ProfileState(), GetFormatter());
+        rule.Apply(CreateDataState("test asdf abc")).ShouldBe("test asdf 123");
     }
 
     [Fact]
@@ -67,8 +67,8 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf abc  def   ghi", true, new ProfileState()).ShouldBe("test 123 abc  456   ghi");
+        rule.Build(new ProfileState(), GetFormatter());
+        rule.Apply(CreateDataState("test asdf abc  def   ghi")).ShouldBe("test 123 abc  456   ghi");
     }
 
     [Fact]
@@ -83,8 +83,8 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf abc  def   ghi", true, new ProfileState()).ShouldBe("test 123 123  123   ghi");
+        rule.Build(new ProfileState(), GetFormatter());
+        rule.Apply(CreateDataState("test asdf abc  def   ghi")).ShouldBe("test 123 123  123   ghi");
     }
 
     [Fact]
@@ -100,8 +100,8 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf abc", true, new ProfileState()).ShouldBe("test 123 abc");
+        rule.Build(new ProfileState(), GetFormatter());
+        rule.Apply(CreateDataState("test asdf abc")).ShouldBe("test 123 abc");
     }
 
     [Fact]
@@ -122,8 +122,8 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply(data, true, new ProfileState()).ShouldBe(expected);
+        rule.Build(new ProfileState(), GetFormatter());
+        rule.Apply(CreateDataState(data)).ShouldBe(expected);
     }
 
     [Fact]
@@ -139,8 +139,8 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf", true, new ProfileState()).ShouldBe("test asdf");
+        rule.Build(new ProfileState(), GetFormatter());
+        rule.Apply(CreateDataState("test asdf")).ShouldBe("test asdf");
 
         rule = new FieldSeparatorRule
         {
@@ -152,7 +152,12 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf", true, new ProfileState()).ShouldBe("test asdf");
+        rule.Build(new ProfileState(), GetFormatter());
+        rule.Apply(CreateDataState("test asdf")).ShouldBe("test asdf");
+    }
+
+    private static DataState CreateDataState(string data)
+    {
+        return new DataState(data, true, new ProfileState());
     }
 }

@@ -133,7 +133,7 @@ public class StreamReaderHandlerTest
         IEnumerable<string> expected,
         int bufferSize = 2048)
     {
-        var reader = new StreamReader(stream);
+        using var reader = new StreamReader(stream);
         using var enumerator = expected.GetEnumerator();
 
         var readerHandler = new StreamReaderHandler(reader, data =>

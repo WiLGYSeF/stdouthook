@@ -1,4 +1,5 @@
 ﻿using System;
+using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
@@ -8,6 +9,6 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         public abstract char? KeyShort { get; }
 
-        public abstract Func<string> Build(string format, out bool isConstant);
+        public abstract Func<DataState, string> Build(FormatBuildState state, out bool isConstant);
     }
 }

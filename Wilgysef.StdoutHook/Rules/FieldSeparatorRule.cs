@@ -23,41 +23,46 @@ namespace Wilgysef.StdoutHook.Rules
 
         public IList<KeyValuePair<FieldRange, string>> ReplaceFields { get; set; }
 
-        private readonly List<KeyValuePair<FieldRange, string>> _outOfRangeReplaceFields = new List<KeyValuePair<FieldRange, string>>();
+        private readonly List<KeyValuePair<FieldRange, CompiledFormat>> _outOfRangeReplaceFields = new List<KeyValuePair<FieldRange, CompiledFormat>>();
 
-        private string?[]? _fieldReplacers;
+        private CompiledFormat?[] _fieldReplacers = null!;
 
-        internal override void Build(Formatter formatter)
+        internal override void Build(ProfileState state, Formatter formatter)
         {
-            base.Build(formatter);
+            base.Build(state, formatter);
 
             var maxRange = GetMaximumNoninfiniteRange();
             var maxRangeClamped = Math.Min(maxRange, MaximumFieldCount);
 
-            _fieldReplacers = new string[maxRangeClamped];
+            _fieldReplacers = new CompiledFormat[maxRangeClamped];
 
             for (var i = 0; i < maxRangeClamped; i++)
             {
-                _fieldReplacers[i] = GetFirstRangeOrDefault(i + 1);
+                var value = GetFirstRangeOrDefault(i + 1);
+                _fieldReplacers[i] = value != null
+                    ? Formatter.CompileFormat(value, state)
+                    : null;
             }
 
-            foreach (var kvp in ReplaceFields)
+            foreach (var (range, replace) in ReplaceFields)
             {
-                if (kvp.Key.Min > maxRangeClamped)
+                if (range.Min > maxRangeClamped)
                 {
-                    _outOfRangeReplaceFields.Add(kvp);
+                    _outOfRangeReplaceFields.Add(new KeyValuePair<FieldRange, CompiledFormat>(
+                        range,
+                        Formatter.CompileFormat(replace, state)));
                 }
             }
         }
 
-        internal override string Apply(string data, bool stdout, ProfileState state)
+        internal override string Apply(DataState state)
         {
-            var splitData = SeparatorRegex.SplitWithSeparators(data, out var splitCount);
+            var splitData = SeparatorRegex.SplitWithSeparators(state.Data, out var splitCount);
 
             if (MinFields.HasValue && MinFields.Value > splitCount
                 || MaxFields.HasValue && MaxFields.Value < splitCount)
             {
-                return data;
+                return state.Data;
             }
 
             var limit = Math.Min(splitCount, _fieldReplacers!.Length);
@@ -66,7 +71,7 @@ namespace Wilgysef.StdoutHook.Rules
                 var replace = _fieldReplacers[i];
                 if (replace != null)
                 {
-                    splitData[i * 2] = Formatter.Format(replace);
+                    splitData[i * 2] = replace.Compute(state);
                 }
             }
 
@@ -76,7 +81,7 @@ namespace Wilgysef.StdoutHook.Rules
                 {
                     if (range.Contains(i))
                     {
-                        splitData[i * 2] = Formatter.Format(replace);
+                        splitData[i * 2] = replace.Compute(state);
                         break;
                     }
                 }

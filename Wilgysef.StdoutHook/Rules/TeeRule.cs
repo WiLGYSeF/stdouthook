@@ -14,17 +14,17 @@ namespace Wilgysef.StdoutHook.Rules
 
         private string _absolutePath;
 
-        internal override void Build(Formatter formatter)
+        internal override void Build(ProfileState state, Formatter formatter)
         {
-            base.Build(formatter);
+            base.Build(state, formatter);
 
             _absolutePath = Path.GetFullPath(Filename);
         }
 
-        internal override string Apply(string data, bool stdout, ProfileState state)
+        internal override string Apply(DataState state)
         {
             FileStream? factoryStream = null;
-            var lockedStream = state.FileStreams.GetOrAdd(_absolutePath, CreateStream);
+            var lockedStream = state.ProfileState.FileStreams.GetOrAdd(_absolutePath, CreateStream);
 
             if (factoryStream != null && factoryStream != lockedStream?.Stream)
             {
@@ -35,12 +35,12 @@ namespace Wilgysef.StdoutHook.Rules
 
             if (lockedStream == null)
             {
-                return data;
+                return state.Data;
             }
 
             lock (lockedStream.Lock)
             {
-                lockedStream.Stream.Write(Encoding.UTF8.GetBytes(data));
+                lockedStream.Stream.Write(Encoding.UTF8.GetBytes(state.Data));
 
                 if (Flush)
                 {
@@ -48,7 +48,7 @@ namespace Wilgysef.StdoutHook.Rules
                 }
             }
 
-            return data;
+            return state.Data;
 
             ProfileState.LockedFileStream? CreateStream(string key)
             {
