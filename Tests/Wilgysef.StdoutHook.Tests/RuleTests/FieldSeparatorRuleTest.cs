@@ -6,6 +6,8 @@ namespace Wilgysef.StdoutHook.Tests.RuleTests;
 
 public class FieldSeparatorRuleTest : RuleTestBase
 {
+    private static readonly int MaximumFieldCount = 128;
+
     [Fact]
     public void FirstField()
     {
@@ -18,8 +20,7 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf", true, new ProfileState()).ShouldBe("123 asdf");
+        ShouldRuleBe(rule, "test asdf", "123 asdf");
     }
 
     [Fact]
@@ -34,8 +35,7 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf abc", true, new ProfileState()).ShouldBe("test 123 abc");
+        ShouldRuleBe(rule, "test asdf abc", "test 123 abc");
     }
 
     [Fact]
@@ -50,8 +50,7 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf abc", true, new ProfileState()).ShouldBe("test asdf 123");
+        ShouldRuleBe(rule, "test asdf abc", "test asdf 123");
     }
 
     [Fact]
@@ -67,8 +66,7 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf abc  def   ghi", true, new ProfileState()).ShouldBe("test 123 abc  456   ghi");
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "test 123 abc  456   ghi");
     }
 
     [Fact]
@@ -83,8 +81,22 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf abc  def   ghi", true, new ProfileState()).ShouldBe("test 123 123  123   ghi");
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "test 123 123  123   ghi");
+    }
+
+    [Fact]
+    public void FieldRange_Infinite()
+    {
+        var rule = new FieldSeparatorRule
+        {
+            SeparatorRegex = new Regex(@"\s+"),
+            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            {
+                new KeyValuePair<FieldRange, string>(new FieldRange(2, null), "123"),
+            },
+        };
+
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "test 123 123  123   123");
     }
 
     [Fact]
@@ -100,8 +112,7 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf abc", true, new ProfileState()).ShouldBe("test 123 abc");
+        ShouldRuleBe(rule, "test asdf abc", "test 123 abc");
     }
 
     [Fact]
@@ -109,6 +120,8 @@ public class FieldSeparatorRuleTest : RuleTestBase
     {
         var fields = 200;
         var replaceField = 180;
+
+        fields.ShouldBeGreaterThan(MaximumFieldCount);
 
         var data = string.Join(" ", Enumerable.Range(0, fields).Select(_ => "test"));
         var expected = string.Join(" ", Enumerable.Range(0, fields).Select((_, i) => i == replaceField ? "123" : "test"));
@@ -122,8 +135,30 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply(data, true, new ProfileState()).ShouldBe(expected);
+        ShouldRuleBe(rule, data, expected);
+    }
+
+    [Fact]
+    public void ExceedMaxFieldCount_InfiniteMax()
+    {
+        var fields = 200;
+        var replaceField = 180;
+
+        fields.ShouldBeGreaterThan(MaximumFieldCount);
+
+        var data = string.Join(" ", Enumerable.Range(0, fields).Select(_ => "test"));
+        var expected = string.Join(" ", Enumerable.Range(0, fields).Select((_, i) => i >= replaceField ? "123" : "test"));
+
+        var rule = new FieldSeparatorRule
+        {
+            SeparatorRegex = new Regex(@"\s+"),
+            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            {
+                new KeyValuePair<FieldRange, string>(new FieldRange(replaceField, null), "123"),
+            },
+        };
+
+        ShouldRuleBe(rule, data, expected);
     }
 
     [Fact]
@@ -139,8 +174,7 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf", true, new ProfileState()).ShouldBe("test asdf");
+        ShouldRuleBe(rule, "test asdf", "test asdf");
 
         rule = new FieldSeparatorRule
         {
@@ -152,7 +186,13 @@ public class FieldSeparatorRuleTest : RuleTestBase
             },
         };
 
-        rule.Build(GetFormatter());
-        rule.Apply("test asdf", true, new ProfileState()).ShouldBe("test asdf");
+        ShouldRuleBe(rule, "test asdf", "test asdf");
+    }
+
+    private static void ShouldRuleBe(Rule rule, string input, string expected)
+    {
+        var state = new ProfileState();
+        rule.Build(state, GetFormatter());
+        rule.Apply(new DataState(input, true, state)).ShouldBe(expected);
     }
 }

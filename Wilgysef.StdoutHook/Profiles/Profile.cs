@@ -7,25 +7,36 @@ namespace Wilgysef.StdoutHook.Profiles
 {
     public class Profile
     {
+        public ProfileState State { get; }
+
         public IList<Rule> Rules => _rules;
 
         private readonly List<Rule> _rules = new List<Rule>();
+
+        public Profile(ProfileState state)
+        {
+            State = state;
+        }
 
         public void Build()
         {
             Build(new Formatter(FormatFunctionBuilder.Create()));
         }
 
-        public bool ApplyRules(ref string line, bool stdout, ProfileState state)
+        public bool ApplyRules(ref string line, bool stdout)
         {
+            var dataState = new DataState(line, stdout, State);
+
             for (var i = 0; i < _rules.Count; i++)
             {
                 var rule = _rules[i];
-                if (rule.IsActive(stdout, state))
+                if (rule.IsActive(dataState))
                 {
                     try
                     {
-                        line = rule.Apply(line, stdout, state);
+                        line = rule.Apply(dataState);
+                        dataState.Data = line;
+
                         if (rule.Terminal)
                         {
                             return false;
@@ -45,7 +56,7 @@ namespace Wilgysef.StdoutHook.Profiles
         {
             for (var i = 0; i < _rules.Count; i++)
             {
-                _rules[i].Build(formatter);
+                _rules[i].Build(State, formatter);
             }
         }
     }

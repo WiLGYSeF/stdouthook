@@ -14,8 +14,6 @@ public class StreamOutputHandler : IDisposable
     private readonly StreamReaderHandler _outputReaderHandler;
     private readonly StreamReaderHandler _errorReaderHandler;
 
-    private readonly ProfileState _profileState = new();
-
     public StreamOutputHandler(Profile profile, StreamReader stdout, StreamReader stderr)
     {
         _profile = profile;
@@ -34,14 +32,13 @@ public class StreamOutputHandler : IDisposable
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        _profileState.Dispose();
     }
 
     private void HandleOutput(string line)
     {
-        _profileState.StdoutLineCount++;
+        _profile.State.StdoutLineCount++;
 
-        if (_profile.ApplyRules(ref line, true, _profileState))
+        if (_profile.ApplyRules(ref line, true))
         {
             WriteConsoleOutput(line);
         }
@@ -49,9 +46,9 @@ public class StreamOutputHandler : IDisposable
 
     private void HandleError(string line)
     {
-        _profileState.StderrLineCount++;
+        _profile.State.StderrLineCount++;
 
-        if (_profile.ApplyRules(ref line, false, _profileState))
+        if (_profile.ApplyRules(ref line, false))
         {
             WriteConsoleError(line);
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters
 {
@@ -16,10 +17,10 @@ namespace Wilgysef.StdoutHook.Formatters
             _formatFunctionBuilder = formatFunctionBuilder;
         }
 
-        public CompiledFormat CompileFormat(string format)
+        public CompiledFormat CompileFormat(string format, ProfileState state)
         {
             var parts = new List<string>();
-            var funcs = new List<Func<string>>();
+            var funcs = new List<Func<DataState, string>>();
             var last = 0;
             var lastPart = "";
 
@@ -135,11 +136,11 @@ namespace Wilgysef.StdoutHook.Formatters
             {
                 try
                 {
-                    var func = _formatFunctionBuilder.Build(key, contents, out var isConstant);
+                    var func = _formatFunctionBuilder.Build(key, contents, state, out var isConstant);
 
                     if (isConstant)
                     {
-                        lastPart += format[last..startIndex] + func();
+                        lastPart += format[last..startIndex] + func(new DataState(state));
                     }
                     else
                     {
@@ -158,9 +159,9 @@ namespace Wilgysef.StdoutHook.Formatters
             }
         }
 
-        public string Format(string format)
+        public string Format(string format, DataState state)
         {
-            return CompileFormat(format).ToString();
+            return CompileFormat(format, state.ProfileState).Compute(state);
         }
 
         private static bool IsNameChar(char c)

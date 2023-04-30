@@ -5,14 +5,20 @@ namespace Wilgysef.StdoutHook.Rules
 {
     public class UnconditionalReplaceRule : Rule
     {
-        internal override void Build(Formatter formatter)
+        public string Format { get; set; }
+
+        private CompiledFormat _compiledFormat;
+
+        internal override void Build(ProfileState state, Formatter formatter)
         {
-            base.Build(formatter);
+            base.Build(state, formatter);
+
+            _compiledFormat = Formatter.CompileFormat(Format, state);
         }
 
-        internal override string Apply(string data, bool stdout, ProfileState state)
+        internal override string Apply(DataState state)
         {
-            return Formatter.Format(data);
+            return _compiledFormat.Compute(state);
         }
     }
 }

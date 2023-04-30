@@ -31,23 +31,23 @@ namespace Wilgysef.StdoutHook.Rules
 
         private protected Formatter Formatter { get; private set; } = null!;
 
-        internal virtual void Build(Formatter formatter)
+        internal virtual void Build(ProfileState state, Formatter formatter)
         {
             Formatter = formatter;
         }
 
-        internal abstract string Apply(string data, bool stdout, ProfileState state);
+        internal abstract string Apply(DataState state);
 
-        internal virtual bool IsActive(bool stdout, ProfileState state)
+        internal virtual bool IsActive(DataState state)
         {
             if (!Enabled
-                || StdoutOnly && !stdout
-                || StderrOnly && stdout)
+                || StdoutOnly && !state.Stdout
+                || StderrOnly && state.Stdout)
             {
                 return false;
             }
 
-
+            // TODO: finish
 
             return true;
         }

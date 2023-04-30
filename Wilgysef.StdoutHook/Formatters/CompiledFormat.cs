@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters
 {
@@ -7,15 +8,15 @@ namespace Wilgysef.StdoutHook.Formatters
     {
         public string[] Parts { get; }
 
-        public Func<string>[] Funcs { get; }
+        public Func<DataState, string>[] Funcs { get; }
 
-        public CompiledFormat(string[] parts, Func<string>[] funcs)
+        public CompiledFormat(string[] parts, Func<DataState, string>[] funcs)
         {
             Parts = parts;
             Funcs = funcs;
         }
 
-        public override string ToString()
+        public string Compute(DataState state)
         {
             var builder = new StringBuilder();
 
@@ -27,7 +28,7 @@ namespace Wilgysef.StdoutHook.Formatters
                     builder.Append(part);
                 }
 
-                builder.Append(Funcs[i]());
+                builder.Append(Funcs[i](state));
             }
 
             builder.Append(Parts[^1]);

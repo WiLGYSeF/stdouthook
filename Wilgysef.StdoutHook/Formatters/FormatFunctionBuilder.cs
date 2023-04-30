@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Wilgysef.StdoutHook.Formatters.FormatBuilders;
+using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters
 {
@@ -28,18 +29,22 @@ namespace Wilgysef.StdoutHook.Formatters
             return new FormatFunctionBuilder(FormatBuilders);
         }
 
-        public Func<string> Build(string key, string format, out bool isConstant)
+        public Func<DataState, string> Build(
+            string key,
+            string contents,
+            ProfileState state,
+            out bool isConstant)
         {
             foreach (var builder in _formatBuilders)
             {
                 if (builder.Key != null && key.Equals(builder.Key, StringComparison.OrdinalIgnoreCase))
                 {
-                    return builder.Build(format, out isConstant);
+                    return builder.Build(new FormatBuildState(contents, state), out isConstant);
                 }
 
                 if (builder.KeyShort.HasValue && key.Length >= 1 && key[0] == builder.KeyShort.Value)
                 {
-                    return builder.Build(key[1..] + format, out isConstant);
+                    return builder.Build(new FormatBuildState(key[1..] + contents, state), out isConstant);
                 }
             }
 

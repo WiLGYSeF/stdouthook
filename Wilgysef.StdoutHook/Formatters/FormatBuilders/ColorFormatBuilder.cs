@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
@@ -74,9 +75,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         public override char? KeyShort => 'C';
 
-        public override Func<string> Build(string format, out bool isConstant)
+        public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
         {
-            var colors = format.Split(Separator);
+            var colors = state.Contents.Split(Separator);
             var colorResults = new List<int>(colors.Length);
 
             for (var i = 0; i < colors.Length; i++)
@@ -105,13 +106,13 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
             if (colorResults.Count == 0)
             {
-                return () => "";
+                return _ => "";
             }
 
             var result = $@"\x1b[{string.Join(';', colorResults)}m";
 
             // only close over the result
-            return () => result;
+            return _ => result;
         }
 
         private class Color
