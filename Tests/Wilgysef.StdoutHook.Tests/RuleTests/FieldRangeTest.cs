@@ -29,6 +29,18 @@ public class FieldRangeTest
     }
 
     [Fact]
+    public void Range_InfiniteMax()
+    {
+        var range = new FieldRange(1, null);
+        range.Min.ShouldBe(1);
+        range.Max.ShouldBeNull();
+
+        range = FieldRange.Parse("1-*");
+        range.Min.ShouldBe(1);
+        range.Max.ShouldBeNull();
+    }
+
+    [Fact]
     public void Invalid()
     {
         Should.Throw<ArgumentException>(() => new FieldRange(3, 1));
@@ -46,5 +58,15 @@ public class FieldRangeTest
         range.Contains(2).ShouldBeTrue();
         range.Contains(3).ShouldBeTrue();
         range.Contains(4).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Contains_InfiniteMax()
+    {
+        var range = new FieldRange(1, null);
+        range.Contains(0).ShouldBeFalse();
+        range.Contains(1).ShouldBeTrue();
+        range.Contains(2).ShouldBeTrue();
+        range.Contains(3).ShouldBeTrue();
     }
 }

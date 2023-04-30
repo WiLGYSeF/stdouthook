@@ -9,7 +9,7 @@ namespace Wilgysef.StdoutHook.Rules
 {
     public class FieldSeparatorRule : Rule
     {
-        private const int MaximumFieldCount = 128;
+        private static readonly int MaximumFieldCount = 128;
 
         public Regex SeparatorRegex { get; set; }
 
@@ -31,7 +31,7 @@ namespace Wilgysef.StdoutHook.Rules
         {
             base.Build(state, formatter);
 
-            var maxRange = GetMaximumNoninfiniteRange();
+            var maxRange = GetMaximumRange();
             var maxRangeClamped = Math.Min(maxRange, MaximumFieldCount);
 
             _fieldReplacers = new CompiledFormat[maxRangeClamped];
@@ -46,7 +46,7 @@ namespace Wilgysef.StdoutHook.Rules
 
             foreach (var (range, replace) in ReplaceFields)
             {
-                if (range.Min > maxRangeClamped)
+                if (range.Min > maxRangeClamped || range.InfiniteMax)
                 {
                     _outOfRangeReplaceFields.Add(new KeyValuePair<FieldRange, CompiledFormat>(
                         range,
@@ -103,15 +103,20 @@ namespace Wilgysef.StdoutHook.Rules
             return null;
         }
 
-        private int GetMaximumNoninfiniteRange()
+        private int GetMaximumRange()
         {
             var max = 0;
 
-            foreach (var range in ReplaceFields)
+            foreach (var (range, _) in ReplaceFields)
             {
-                if (range.Key.Max > max)
+                if (range.InfiniteMax)
                 {
-                    max = range.Key.Max;
+                    return int.MaxValue;
+                }
+
+                if (range.Max!.Value > max)
+                {
+                    max = range.Max.Value;
                 }
             }
 

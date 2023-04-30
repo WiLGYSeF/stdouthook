@@ -6,6 +6,8 @@ namespace Wilgysef.StdoutHook.Tests.RuleTests;
 
 public class FieldSeparatorRuleTest : RuleTestBase
 {
+    private static readonly int MaximumFieldCount = 128;
+
     [Fact]
     public void FirstField()
     {
@@ -83,6 +85,21 @@ public class FieldSeparatorRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void FieldRange_Infinite()
+    {
+        var rule = new FieldSeparatorRule
+        {
+            SeparatorRegex = new Regex(@"\s+"),
+            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            {
+                new KeyValuePair<FieldRange, string>(new FieldRange(2, null), "123"),
+            },
+        };
+
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "test 123 123  123   123");
+    }
+
+    [Fact]
     public void Override()
     {
         var rule = new FieldSeparatorRule
@@ -104,6 +121,8 @@ public class FieldSeparatorRuleTest : RuleTestBase
         var fields = 200;
         var replaceField = 180;
 
+        fields.ShouldBeGreaterThan(MaximumFieldCount);
+
         var data = string.Join(" ", Enumerable.Range(0, fields).Select(_ => "test"));
         var expected = string.Join(" ", Enumerable.Range(0, fields).Select((_, i) => i == replaceField ? "123" : "test"));
 
@@ -113,6 +132,29 @@ public class FieldSeparatorRuleTest : RuleTestBase
             ReplaceFields = new List<KeyValuePair<FieldRange, string>>
             {
                 new KeyValuePair<FieldRange, string>(new FieldRange(replaceField), "123"),
+            },
+        };
+
+        ShouldRuleBe(rule, data, expected);
+    }
+
+    [Fact]
+    public void ExceedMaxFieldCount_InfiniteMax()
+    {
+        var fields = 200;
+        var replaceField = 180;
+
+        fields.ShouldBeGreaterThan(MaximumFieldCount);
+
+        var data = string.Join(" ", Enumerable.Range(0, fields).Select(_ => "test"));
+        var expected = string.Join(" ", Enumerable.Range(0, fields).Select((_, i) => i >= replaceField ? "123" : "test"));
+
+        var rule = new FieldSeparatorRule
+        {
+            SeparatorRegex = new Regex(@"\s+"),
+            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            {
+                new KeyValuePair<FieldRange, string>(new FieldRange(replaceField, null), "123"),
             },
         };
 

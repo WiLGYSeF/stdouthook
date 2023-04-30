@@ -2,6 +2,7 @@
 {
     internal class DataState
     {
+        // TODO: not null?
         public string? Data { get; internal set; }
 
         public bool Stdout { get; }
