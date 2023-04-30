@@ -7,24 +7,29 @@ namespace Wilgysef.StdoutHook.Rules
     {
         public int Min { get; set; }
 
-        // TODO: handle infinite
-        public int Max { get; set; }
+        public int? Max { get; set; }
+
+        public bool InfiniteMax => !Max.HasValue;
 
         public FieldRange(int number) : this(number, number) { }
 
-        public FieldRange(int min, int max)
+        public FieldRange(int min, int? max)
         {
             if (min < 0)
             {
                 throw new ArgumentException("Minimum cannot be negative.");
             }
-            if (max < 0)
+
+            if (max.HasValue)
             {
-                throw new ArgumentException("Maximum cannot be negative.");
-            }
-            if (min > max)
-            {
-                throw new ArgumentException("Minimum cannot be greater than maximum", nameof(min));
+                if (max.Value < 0)
+                {
+                    throw new ArgumentException("Maximum cannot be negative.");
+                }
+                if (min > max.Value)
+                {
+                    throw new ArgumentException("Minimum cannot be greater than maximum", nameof(min));
+                }
             }
 
             Min = min;
@@ -33,7 +38,7 @@ namespace Wilgysef.StdoutHook.Rules
 
         public bool Contains(int number)
         {
-            return Min <= number && number <= Max;
+            return Min <= number && (!Max.HasValue || number <= Max.Value);
         }
 
         public static FieldRange Parse(string s)
@@ -54,17 +59,35 @@ namespace Wilgysef.StdoutHook.Rules
             }
 
             var index = s.IndexOf('-');
-            if (index == -1
-                || !int.TryParse(s[..index], out var min)
-                || !int.TryParse(s[(index + 1)..], out var max))
+            if (index == -1)
             {
                 range = null;
                 return false;
             }
 
+            if (!int.TryParse(s.AsSpan(0, index), out var min))
+            {
+                range = null;
+                return false;
+            }
+
+            var maxSpan = s.AsSpan(index + 1);
+            int? max = null;
+
+            if (!maxSpan.Equals("*", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!int.TryParse(maxSpan, out var maxInt))
+                {
+                    range = null;
+                    return false;
+                }
+
+                max = maxInt;
+            }
+
             return CreateRange(min, max, out range);
 
-            static bool CreateRange(int min, int max, out FieldRange? range_)
+            static bool CreateRange(int min, int? max, out FieldRange? range_)
             {
                 try
                 {

@@ -1,4 +1,5 @@
 ﻿using Wilgysef.StdoutHook.Formatters.FormatBuilders;
+using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Tests;
 
@@ -10,14 +11,14 @@ internal class TestFormatBuilder : FormatBuilder
 
     private readonly string? _key;
     private readonly char? _keyShort;
-    private readonly Func<string, string>? _func;
-    private readonly Func<string, bool>? _constantFunc;
+    private readonly Func<DataState, string>? _func;
+    private readonly Func<FormatBuildState, bool>? _constantFunc;
 
     public TestFormatBuilder(
         string? key,
         char? keyShort,
-        Func<string, string>? func = null,
-        Func<string, bool>? constantFunc = null)
+        Func<DataState, string>? func = null,
+        Func<FormatBuildState, bool>? constantFunc = null)
     {
         _key = key;
         _keyShort = keyShort;
@@ -25,11 +26,9 @@ internal class TestFormatBuilder : FormatBuilder
         _constantFunc = constantFunc;
     }
 
-    public override Func<string> Build(string format, out bool isConstant)
+    public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
     {
-        isConstant = _constantFunc != null && _constantFunc(format);
-        return _func != null
-            ? () => _func(format)
-            : () => format;
+        isConstant = _constantFunc != null && _constantFunc(state);
+        return _func ?? (_ => state.Contents);
     }
 }
