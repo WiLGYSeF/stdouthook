@@ -141,7 +141,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                     colorResults.Add(5);
                     colorResults.Add(colorInt);
                 }
-                else if (colorStr.Length == 6 && TryParseHexToInt(colorStr, out var colorHex))
+                else if (TryParseHexToInt(colorStr, out var colorHex))
                 {
                     colorResults.Add(toggle ? 48 : 38);
                     colorResults.Add(2);
@@ -163,6 +163,22 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         private static bool TryParseHexToInt(string hex, out int value)
         {
+            if (hex.StartsWith("0x"))
+            {
+                if (hex.Length != 8)
+                {
+                    value = 0;
+                    return false;
+                }
+
+                hex = hex[2..];
+            }
+            else if (hex.Length != 6)
+            {
+                value = 0;
+                return false;
+            }
+
             try
             {
                 value = Convert.ToInt32(hex, 16);
