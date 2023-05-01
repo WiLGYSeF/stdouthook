@@ -39,9 +39,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             AddColor(new Color("lightgrey", "le", 97));
             AddColor(new Color("white", "w", 97));
 
-            AddColor(new Style("z", 0));
-            AddColor(new Style("reset", "res", 0));
-            AddColor(new Style("normal", "nor", 0));
+            AddColor(new Style("z", 0, 0));
+            AddColor(new Style("reset", "res", 0, 0));
+            AddColor(new Style("normal", "nor", 0, 0));
             AddColor(new Style("bold", "bol", 1));
             AddColor(new Style("bright", "bri", 1));
             AddColor(new Style("dim", 2));

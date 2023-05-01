@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Wilgysef.StdoutHook.Formatters;
+﻿using Wilgysef.StdoutHook.Formatters;
 
 namespace Wilgysef.StdoutHook.Cli;
 
@@ -94,9 +93,16 @@ internal static class ColorDebug
 
             for (var v = 0; v < 256; v += vIncr)
             {
+                WriteRow((float)v / 256);
+            }
+
+            WriteRow(1);
+
+            void WriteRow(float v)
+            {
                 for (var h = 0; h < 256; h += hIncr)
                 {
-                    HsvToRgb((float)h / 256, 1, (float)v / 256, out var r, out var g, out var b);
+                    HsvToRgb((float)h / 256, 1, v, out var r, out var g, out var b);
                     var color = (r << 16) | (g << 8) | b;
 
                     writer.Write(formatter.Format($"%C({backgroundStr}0x{color:X6}) {color:X6} "));
@@ -104,16 +110,6 @@ internal static class ColorDebug
 
                 writer.WriteLine(reset);
             }
-
-            for (var h = 0; h < 256; h += hIncr)
-            {
-                HsvToRgb((float)h / 256, 1, 1, out var r, out var g, out var b);
-                var color = (r << 16) | (g << 8) | b;
-
-                writer.Write(formatter.Format($"%C({backgroundStr}0x{color:X6}) {color:X6} "));
-            }
-
-            writer.WriteLine(reset);
         }
 
         static void HsvToRgb(float h, float s, float v, out int r, out int g, out int b)
