@@ -70,6 +70,7 @@ public class ColorFormatTest : RuleTestBase
     {
         ShouldFormatBe("%C(ffa600)test", "\x1b[38;2;255;166;0mtest");
         ShouldFormatBe("%C(0xffa600)test", "\x1b[38;2;255;166;0mtest");
+        ShouldFormatBe("%C(^0xffa600)test", "\x1b[48;2;255;166;0mtest");
 
         ShouldFormatBe("%C(0xaaa)test", "test");
         ShouldFormatBe("%C(zxcvbn)test", "test");

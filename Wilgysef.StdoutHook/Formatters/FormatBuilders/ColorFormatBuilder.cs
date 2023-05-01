@@ -93,23 +93,17 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             {
                 var color = colors[i].Trim();
 
-                if (color.Length == 0)
-                {
-                    colors.RemoveAt(i--);
-                    continue;
-                }
-
                 if (CustomColors.TryGetValue(color, out var colorAlias))
                 {
                     var aliasColors = colorAlias.Split(Separator);
                     if (aliasColors.Length > 1)
                     {
-                        colors[i] = aliasColors[0];
-                        colors.InsertRange(i + 1, aliasColors.Skip(1));
+                        colors[i] = aliasColors[0].Trim();
+                        colors.InsertRange(i + 1, aliasColors.Skip(1).Select(c => c.Trim()));
                     }
                     else
                     {
-                        colors[i] = colorAlias;
+                        colors[i] = colorAlias.Trim();
                     }
                 }
                 else
@@ -123,6 +117,11 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             for (var i = 0; i < colors.Count; i++)
             {
                 var colorStr = colors[i];
+                if (colorStr.Length == 0)
+                {
+                    continue;
+                }
+
                 var toggle = false;
 
                 if (colorStr[0] == Toggle)
