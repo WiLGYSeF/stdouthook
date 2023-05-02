@@ -29,6 +29,19 @@ public class FieldRangeListTest
         Should.Throw<ArgumentException>(() => FieldRangeList.Parse("1-3,-4"));
     }
 
+    [Fact]
+    public void Contains()
+    {
+        var ranges = FieldRangeList.Parse("1-3,5");
+        ranges.Contains(0).ShouldBeFalse();
+        ranges.Contains(1).ShouldBeTrue();
+        ranges.Contains(2).ShouldBeTrue();
+        ranges.Contains(3).ShouldBeTrue();
+        ranges.Contains(4).ShouldBeFalse();
+        ranges.Contains(5).ShouldBeTrue();
+        ranges.Contains(6).ShouldBeFalse();
+    }
+
     private static void ShouldFieldRangeBe(FieldRange range, int min, int max)
     {
         range.Min.ShouldBe(min);

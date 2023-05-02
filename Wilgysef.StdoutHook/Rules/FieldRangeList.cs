@@ -17,6 +17,67 @@ namespace Wilgysef.StdoutHook.Rules
             _fields.AddRange(fields);
         }
 
+        public int GetMin()
+        {
+            var min = int.MaxValue;
+
+            for (var i = 0; i < _fields.Count; i++)
+            {
+                if (_fields[i].Min < min)
+                {
+                    min = _fields[i].Min;
+                }
+            }
+
+            return min;
+        }
+
+        public int GetMax()
+        {
+            var max = 0;
+
+            for (var i = 0; i < _fields.Count; i++)
+            {
+                if (_fields[i].InfiniteMax)
+                {
+                    return int.MaxValue;
+                }
+
+                if (_fields[i].Max!.Value > max)
+                {
+                    max = _fields[i].Max!.Value;
+                }
+            }
+
+            return max;
+        }
+
+        public bool IsInfiniteMax()
+        {
+            for (var i = 0; i < _fields.Count; i++)
+            {
+                if (_fields[i].InfiniteMax)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool Contains(int number)
+        {
+            for (var i = 0; i < _fields.Count; i++)
+            {
+                if (_fields[i].Contains(number))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public static FieldRangeList Parse(string s)
         {
             if (!TryParse(s, out var ranges))

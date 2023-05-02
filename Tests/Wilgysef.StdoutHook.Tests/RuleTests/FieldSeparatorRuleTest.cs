@@ -11,27 +11,30 @@ public class FieldSeparatorRuleTest : RuleTestBase
     [Fact]
     public void FirstField()
     {
-        var rule = new FieldSeparatorRule
+        var replaceFields = new List<KeyValuePair<FieldRangeList, string>>
         {
-            SeparatorRegex = new Regex(@"\s+"),
-            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
-            {
-                new KeyValuePair<FieldRange, string>(new FieldRange(1), "123"),
-            },
+            new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1"), "123"),
         };
 
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
+        {
+            ReplaceFields = replaceFields,
+        };
+
+        ShouldRuleBe(rule, "test asdf", "123 asdf");
+
+        rule = new FieldSeparatorRule(new Regex(@"\s+"), replaceFields);
         ShouldRuleBe(rule, "test asdf", "123 asdf");
     }
 
     [Fact]
     public void MiddleField()
     {
-        var rule = new FieldSeparatorRule
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
         {
-            SeparatorRegex = new Regex(@"\s+"),
-            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
             {
-                new KeyValuePair<FieldRange, string>(new FieldRange(2), "123"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "123"),
             },
         };
 
@@ -41,12 +44,11 @@ public class FieldSeparatorRuleTest : RuleTestBase
     [Fact]
     public void LastField()
     {
-        var rule = new FieldSeparatorRule
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
         {
-            SeparatorRegex = new Regex(@"\s+"),
-            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
             {
-                new KeyValuePair<FieldRange, string>(new FieldRange(3), "123"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("3"), "123"),
             },
         };
 
@@ -56,13 +58,12 @@ public class FieldSeparatorRuleTest : RuleTestBase
     [Fact]
     public void MultipleFields()
     {
-        var rule = new FieldSeparatorRule
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
         {
-            SeparatorRegex = new Regex(@"\s+"),
-            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
             {
-                new KeyValuePair<FieldRange, string>(new FieldRange(2), "123"),
-                new KeyValuePair<FieldRange, string>(new FieldRange(4), "456"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "123"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("4"), "456"),
             },
         };
 
@@ -72,12 +73,11 @@ public class FieldSeparatorRuleTest : RuleTestBase
     [Fact]
     public void FieldRange()
     {
-        var rule = new FieldSeparatorRule
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
         {
-            SeparatorRegex = new Regex(@"\s+"),
-            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
             {
-                new KeyValuePair<FieldRange, string>(new FieldRange(2, 4), "123"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2-4"), "123"),
             },
         };
 
@@ -87,12 +87,11 @@ public class FieldSeparatorRuleTest : RuleTestBase
     [Fact]
     public void FieldRange_Infinite()
     {
-        var rule = new FieldSeparatorRule
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
         {
-            SeparatorRegex = new Regex(@"\s+"),
-            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
             {
-                new KeyValuePair<FieldRange, string>(new FieldRange(2, null), "123"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2-*"), "123"),
             },
         };
 
@@ -102,13 +101,12 @@ public class FieldSeparatorRuleTest : RuleTestBase
     [Fact]
     public void Override()
     {
-        var rule = new FieldSeparatorRule
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
         {
-            SeparatorRegex = new Regex(@"\s+"),
-            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
             {
-                new KeyValuePair<FieldRange, string>(new FieldRange(2), "123"),
-                new KeyValuePair<FieldRange, string>(new FieldRange(2), "456"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "123"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "456"),
             },
         };
 
@@ -126,12 +124,11 @@ public class FieldSeparatorRuleTest : RuleTestBase
         var data = string.Join(" ", Enumerable.Range(0, fields).Select(_ => "test"));
         var expected = string.Join(" ", Enumerable.Range(0, fields).Select((_, i) => i == replaceField ? "123" : "test"));
 
-        var rule = new FieldSeparatorRule
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
         {
-            SeparatorRegex = new Regex(@"\s+"),
-            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
             {
-                new KeyValuePair<FieldRange, string>(new FieldRange(replaceField), "123"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse($"{replaceField}"), "123"),
             },
         };
 
@@ -149,12 +146,11 @@ public class FieldSeparatorRuleTest : RuleTestBase
         var data = string.Join(" ", Enumerable.Range(0, fields).Select(_ => "test"));
         var expected = string.Join(" ", Enumerable.Range(0, fields).Select((_, i) => i >= replaceField ? "123" : "test"));
 
-        var rule = new FieldSeparatorRule
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
         {
-            SeparatorRegex = new Regex(@"\s+"),
-            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
             {
-                new KeyValuePair<FieldRange, string>(new FieldRange(replaceField, null), "123"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse($"{replaceField}-*"), "123"),
             },
         };
 
@@ -164,25 +160,23 @@ public class FieldSeparatorRuleTest : RuleTestBase
     [Fact]
     public void OutOfRange()
     {
-        var rule = new FieldSeparatorRule
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
         {
-            SeparatorRegex = new Regex(@"\s+"),
             MinFields = 3,
-            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
             {
-                new KeyValuePair<FieldRange, string>(new FieldRange(2), "123"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "123"),
             },
         };
 
         ShouldRuleBe(rule, "test asdf", "test asdf");
 
-        rule = new FieldSeparatorRule
+        rule = new FieldSeparatorRule(new Regex(@"\s+"))
         {
-            SeparatorRegex = new Regex(@"\s+"),
             MaxFields = 1,
-            ReplaceFields = new List<KeyValuePair<FieldRange, string>>
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
             {
-                new KeyValuePair<FieldRange, string>(new FieldRange(2), "123"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "123"),
             },
         };
 
