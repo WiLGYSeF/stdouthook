@@ -209,10 +209,22 @@ public class FieldSeparatorRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void ReplaceAll_Field_Invalid()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%Fg");
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "%Fg");
+
+        rule = new FieldSeparatorRule(new Regex(@"\s+"), "%F");
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "%F");
+    }
+
+    [Fact]
     public void ReplaceAll_FieldSeparator()
     {
         var rule = new FieldSeparatorRule(new Regex(@"\s+"), "a%F(s3)b");
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "a  b");
 
+        rule = new FieldSeparatorRule(new Regex(@"\s+"), "a%F(S3)b");
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "a  b");
     }
 
@@ -222,6 +234,14 @@ public class FieldSeparatorRuleTest : RuleTestBase
         var rule = new FieldSeparatorRule(new Regex(@"\s+"), "a%F(s9)b");
 
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "ab");
+    }
+
+    [Fact]
+    public void ReplaceAll_FieldSeparator_Range()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"), "a%F(s1-3)b");
+
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "a%F(s1-3)b");
     }
 
     private static void ShouldRuleBe(Rule rule, string input, string expected)

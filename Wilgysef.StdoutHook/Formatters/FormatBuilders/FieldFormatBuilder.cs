@@ -38,34 +38,46 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             }
 
             isConstant = false;
+
+            if (fieldRange.SingleValue.HasValue)
+            {
+                if (separator)
+                {
+                    return dataState =>
+                    {
+                        if (!Preface(dataState, fieldRange))
+                        {
+                            return "";
+                        }
+
+                        var singleVal = fieldRange.SingleValue.Value;
+                        return singleVal <= dataState.Context.FieldSeparators!.Count
+                            ? dataState.Context.FieldSeparators[singleVal - 1]
+                            : "";
+                    };
+                }
+                else
+                {
+                    return dataState =>
+                    {
+                        if (!Preface(dataState, fieldRange))
+                        {
+                            return "";
+                        }
+
+                        var singleVal = fieldRange.SingleValue.Value;
+                        return singleVal <= dataState.Context.Fields!.Count
+                            ? dataState.Context.Fields[singleVal - 1]
+                            : "";
+                    };
+                }
+            }
+
             return dataState =>
             {
-                if (!dataState.Context.HasFields)
+                if (!Preface(dataState, fieldRange))
                 {
                     return "";
-                }
-
-                if (fieldRange.Max.HasValue && fieldRange.Max.Value > dataState.Context.HighestFieldNumber)
-                {
-                    dataState.Context.HighestFieldNumber = fieldRange.Max.Value;
-                }
-
-                var singleVal = fieldRange.SingleValue;
-
-                if (singleVal.HasValue)
-                {
-                    if (separator)
-                    {
-                        return singleVal.Value <= dataState.Context.FieldSeparators!.Count
-                            ? dataState.Context.FieldSeparators[singleVal.Value - 1]
-                            : "";
-                    }
-                    else
-                    {
-                        return singleVal.Value <= dataState.Context.Fields!.Count
-                            ? dataState.Context.Fields[singleVal.Value - 1]
-                            : "";
-                    }
                 }
 
                 var builder = new StringBuilder();
@@ -81,6 +93,21 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
                 return builder.ToString();
             };
+        }
+
+        private static bool Preface(DataState dataState, FieldRange range)
+        {
+            if (!dataState.Context.HasFields)
+            {
+                return false;
+            }
+
+            if (range.Max.HasValue && range.Max.Value > dataState.Context.HighestFieldNumber)
+            {
+                dataState.Context.HighestFieldNumber = range.Max.Value;
+            }
+
+            return true;
         }
     }
 }
