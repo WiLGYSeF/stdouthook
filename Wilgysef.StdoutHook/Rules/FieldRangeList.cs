@@ -8,6 +8,10 @@ namespace Wilgysef.StdoutHook.Rules
     {
         public IList<FieldRange> Fields => _fields;
 
+        public int? SingleValue => Fields.Count == 1
+            ? Fields[0].SingleValue
+            : null;
+
         private readonly List<FieldRange> _fields = new List<FieldRange>();
 
         public FieldRangeList(params FieldRange[] fields) : this((IEnumerable<FieldRange>)fields) { }

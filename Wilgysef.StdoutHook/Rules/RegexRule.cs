@@ -8,14 +8,32 @@ namespace Wilgysef.StdoutHook.Rules
     {
         public Regex Regex { get; set; }
 
+        public string ReplaceFormat { get; set; }
+
+        private CompiledFormat _compiledFormat = null!;
+
+        public RegexRule(Regex regex, string replaceFormat)
+        {
+            Regex = regex;
+            ReplaceFormat = replaceFormat;
+        }
+
         internal override void Build(ProfileState state, Formatter formatter)
         {
             base.Build(state,formatter);
+
+            _compiledFormat = Formatter.CompileFormat(ReplaceFormat, state);
         }
 
         internal override string Apply(DataState state)
         {
-            throw new System.NotImplementedException();
+            var match = Regex.Match(state.Data!);
+            if (!match.Success)
+            {
+                return state.Data!;
+            }
+
+            return _compiledFormat.Compute(state);
         }
     }
 }

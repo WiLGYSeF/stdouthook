@@ -17,11 +17,14 @@ namespace Wilgysef.StdoutHook.Rules
 
         public int? MaxFields { get; set; }
 
-        public IList<KeyValuePair<FieldRangeList, string>> ReplaceFields { get; set; }
+        public IList<KeyValuePair<FieldRangeList, string>>? ReplaceFields { get; set; }
+
+        public string? ReplaceAllFormat { get; set; }
 
         private readonly List<KeyValuePair<FieldRangeList, CompiledFormat>> _outOfRangeReplaceFields = new List<KeyValuePair<FieldRangeList, CompiledFormat>>();
 
-        private CompiledFormat?[] _fieldReplacers = null!;
+        private CompiledFormat?[]? _fieldReplacers;
+        private CompiledFormat? _replaceAll;
 
         public FieldSeparatorRule(Regex separatorRegex)
         {
@@ -35,9 +38,21 @@ namespace Wilgysef.StdoutHook.Rules
             ReplaceFields = replaceFields;
         }
 
+        public FieldSeparatorRule(Regex separatorRegex, string replaceAllFormat)
+        {
+            SeparatorRegex = separatorRegex;
+            ReplaceAllFormat = replaceAllFormat;
+        }
+
         internal override void Build(ProfileState state, Formatter formatter)
         {
             base.Build(state, formatter);
+
+            if (ReplaceAllFormat != null)
+            {
+                _replaceAll = Formatter.CompileFormat(ReplaceAllFormat, state);
+                return;
+            }
 
             var maxRange = GetMaximumRange();
             var maxRangeClamped = Math.Min(maxRange, MaximumFieldCount);
@@ -52,7 +67,7 @@ namespace Wilgysef.StdoutHook.Rules
                     : null;
             }
 
-            foreach (var (rangeList, replace) in ReplaceFields)
+            foreach (var (rangeList, replace) in ReplaceFields!)
             {
                 if (rangeList.GetMin() > maxRangeClamped || rangeList.IsInfiniteMax())
                 {
@@ -75,6 +90,11 @@ namespace Wilgysef.StdoutHook.Rules
 
             using var contextScope = state.GetContextScope();
             state.Context.SetFieldContext(splitData);
+
+            if (_replaceAll != null)
+            {
+                return _replaceAll.Compute(state);
+            }
 
             var limit = Math.Min(splitCount, _fieldReplacers!.Length);
             for (var i = 0; i < limit; i++)
@@ -103,7 +123,7 @@ namespace Wilgysef.StdoutHook.Rules
 
         private string? GetFirstRangeOrDefault(int position)
         {
-            foreach (var (rangeList, replace) in ReplaceFields)
+            foreach (var (rangeList, replace) in ReplaceFields!)
             {
                 if (rangeList.Contains(position))
                 {
@@ -118,7 +138,7 @@ namespace Wilgysef.StdoutHook.Rules
         {
             var max = 0;
 
-            foreach (var (rangeList, _) in ReplaceFields)
+            foreach (var (rangeList, _) in ReplaceFields!)
             {
                 if (rangeList.IsInfiniteMax())
                 {

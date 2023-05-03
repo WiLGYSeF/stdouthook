@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Rules;
 
@@ -183,10 +184,50 @@ public class FieldSeparatorRuleTest : RuleTestBase
         ShouldRuleBe(rule, "test asdf", "test asdf");
     }
 
+    [Fact]
+    public void ReplaceAll()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%F3 %F4 %F2");
+
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "abc def asdf");
+    }
+
+    [Fact]
+    public void ReplaceAll_FieldRange()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%F(2-4)");
+
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "asdf abc  def");
+    }
+
+    [Fact]
+    public void ReplaceAll_Field_OutOfRange()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%F9");
+
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "");
+    }
+
+    [Fact]
+    public void ReplaceAll_FieldSeparator()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"), "a%F(s3)b");
+
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "a  b");
+    }
+
+    [Fact]
+    public void ReplaceAll_FieldSeparator_OutOfRange()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"), "a%F(s9)b");
+
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "ab");
+    }
+
     private static void ShouldRuleBe(Rule rule, string input, string expected)
     {
         var state = new ProfileState();
-        rule.Build(state, GetFormatter());
+        rule.Build(state, GetFormatter(FormatFunctionBuilder.FormatBuilders));
         rule.Apply(new DataState(input, true, state)).ShouldBe(expected);
     }
 }
