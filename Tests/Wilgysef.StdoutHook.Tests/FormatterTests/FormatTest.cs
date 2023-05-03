@@ -41,6 +41,13 @@ public class FormatTest : RuleTestBase
     }
 
     [Fact]
+    public void Single_Consecutive()
+    {
+        var formatter = GetFormatter(new TestFormatBuilder(null, 'C', _ => "asdf"));
+        ShouldFormatBe(formatter, "%C%C", "asdfasdf", "asdf", "asdf");
+    }
+
+    [Fact]
     public void Single_InParentheses()
     {
         var formatter = GetFormatter(new TestFormatBuilder(null, 'C', _ => "asdf"));
@@ -80,6 +87,20 @@ public class FormatTest : RuleTestBase
     {
         var formatter = GetFormatter(new TestFormatBuilder("test", null, _ => "asdf"));
         ShouldFormatBe(formatter, "%Test", "asdf", "asdf");
+    }
+
+    [Fact]
+    public void Format_Consecutive()
+    {
+        var formatter = GetFormatter(new TestFormatBuilder("test", null, _ => "asdf"));
+        ShouldFormatBe(formatter, "%test%test", "asdfasdf", "asdf", "asdf");
+    }
+
+    [Fact]
+    public void Format_Consecutive_Param()
+    {
+        var formatter = GetFormatter(new TestFormatBuilder("test", null));
+        ShouldFormatBe(formatter, "%(test:abc)%(test:def)", "abcdef", "abc", "def");
     }
 
     [Fact]

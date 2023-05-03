@@ -7,9 +7,10 @@ namespace Wilgysef.StdoutHook.Formatters
 {
     internal class FormatFunctionBuilder
     {
-        public static FormatBuilder[] FormatBuilders = new[]
+        public static FormatBuilder[] FormatBuilders = new FormatBuilder[]
         {
             new ColorFormatBuilder(),
+            new FieldFormatBuilder(),
         };
 
         private readonly List<FormatBuilder> _formatBuilders;

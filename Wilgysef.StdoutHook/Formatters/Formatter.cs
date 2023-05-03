@@ -123,7 +123,7 @@ namespace Wilgysef.StdoutHook.Formatters
                             last = endIndex;
                         }
 
-                        i = endIndex;
+                        i = endIndex - 1;
                     }
                 }
             }

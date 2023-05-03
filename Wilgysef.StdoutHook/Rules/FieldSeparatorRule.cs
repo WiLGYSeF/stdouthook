@@ -73,6 +73,9 @@ namespace Wilgysef.StdoutHook.Rules
                 return state.Data;
             }
 
+            using var contextScope = state.GetContextScope();
+            state.Context.SetFieldContext(splitData);
+
             var limit = Math.Min(splitCount, _fieldReplacers!.Length);
             for (var i = 0; i < limit; i++)
             {
