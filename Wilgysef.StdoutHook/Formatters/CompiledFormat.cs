@@ -31,8 +31,8 @@ namespace Wilgysef.StdoutHook.Formatters
                 builder.Append(Funcs[i](state));
             }
 
-            builder.Append(Parts[^1]);
-            return builder.ToString();
+            return builder.Append(Parts[^1])
+                .ToString();
         }
     }
 }

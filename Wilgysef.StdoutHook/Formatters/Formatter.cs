@@ -6,7 +6,7 @@ namespace Wilgysef.StdoutHook.Formatters
 {
     internal class Formatter
     {
-        public static char Separator = ':';
+        public static readonly char Separator = ':';
 
         public bool InvalidFormatBlank { get; set; }
 

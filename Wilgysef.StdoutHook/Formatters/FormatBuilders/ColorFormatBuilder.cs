@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
@@ -38,9 +39,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             AddColor(new Color("lightgrey", "le", 97));
             AddColor(new Color("white", "w", 97));
 
-            AddColor(new Style("z", 0));
-            AddColor(new Style("reset", "res", 0));
-            AddColor(new Style("normal", "nor", 0));
+            AddColor(new Style("z", 0, 0));
+            AddColor(new Style("reset", "res", 0, 0));
+            AddColor(new Style("normal", "nor", 0, 0));
             AddColor(new Style("bold", "bol", 1));
             AddColor(new Style("bright", "bri", 1));
             AddColor(new Style("dim", 2));
@@ -75,21 +76,54 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         public override char? KeyShort => 'C';
 
+        public IDictionary<string, string> CustomColors = new Dictionary<string, string>();
+
         public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
         {
-            var colors = state.Contents.Split(Separator);
-            var colorResults = new List<int>(colors.Length);
+            isConstant = true;
 
-            for (var i = 0; i < colors.Length; i++)
+            if (state.Contents.StartsWith("raw"))
             {
-                var colorStr = colors[i].Trim();
+                return _ => $"\x1b[{state.Contents[3..]}m";
+            }
 
+            var colors = new List<string>(state.Contents.Split(Separator));
+
+            for (var i = 0; i < colors.Count; i++)
+            {
+                var color = colors[i].Trim();
+
+                if (CustomColors.TryGetValue(color, out var colorAlias))
+                {
+                    var aliasColors = colorAlias.Split(Separator);
+                    if (aliasColors.Length > 1)
+                    {
+                        colors[i] = aliasColors[0].Trim();
+                        colors.InsertRange(i + 1, aliasColors.Skip(1).Select(c => c.Trim()));
+                    }
+                    else
+                    {
+                        colors[i] = colorAlias.Trim();
+                    }
+                }
+                else
+                {
+                    colors[i] = color;
+                }
+            }
+
+            var colorResults = new List<int>(colors.Count);
+
+            for (var i = 0; i < colors.Count; i++)
+            {
+                var colorStr = colors[i];
                 if (colorStr.Length == 0)
                 {
                     continue;
                 }
 
                 var toggle = false;
+
                 if (colorStr[0] == Toggle)
                 {
                     colorStr = colorStr[1..];
@@ -100,19 +134,60 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 {
                     colorResults.Add(color.GetValue(toggle));
                 }
+                else if (int.TryParse(colorStr, out var colorInt) && colorInt >= 0 && colorInt <= 255)
+                {
+                    colorResults.Add(toggle ? 48 : 38);
+                    colorResults.Add(5);
+                    colorResults.Add(colorInt);
+                }
+                else if (TryParseHexToInt(colorStr, out var colorHex))
+                {
+                    colorResults.Add(toggle ? 48 : 38);
+                    colorResults.Add(2);
+                    colorResults.Add((colorHex >> 16) & 0xFF);
+                    colorResults.Add((colorHex >> 8) & 0xFF);
+                    colorResults.Add(colorHex & 0xFF);
+                }
             }
-
-            isConstant = true;
 
             if (colorResults.Count == 0)
             {
                 return _ => "";
             }
 
-            var result = $@"\x1b[{string.Join(';', colorResults)}m";
-
             // only close over the result
+            var result = $"\x1b[{string.Join(';', colorResults)}m";
             return _ => result;
+        }
+
+        private static bool TryParseHexToInt(string hex, out int value)
+        {
+            if (hex.StartsWith("0x"))
+            {
+                if (hex.Length != 8)
+                {
+                    value = 0;
+                    return false;
+                }
+
+                hex = hex[2..];
+            }
+            else if (hex.Length != 6)
+            {
+                value = 0;
+                return false;
+            }
+
+            try
+            {
+                value = Convert.ToInt32(hex, 16);
+                return true;
+            }
+            catch
+            {
+                value = 0;
+                return false;
+            }
         }
 
         private class Color
