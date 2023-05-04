@@ -7,7 +7,12 @@ namespace Wilgysef.StdoutHook.Rules
     {
         public string Format { get; set; }
 
-        private CompiledFormat _compiledFormat;
+        private CompiledFormat _compiledFormat = null!;
+
+        public UnconditionalReplaceRule(string format)
+        {
+            Format = format;
+        }
 
         internal override void Build(ProfileState state, Formatter formatter)
         {

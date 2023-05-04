@@ -11,13 +11,17 @@ namespace Wilgysef.StdoutHook.Rules
 
         public bool InfiniteMax => !Max.HasValue;
 
+        public int? SingleValue => Max.HasValue && Max.Value == Min
+            ? (int?)Min
+            : null;
+
         public FieldRange(int number) : this(number, number) { }
 
         public FieldRange(int min, int? max)
         {
-            if (min < 0)
+            if (min <= 0)
             {
-                throw new ArgumentException("Minimum cannot be negative.");
+                throw new ArgumentException("Minimum cannot be less than 1.");
             }
 
             if (max.HasValue)

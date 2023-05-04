@@ -32,6 +32,11 @@ namespace Wilgysef.StdoutHook.Profiles
                 var rule = _rules[i];
                 if (rule.IsActive(dataState))
                 {
+                    if (rule.Filter)
+                    {
+                        return false;
+                    }
+
                     try
                     {
                         line = rule.Apply(dataState);
@@ -39,7 +44,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
                         if (rule.Terminal)
                         {
-                            return false;
+                            break;
                         }
                     }
                     catch (Exception e)

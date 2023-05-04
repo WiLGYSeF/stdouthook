@@ -9,10 +9,7 @@ public class UnconditionalReplaceRuleTest : RuleTestBase
     [Fact]
     public void UnconditionalRule()
     {
-        var rule = new UnconditionalReplaceRule
-        {
-            Format = "asdf %test abc",
-        };
+        var rule = new UnconditionalReplaceRule("asdf %test abc");
 
         ShouldRuleBe(
             rule,

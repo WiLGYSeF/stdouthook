@@ -29,6 +29,8 @@ namespace Wilgysef.StdoutHook.Rules
 
         public IList<long> DeactivationLinesStderrOnly { get; set; } = new List<long>();
 
+        public virtual bool Filter { get; protected set; }
+
         private protected Formatter Formatter { get; private set; } = null!;
 
         internal virtual void Build(ProfileState state, Formatter formatter)
