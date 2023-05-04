@@ -80,7 +80,7 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            var splitData = SeparatorRegex.SplitWithSeparators(state.Data, out var splitCount);
+            var splitData = SeparatorRegex.SplitWithSeparatorsExtractedColor(state.Data, out var splitCount);
 
             if (MinFields.HasValue && MinFields.Value > splitCount
                 || MaxFields.HasValue && MaxFields.Value < splitCount)

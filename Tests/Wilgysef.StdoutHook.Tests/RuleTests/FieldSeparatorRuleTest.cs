@@ -244,6 +244,39 @@ public class FieldSeparatorRuleTest : RuleTestBase
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "a%F(s1-3)b");
     }
 
+    [Fact]
+    public void WithColors()
+    {
+        var rule = new FieldSeparatorRule(new Regex("---"), "%F1 %F2 %F3");
+
+        ShouldRuleBe(rule, "\x1b[31mtest---asdf---abc", "\x1b[31mtest asdf abc");
+    }
+
+    [Fact]
+    public void WithColors_Separator()
+    {
+        var rule = new FieldSeparatorRule(new Regex("---"), "%F1%Fs1%F2 %F3");
+
+        ShouldRuleBe(rule, "test-\x1b[1m--asdf-\x1b[31m-\x1b[0m-abc", "test-\x1b[1m--asdf abc");
+    }
+
+    [Fact]
+    public void WithColors_ColorEndField()
+    {
+        var rule = new FieldSeparatorRule(new Regex("---"), "%F1 %F2 %F3");
+
+        ShouldRuleBe(rule, "test\x1b[1m---asdf---abc", "test\x1b[1m asdf abc");
+    }
+
+    [Fact]
+    public void WithColors_ColorEndSeparator()
+    {
+        var rule = new FieldSeparatorRule(new Regex("---"), "%F1 %F2 %F3");
+
+        ShouldRuleBe(rule, "test---\x1b[31masdf---abc", "test \x1b[31masdf abc");
+        ShouldRuleBe(rule, "test-\x1b[32m--\x1b[31masdf---abc", "test \x1b[31masdf abc");
+    }
+
     private static void ShouldRuleBe(Rule rule, string input, string expected)
     {
         var state = new ProfileState();
