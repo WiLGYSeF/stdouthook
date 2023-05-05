@@ -56,7 +56,7 @@ namespace Wilgysef.StdoutHook.Extensions
             return splitData;
         }
 
-        public static string[]? MatchExtractedColor(this Regex regex, string input)
+        public static MatchEntry[]? MatchExtractedColor(this Regex regex, string input)
         {
             var colors = new List<KeyValuePair<int, string>>();
             var data = ColorExtractor.ExtractColor(input, colors);
@@ -67,7 +67,7 @@ namespace Wilgysef.StdoutHook.Extensions
                 return null;
             }
 
-            var groups = new string[match.Groups.Count];
+            var groups = new MatchEntry[match.Groups.Count];
             var builder = new StringBuilder();
 
             for (var i = 0; i < match.Groups.Count; i++)
@@ -75,7 +75,7 @@ namespace Wilgysef.StdoutHook.Extensions
                 var curMatch = match.Groups[i];
                 var colorIndex = 0;
 
-                groups[i] = colorIndex < colors.Count
+                var value = colorIndex < colors.Count
                     ? InsertExtractedColors(
                         curMatch.Value,
                         colors,
@@ -85,9 +85,23 @@ namespace Wilgysef.StdoutHook.Extensions
                         ref colorIndex,
                         true)
                     : curMatch.Value;
+                groups[i] = new MatchEntry(value, curMatch.Index);
             }
 
             return groups;
+        }
+
+        public class MatchEntry
+        {
+            public string Value { get; }
+
+            public int Index { get; }
+
+            public MatchEntry(string value, int index)
+            {
+                Value = value;
+                Index = index;
+            }
         }
 
         private static string InsertExtractedColors(
@@ -116,7 +130,8 @@ namespace Wilgysef.StdoutHook.Extensions
             while (colorIndex < colors.Count
                 && IsColorPositionWithinMax(colors[colorIndex], endOffset, isField));
 
-            return builder.Append(data[last..]).ToString();
+            return builder.Append(data[last..])
+                .ToString();
         }
 
         private static bool IsColorPositionWithinMax(KeyValuePair<int, string> color, int max, bool isField)

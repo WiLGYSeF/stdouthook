@@ -35,7 +35,14 @@ namespace Wilgysef.StdoutHook.Rules
             }
 
             using var contextScope = state.GetContextScope();
-            state.Context.SetRegexGroupContext(groups);
+            var groupValues = new string[groups.Length];
+
+            for (var i = 0; i < groups.Length; i++)
+            {
+                groupValues[i] = groups[i].Value;
+            }
+
+            state.Context.SetRegexGroupContext(groupValues);
 
             return _compiledFormat.Compute(state);
         }
