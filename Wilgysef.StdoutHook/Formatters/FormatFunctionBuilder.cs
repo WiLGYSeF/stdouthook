@@ -11,6 +11,7 @@ namespace Wilgysef.StdoutHook.Formatters
         {
             new ColorFormatBuilder(),
             new FieldFormatBuilder(),
+            new RegexGroupFormatBuilder(),
         };
 
         private readonly List<FormatBuilder> _formatBuilders;

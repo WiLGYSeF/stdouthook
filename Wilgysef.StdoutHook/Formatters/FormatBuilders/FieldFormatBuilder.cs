@@ -50,9 +50,11 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                             return "";
                         }
 
+                        var context = dataState.Context.FieldContext;
                         var singleVal = fieldRange.SingleValue.Value;
-                        return singleVal <= dataState.Context.FieldSeparators!.Count
-                            ? dataState.Context.FieldSeparators[singleVal - 1]
+
+                        return singleVal <= context.FieldSeparators!.Count
+                            ? context.FieldSeparators[singleVal - 1]
                             : "";
                     };
                 }
@@ -65,9 +67,11 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                             return "";
                         }
 
+                        var context = dataState.Context.FieldContext;
                         var singleVal = fieldRange.SingleValue.Value;
-                        return singleVal <= dataState.Context.Fields!.Count
-                            ? dataState.Context.Fields[singleVal - 1]
+
+                        return singleVal <= context.Fields!.Count
+                            ? context.Fields[singleVal - 1]
                             : "";
                     };
                 }
@@ -80,14 +84,15 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                     return "";
                 }
 
+                var context = dataState.Context.FieldContext;
                 var builder = new StringBuilder();
 
-                for (var i = fieldRange.Min; i < dataState.Context.Fields!.Count && i <= fieldRange.Max; i++)
+                for (var i = fieldRange.Min; i < context.Fields!.Count && i <= fieldRange.Max; i++)
                 {
-                    builder.Append(dataState.Context.Fields[i - 1]);
+                    builder.Append(context.Fields[i - 1]);
                     if (i < fieldRange.Max)
                     {
-                        builder.Append(dataState.Context.FieldSeparators![i - 1]);
+                        builder.Append(context.FieldSeparators![i - 1]);
                     }
                 }
 
@@ -97,14 +102,15 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         private static bool Preface(DataState dataState, FieldRange range)
         {
-            if (!dataState.Context.HasFields)
+            var context = dataState.Context.FieldContext;
+            if (context == null)
             {
                 return false;
             }
 
-            if (range.Max.HasValue && range.Max.Value > dataState.Context.HighestFieldNumber)
+            if (range.Max.HasValue && range.Max.Value > context.HighestFieldNumber)
             {
-                dataState.Context.HighestFieldNumber = range.Max.Value;
+                context.HighestFieldNumber = range.Max.Value;
             }
 
             return true;

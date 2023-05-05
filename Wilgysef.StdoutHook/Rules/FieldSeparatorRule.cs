@@ -54,28 +54,11 @@ namespace Wilgysef.StdoutHook.Rules
                 return;
             }
 
-            var maxRange = GetMaximumRange();
-            var maxRangeClamped = Math.Min(maxRange, MaximumFieldCount);
-
-            _fieldReplacers = new CompiledFormat[maxRangeClamped];
-
-            for (var i = 0; i < maxRangeClamped; i++)
-            {
-                var value = GetFirstRangeOrDefault(i + 1);
-                _fieldReplacers[i] = value != null
-                    ? Formatter.CompileFormat(value, state)
-                    : null;
-            }
-
-            foreach (var (rangeList, replace) in ReplaceFields!)
-            {
-                if (rangeList.GetMin() > maxRangeClamped || rangeList.IsInfiniteMax())
-                {
-                    _outOfRangeReplaceFields.Add(new KeyValuePair<FieldRangeList, CompiledFormat>(
-                        rangeList,
-                        Formatter.CompileFormat(replace, state)));
-                }
-            }
+            _fieldReplacers = FieldRangeFormatCompiler.CompileFieldRangeFormats(
+                ReplaceFields!,
+                MaximumFieldCount,
+                _outOfRangeReplaceFields,
+                format => Formatter.CompileFormat(format, state));
         }
 
         internal override string Apply(DataState state)
@@ -119,40 +102,6 @@ namespace Wilgysef.StdoutHook.Rules
             }
 
             return string.Join("", splitData);
-        }
-
-        private string? GetFirstRangeOrDefault(int position)
-        {
-            foreach (var (rangeList, replace) in ReplaceFields!)
-            {
-                if (rangeList.Contains(position))
-                {
-                    return replace;
-                }
-            }
-
-            return null;
-        }
-
-        private int GetMaximumRange()
-        {
-            var max = 0;
-
-            foreach (var (rangeList, _) in ReplaceFields!)
-            {
-                if (rangeList.IsInfiniteMax())
-                {
-                    return int.MaxValue;
-                }
-
-                var curMax = rangeList.GetMax();
-                if (curMax > max)
-                {
-                    max = curMax;
-                }
-            }
-
-            return max;
         }
     }
 }

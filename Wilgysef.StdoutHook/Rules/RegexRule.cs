@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
@@ -27,11 +28,14 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            var match = Regex.Match(state.Data!);
-            if (!match.Success)
+            var groups = Regex.MatchExtractedColor(state.Data!);
+            if (groups == null)
             {
                 return state.Data!;
             }
+
+            using var contextScope = state.GetContextScope();
+            state.Context.SetRegexGroupContext(groups);
 
             return _compiledFormat.Compute(state);
         }
