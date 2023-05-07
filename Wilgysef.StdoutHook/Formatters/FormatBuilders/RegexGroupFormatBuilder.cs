@@ -17,22 +17,38 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             }
 
             var contents = state.Contents;
+            isConstant = false;
+
+            if (contents.Equals("c", StringComparison.OrdinalIgnoreCase))
+            {
+                return dataState =>
+                {
+                    var context = dataState.Context.RegexGroupContext;
+                    if (context == null)
+                    {
+                        return "";
+                    }
+
+                    var groupNumber = context.GetCurrentGroupNumber();
+
+                    return groupNumber <= context.Groups!.Count
+                        ? context.Groups[groupNumber]
+                        : "";
+                };
+            }
 
             if (!int.TryParse(contents, out var groupNumber))
             {
                 throw new ArgumentException($"Invalid group: {contents}.");
             }
 
-            isConstant = false;
-
             return dataState =>
             {
-                if (dataState.Context.RegexGroupContext == null)
+                var context = dataState.Context.RegexGroupContext;
+                if (context == null)
                 {
                     return "";
                 }
-
-                var context = dataState.Context.RegexGroupContext;
 
                 return groupNumber <= context.Groups!.Count
                     ? context.Groups[groupNumber]

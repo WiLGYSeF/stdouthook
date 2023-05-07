@@ -81,8 +81,11 @@ namespace Wilgysef.StdoutHook.Rules
 
             if (_compiledFormat != null)
             {
+                state.Context.RegexGroupContext!.IncrementGroupNumberOnGet = true;
                 return _compiledFormat.Compute(state);
             }
+
+            state.Context.RegexGroupContext!.IncrementGroupNumberOnGet = false;
 
             var builder = new StringBuilder();
             var limit = Math.Min(groups.Length - 1, _groupReplacers!.Length);
@@ -90,7 +93,7 @@ namespace Wilgysef.StdoutHook.Rules
 
             for (var i = 0; i < limit; i++)
             {
-                AppendGroup(groups[i + 1], _groupReplacers[i]);
+                AppendGroup(i + 1, _groupReplacers[i]);
             }
 
             for (var i = limit; i < groups.Length - 1; i++)
@@ -106,14 +109,17 @@ namespace Wilgysef.StdoutHook.Rules
                     }
                 }
 
-                AppendGroup(groups[i + 1], foundReplace);
+                AppendGroup(i + 1, foundReplace);
             }
 
             return builder.Append(state.Data![last..])
                 .ToString();
 
-            void AppendGroup(MatchEntry group, CompiledFormat? format)
+            void AppendGroup(int groupNumber, CompiledFormat? format)
             {
+                var group = groups[groupNumber];
+                state.Context.RegexGroupContext!.CurrentGroupNumber = groupNumber;
+
                 if (group.Index >= last)
                 {
                     builder

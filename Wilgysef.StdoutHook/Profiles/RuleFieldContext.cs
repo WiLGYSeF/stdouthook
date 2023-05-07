@@ -10,7 +10,9 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public IReadOnlyList<string>? FieldSeparators { get; private set; }
 
-        public int HighestFieldNumber { get; set; }
+        public int CurrentFieldNumber { get; set; } = 1;
+
+        public bool IncrementFieldNumberOnGet { get; set; }
 
         public RuleFieldContext(IReadOnlyList<string> fieldsWithSeparators)
         {
@@ -34,6 +36,13 @@ namespace Wilgysef.StdoutHook.Profiles
                     ? fieldSeparators
                     : fields;
             }
+        }
+
+        public int GetCurrentFieldNumber()
+        {
+            return IncrementFieldNumberOnGet
+                ? CurrentFieldNumber++
+                : CurrentFieldNumber;
         }
     }
 }

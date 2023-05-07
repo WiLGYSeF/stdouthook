@@ -77,8 +77,11 @@ namespace Wilgysef.StdoutHook.Rules
 
             if (_replaceAll != null)
             {
+                state.Context.FieldContext!.IncrementFieldNumberOnGet = true;
                 return _replaceAll.Compute(state);
             }
+
+            state.Context.FieldContext!.IncrementFieldNumberOnGet = false;
 
             var limit = Math.Min(splitCount, _fieldReplacers!.Length);
             for (var i = 0; i < limit; i++)
@@ -86,6 +89,7 @@ namespace Wilgysef.StdoutHook.Rules
                 var replace = _fieldReplacers[i];
                 if (replace != null)
                 {
+                    state.Context.FieldContext.CurrentFieldNumber = i + 1;
                     splitData[i * 2] = replace.Compute(state);
                 }
             }
@@ -96,6 +100,7 @@ namespace Wilgysef.StdoutHook.Rules
                 {
                     if (rangeList.Contains(i))
                     {
+                        state.Context.FieldContext.CurrentFieldNumber = i + 1;
                         splitData[i * 2] = replace.Compute(state);
                         break;
                     }

@@ -44,6 +44,26 @@ public class RegexGroupRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void Replace_Current()
+    {
+        var rule = new RegexGroupRule(new Regex(@"([0-9]+)\.([0-9]+)"), new List<KeyValuePair<FieldRangeList, string>>
+        {
+            new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1,2"), "=%Gc="),
+        });
+        ShouldRuleBe(rule, "123.456", "=123=.=456=");
+    }
+
+    [Fact]
+    public void Replace_Current_Multiple()
+    {
+        var rule = new RegexGroupRule(new Regex(@"([0-9]+)\.([0-9]+)"), new List<KeyValuePair<FieldRangeList, string>>
+        {
+            new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1,2"), "=%Gc%Gc="),
+        });
+        ShouldRuleBe(rule, "123.456", "=123123=.=456456=");
+    }
+
+    [Fact]
     public void ReplaceAll()
     {
         var rule = new RegexGroupRule(new Regex(@"a([a-z]+)f"), "aaa %G1");
@@ -60,11 +80,25 @@ public class RegexGroupRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void ReplaceAll_OutOfRange()
+    {
+        var rule = new RegexGroupRule(new Regex(@"([0-9]+)\.([0-9]+)"), "%G4");
+        ShouldRuleBe(rule, "123.456", "");
+    }
+
+    [Fact]
     public void ReplaceAll_Replace_Color()
     {
         var rule = new RegexGroupRule(new Regex(@"a([a-z]+)f"), "%G1");
 
         ShouldRuleBe(rule, "test as\x1b[31mdf abc", "s\x1b[31md");
+    }
+
+    [Fact]
+    public void ReplaceAll_Current()
+    {
+        var rule = new RegexGroupRule(new Regex(@"([0-9]+)\.([0-9]+)"), "=%Gc=.=%Gc=");
+        ShouldRuleBe(rule, "123.456", "=123=.=456=");
     }
 
     private static void ShouldRuleBe(Rule rule, string input, string expected)
