@@ -17,9 +17,12 @@ namespace Wilgysef.StdoutHook.Rules
 
         public IList<KeyValuePair<FieldRangeList, string>>? ReplaceGroups { get; set; }
 
+        public string? ReplaceAllFormat { get; set; }
+
         private readonly List<KeyValuePair<FieldRangeList, CompiledFormat>> _outOfRangeReplaceGroups = new List<KeyValuePair<FieldRangeList, CompiledFormat>>();
 
         private CompiledFormat?[]? _groupReplacers;
+        private CompiledFormat _compiledFormat = null!;
 
         public RegexGroupRule(Regex regex)
         {
@@ -33,15 +36,29 @@ namespace Wilgysef.StdoutHook.Rules
             ReplaceGroups = replaceGroups;
         }
 
+        public RegexGroupRule(Regex regex, string replaceAllFormat)
+        {
+            Regex = regex;
+            ReplaceAllFormat = replaceAllFormat;
+        }
+
         internal override void Build(ProfileState state, Formatter formatter)
         {
             base.Build(state, formatter);
 
-            _groupReplacers = FieldRangeFormatCompiler.CompileFieldRangeFormats(
-                ReplaceGroups!,
-                MaximumGroupCount,
-                _outOfRangeReplaceGroups,
-                format => Formatter.CompileFormat(format, state));
+            if (ReplaceGroups != null)
+            {
+                _groupReplacers = FieldRangeFormatCompiler.CompileFieldRangeFormats(
+                    ReplaceGroups,
+                    MaximumGroupCount,
+                    _outOfRangeReplaceGroups,
+                    format => Formatter.CompileFormat(format, state));
+            }
+
+            if (ReplaceAllFormat != null)
+            {
+                _compiledFormat = Formatter.CompileFormat(ReplaceAllFormat, state);
+            }
         }
 
         internal override string Apply(DataState state)
@@ -61,6 +78,11 @@ namespace Wilgysef.StdoutHook.Rules
             }
 
             state.Context.SetRegexGroupContext(groupValues);
+
+            if (_compiledFormat != null)
+            {
+                return _compiledFormat.Compute(state);
+            }
 
             var builder = new StringBuilder();
             var limit = Math.Min(groups.Length - 1, _groupReplacers!.Length);

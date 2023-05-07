@@ -43,6 +43,30 @@ public class RegexGroupRuleTest : RuleTestBase
         ShouldRuleBe(rule, "test as\x1b[31mdf abc", "test a0s\x1b[31mdf abc");
     }
 
+    [Fact]
+    public void ReplaceAll()
+    {
+        var rule = new RegexGroupRule(new Regex(@"a([a-z]+)f"), "aaa %G1");
+
+        ShouldRuleBe(rule, "test asdf abc", "aaa sd");
+    }
+
+    [Fact]
+    public void ReplaceAll_NoMatch()
+    {
+        var rule = new RegexGroupRule(new Regex(@"zxcv"), "aaa");
+
+        ShouldRuleBe(rule, "test asdf abc", "test asdf abc");
+    }
+
+    [Fact]
+    public void ReplaceAll_Replace_Color()
+    {
+        var rule = new RegexGroupRule(new Regex(@"a([a-z]+)f"), "%G1");
+
+        ShouldRuleBe(rule, "test as\x1b[31mdf abc", "s\x1b[31md");
+    }
+
     private static void ShouldRuleBe(Rule rule, string input, string expected)
     {
         var state = new ProfileState();
