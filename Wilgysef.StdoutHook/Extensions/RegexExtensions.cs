@@ -42,41 +42,106 @@ namespace Wilgysef.StdoutHook.Extensions
             {
                 var splitSpan = splitData[i].AsSpan();
                 var endOffset = offset + splitSpan.Length;
+                var isField = (i & 1) == 0;
 
                 if (offset <= colors[colorIndex].Key
-                    && IsColorPositionWithinMax(colors[colorIndex], endOffset, (i & 1) == 0))
+                    && IsColorPositionWithinMax(colors[colorIndex], endOffset, isField))
                 {
-                    var last = 0;
-
-                    builder.Clear();
-
-                    do
-                    {
-                        var delta = colors[colorIndex].Key - offset;
-                        builder
-                            .Append(splitSpan[last..delta])
-                            .Append(colors[colorIndex].Value);
-
-                        last = delta;
-                        colorIndex++;
-                    }
-                    while (colorIndex < colors.Count
-                        && IsColorPositionWithinMax(colors[colorIndex], endOffset, (i & 1) == 0));
-
-                    splitData[i] = builder.Append(splitSpan[last..]).ToString();
+                    splitData[i] = InsertExtractedColors(splitSpan, colors, builder, offset, endOffset, ref colorIndex, isField);
                 }
 
                 offset += splitSpan.Length;
             }
 
             return splitData;
+        }
 
-            static bool IsColorPositionWithinMax(KeyValuePair<int, string> color, int max, bool isField)
+        public static MatchEntry[]? MatchExtractedColor(this Regex regex, string input)
+        {
+            var colors = new List<KeyValuePair<int, string>>();
+            var data = ColorExtractor.ExtractColor(input, colors);
+
+            var match = regex.Match(data);
+            if (!match.Success)
             {
-                return isField
-                    ? color.Key <= max
-                    : color.Key < max;
+                return null;
             }
+
+            var groups = new MatchEntry[match.Groups.Count];
+            var builder = new StringBuilder();
+
+            for (var i = 0; i < match.Groups.Count; i++)
+            {
+                var curMatch = match.Groups[i];
+                var colorIndex = 0;
+
+                var value = colorIndex < colors.Count
+                    ? InsertExtractedColors(
+                        curMatch.Value,
+                        colors,
+                        builder,
+                        curMatch.Index,
+                        curMatch.Value.Length,
+                        ref colorIndex,
+                        true)
+                    : curMatch.Value;
+                groups[i] = new MatchEntry(value, curMatch.Name, curMatch.Index);
+            }
+
+            return groups;
+        }
+
+        public class MatchEntry
+        {
+            public string Value { get; }
+
+            public string Name { get; }
+
+            public int Index { get; }
+
+            public MatchEntry(string value, string name, int index)
+            {
+                Value = value;
+                Name = name;
+                Index = index;
+            }
+        }
+
+        private static string InsertExtractedColors(
+            ReadOnlySpan<char> data,
+            List<KeyValuePair<int, string>> colors,
+            StringBuilder builder,
+            int offset,
+            int endOffset,
+            ref int colorIndex,
+            bool isField)
+        {
+            var last = 0;
+
+            builder.Clear();
+
+            do
+            {
+                var delta = colors[colorIndex].Key - offset;
+                builder
+                    .Append(data[last..delta])
+                    .Append(colors[colorIndex].Value);
+
+                last = delta;
+                colorIndex++;
+            }
+            while (colorIndex < colors.Count
+                && IsColorPositionWithinMax(colors[colorIndex], endOffset, isField));
+
+            return builder.Append(data[last..])
+                .ToString();
+        }
+
+        private static bool IsColorPositionWithinMax(KeyValuePair<int, string> color, int max, bool isField)
+        {
+            return isField
+                ? color.Key <= max
+                : color.Key < max;
         }
     }
 }
