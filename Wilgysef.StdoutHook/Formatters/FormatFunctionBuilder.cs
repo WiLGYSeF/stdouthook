@@ -9,6 +9,7 @@ namespace Wilgysef.StdoutHook.Formatters
     {
         public static FormatBuilder[] FormatBuilders = new FormatBuilder[]
         {
+            new ByteFormatBuilder(),
             new ColorFormatBuilder(),
             new FieldFormatBuilder(),
             new RegexGroupFormatBuilder(),
