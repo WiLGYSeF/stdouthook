@@ -23,7 +23,7 @@ namespace Wilgysef.StdoutHook.Rules
 
         private readonly List<KeyValuePair<FieldRangeList, CompiledFormat>> _outOfRangeReplaceFields = new List<KeyValuePair<FieldRangeList, CompiledFormat>>();
 
-        // TODO: optimize to sparse
+        // TODO: optimize to sparse?
         private CompiledFormat?[]? _fieldReplacers;
         private CompiledFormat? _replaceAll;
 

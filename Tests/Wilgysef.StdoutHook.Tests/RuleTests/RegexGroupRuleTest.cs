@@ -94,8 +94,8 @@ public class RegexGroupRuleTest : RuleTestBase
     [Fact]
     public void Replace_OutOfRange()
     {
-        var groups = 25;
-        var groupNumber = 20;
+        var groups = 40;
+        var groupNumber = 35;
         groupNumber.ShouldBeGreaterThan(MaximumGroupCount);
 
         var regexBuilder = new StringBuilder();
