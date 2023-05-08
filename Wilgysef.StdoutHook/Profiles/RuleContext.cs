@@ -13,7 +13,7 @@ namespace Wilgysef.StdoutHook.Profiles
             FieldContext = new RuleFieldContext(fieldsWithSeparators);
         }
 
-        public void SetRegexGroupContext(IReadOnlyList<string> groups)
+        public void SetRegexGroupContext(IReadOnlyDictionary<string, string> groups)
         {
             RegexGroupContext = new RuleRegexGroupContext(groups);
         }

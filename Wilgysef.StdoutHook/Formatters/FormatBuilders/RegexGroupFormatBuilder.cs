@@ -32,14 +32,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                     var groupNumber = context.GetCurrentGroupNumber();
 
                     return groupNumber <= context.Groups!.Count
-                        ? context.Groups[groupNumber]
+                        ? context.Groups[groupNumber.ToString()]
                         : "";
                 };
-            }
-
-            if (!int.TryParse(contents, out var groupNumber))
-            {
-                throw new ArgumentException($"Invalid group: {contents}.");
             }
 
             return dataState =>
@@ -50,8 +45,8 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                     return "";
                 }
 
-                return groupNumber <= context.Groups!.Count
-                    ? context.Groups[groupNumber]
+                return context.Groups.TryGetValue(contents, out var value)
+                    ? value
                     : "";
             };
         }

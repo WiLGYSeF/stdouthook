@@ -85,7 +85,7 @@ namespace Wilgysef.StdoutHook.Extensions
                         ref colorIndex,
                         true)
                     : curMatch.Value;
-                groups[i] = new MatchEntry(value, curMatch.Index);
+                groups[i] = new MatchEntry(value, curMatch.Name, curMatch.Index);
             }
 
             return groups;
@@ -95,11 +95,14 @@ namespace Wilgysef.StdoutHook.Extensions
         {
             public string Value { get; }
 
+            public string Name { get; }
+
             public int Index { get; }
 
-            public MatchEntry(string value, int index)
+            public MatchEntry(string value, string name, int index)
             {
                 Value = value;
+                Name = name;
                 Index = index;
             }
         }

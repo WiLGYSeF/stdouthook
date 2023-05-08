@@ -4,15 +4,15 @@ namespace Wilgysef.StdoutHook.Profiles
 {
     internal class RuleRegexGroupContext
     {
-        public IReadOnlyList<string> Groups { get; }
+        public IReadOnlyDictionary<string, string> Groups { get; }
 
         public int CurrentGroupNumber { get; set; } = 1;
 
         public bool IncrementGroupNumberOnGet { get; set; }
 
-        public RuleRegexGroupContext(IReadOnlyList<string> groups)
+        public RuleRegexGroupContext(IReadOnlyDictionary<string, string> groups)
         {
-            Groups = new List<string>(groups);
+            Groups = new Dictionary<string, string>(groups);
         }
 
         public int GetCurrentGroupNumber()

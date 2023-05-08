@@ -11,15 +11,18 @@ namespace Wilgysef.StdoutHook.Rules
 {
     public class RegexGroupRule : Rule
     {
-        private static readonly int MaximumGroupCount = 16;
+        private static readonly int MaximumGroupCount = 32;
 
         public Regex Regex { get; set; }
 
         public IList<KeyValuePair<FieldRangeList, string>>? ReplaceGroups { get; set; }
 
+        public IDictionary<string, string>? ReplaceNamedGroups { get; set; }
+
         public string? ReplaceAllFormat { get; set; }
 
         private readonly List<KeyValuePair<FieldRangeList, CompiledFormat>> _outOfRangeReplaceGroups = new List<KeyValuePair<FieldRangeList, CompiledFormat>>();
+        private readonly Dictionary<string, CompiledFormat> _namedGroups = new Dictionary<string, CompiledFormat>();
 
         private CompiledFormat?[]? _groupReplacers;
         private CompiledFormat _compiledFormat = null!;
@@ -28,12 +31,29 @@ namespace Wilgysef.StdoutHook.Rules
         {
             Regex = regex;
             ReplaceGroups = new List<KeyValuePair<FieldRangeList, string>>();
+            ReplaceNamedGroups = new Dictionary<string, string>();
         }
 
-        public RegexGroupRule(Regex regex, IList<KeyValuePair<FieldRangeList, string>>? replaceGroups)
+        public RegexGroupRule(Regex regex, IList<KeyValuePair<FieldRangeList, string>> replaceGroups)
         {
             Regex = regex;
             ReplaceGroups = replaceGroups;
+        }
+
+        public RegexGroupRule(Regex regex, IDictionary<string, string> replaceNamedGroups)
+        {
+            Regex = regex;
+            ReplaceNamedGroups = replaceNamedGroups;
+        }
+
+        public RegexGroupRule(
+            Regex regex,
+            IList<KeyValuePair<FieldRangeList, string>> replaceGroups,
+            IDictionary<string, string> replaceNamedGroups)
+        {
+            Regex = regex;
+            ReplaceGroups = replaceGroups;
+            ReplaceNamedGroups = replaceNamedGroups;
         }
 
         public RegexGroupRule(Regex regex, string replaceAllFormat)
@@ -55,6 +75,14 @@ namespace Wilgysef.StdoutHook.Rules
                     format => Formatter.CompileFormat(format, state));
             }
 
+            if (ReplaceNamedGroups != null)
+            {
+                foreach (var (name, format) in ReplaceNamedGroups)
+                {
+                    _namedGroups[name] = Formatter.CompileFormat(format, state);
+                }
+            }
+
             if (ReplaceAllFormat != null)
             {
                 _compiledFormat = Formatter.CompileFormat(ReplaceAllFormat, state);
@@ -70,11 +98,13 @@ namespace Wilgysef.StdoutHook.Rules
             }
 
             using var contextScope = state.GetContextScope();
-            var groupValues = new string[groups.Length];
+            var groupValues = new Dictionary<string, string>(groups.Length);
 
             for (var i = 0; i < groups.Length; i++)
             {
-                groupValues[i] = groups[i].Value;
+                var group = groups[i];
+                groupValues[i.ToString()] = group.Value;
+                groupValues[group.Name] = group.Value;
             }
 
             state.Context.SetRegexGroupContext(groupValues);
@@ -88,12 +118,12 @@ namespace Wilgysef.StdoutHook.Rules
             state.Context.RegexGroupContext!.IncrementGroupNumberOnGet = false;
 
             var builder = new StringBuilder();
-            var limit = Math.Min(groups.Length - 1, _groupReplacers!.Length);
+            var limit = Math.Min(groups.Length - 1, _groupReplacers?.Length ?? 0);
             var last = 0;
 
             for (var i = 0; i < limit; i++)
             {
-                AppendGroup(i + 1, _groupReplacers[i]);
+                AppendGroup(i + 1, _groupReplacers![i]);
             }
 
             for (var i = limit; i < groups.Length - 1; i++)
@@ -102,7 +132,7 @@ namespace Wilgysef.StdoutHook.Rules
 
                 foreach (var (rangeList, replace) in _outOfRangeReplaceGroups)
                 {
-                    if (rangeList.Contains(i))
+                    if (rangeList.Contains(i + 1))
                     {
                         foundReplace = replace;
                         break;
@@ -122,6 +152,11 @@ namespace Wilgysef.StdoutHook.Rules
 
                 if (group.Index >= last)
                 {
+                    if (_namedGroups.TryGetValue(group.Name, out var namedFormat))
+                    {
+                        format = namedFormat;
+                    }
+
                     builder
                         .Append(state.Data![last..group.Index])
                         .Append(format != null
