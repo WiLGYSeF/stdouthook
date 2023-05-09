@@ -12,8 +12,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
         {
             new ProcessProperty(new[] { "basePriority", "priority" }, process => process.BasePriority.ToString(), false),
             new ProcessProperty(new[] { "id", "pid", "processId" }, process => process.Id.ToString(), true),
-            new ProcessProperty(new[] { "filename", "path" }, process => process.StartInfo.FileName, true),
-            new ProcessProperty(new[] { "fullpath" }, process => Path.GetFullPath(process.StartInfo.FileName), true),
+            new ProcessProperty(new[] { "fullpath" }, process => process.MainModule.FileName, true),
             new ProcessProperty(new[] { "nonpagedSystemMemorySize" }, process => process.NonpagedSystemMemorySize64.ToString(), false),
             new ProcessProperty(new[] { "pagedSystemMemorySize" }, process => process.PagedSystemMemorySize64.ToString(), false),
             new ProcessProperty(new[] { "pagedMemorySize" }, process => process.PagedMemorySize64.ToString(), false),
