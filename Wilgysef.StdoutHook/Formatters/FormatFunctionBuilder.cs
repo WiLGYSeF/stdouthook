@@ -13,6 +13,7 @@ namespace Wilgysef.StdoutHook.Formatters
             new ColorFormatBuilder(),
             new FieldFormatBuilder(),
             new ProcessFormatBuilder(),
+            new ProfileFormatBuilder(),
             new RegexGroupFormatBuilder(),
         };
 

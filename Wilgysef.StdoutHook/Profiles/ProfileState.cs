@@ -38,7 +38,7 @@ namespace Wilgysef.StdoutHook.Profiles
         {
             public FileStream Stream { get; }
 
-            public object Lock = new object();
+            public object Lock { get; } = new object();
 
             public LockedFileStream(FileStream stream)
             {
