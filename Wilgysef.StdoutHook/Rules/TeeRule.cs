@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Wilgysef.StdoutHook.Formatters;
@@ -11,6 +12,8 @@ namespace Wilgysef.StdoutHook.Rules
         public string Filename { get; set; }
 
         public bool Flush { get; set; }
+
+        public bool ExtractColors { get; set; }
 
         private string _absolutePath;
 
@@ -38,9 +41,13 @@ namespace Wilgysef.StdoutHook.Rules
                 return state.Data;
             }
 
+            var data = Encoding.UTF8.GetBytes(ExtractColors
+                ? ColorExtractor.ExtractColor(state.Data, new List<KeyValuePair<int, string>>())
+                : state.Data);
+
             lock (lockedStream.Lock)
             {
-                lockedStream.Stream.Write(Encoding.UTF8.GetBytes(state.Data));
+                lockedStream.Stream.Write(data);
 
                 if (Flush)
                 {
