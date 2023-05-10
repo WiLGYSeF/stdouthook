@@ -15,6 +15,7 @@ namespace Wilgysef.StdoutHook.Formatters
             new ProcessFormatBuilder(),
             new ProfileFormatBuilder(),
             new RegexGroupFormatBuilder(),
+            new TimeFormatBuilder(),
         };
 
         private readonly List<FormatBuilder> _formatBuilders;
