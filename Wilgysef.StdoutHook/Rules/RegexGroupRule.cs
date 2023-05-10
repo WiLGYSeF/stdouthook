@@ -91,7 +91,8 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            var groups = Regex.MatchExtractedColor(state.Data!);
+            var data = state.Data!.TrimEndNewline(out var newline);
+            var groups = Regex.MatchExtractedColor(data);
             if (groups == null)
             {
                 return state.Data!;
@@ -142,7 +143,8 @@ namespace Wilgysef.StdoutHook.Rules
                 AppendGroup(i + 1, foundReplace);
             }
 
-            return builder.Append(state.Data![last..])
+            return builder.Append(data[last..])
+                .Append(newline)
                 .ToString();
 
             void AppendGroup(int groupNumber, CompiledFormat? format)
@@ -158,7 +160,7 @@ namespace Wilgysef.StdoutHook.Rules
                     }
 
                     builder
-                        .Append(state.Data![last..group.Index])
+                        .Append(data[last..group.Index])
                         .Append(format != null
                             ? format.Compute(state)
                             : group.Value);

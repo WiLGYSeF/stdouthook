@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Formatters;
@@ -64,7 +65,9 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            var splitData = SeparatorRegex.SplitWithSeparatorsExtractedColor(state.Data, out var splitCount);
+            var splitData = SeparatorRegex.SplitWithSeparatorsExtractedColor(
+                state.Data!.TrimEndNewline(out var newline),
+                out var splitCount);
 
             if (MinFields.HasValue && MinFields.Value > splitCount
                 || MaxFields.HasValue && MaxFields.Value < splitCount)
@@ -83,31 +86,61 @@ namespace Wilgysef.StdoutHook.Rules
 
             state.Context.FieldContext!.IncrementFieldNumberOnGet = false;
 
+            var builder = new StringBuilder();
             var limit = Math.Min(splitCount, _fieldReplacers!.Length);
+            var index = 0;
+
             for (var i = 0; i < limit; i++)
             {
                 var replace = _fieldReplacers[i];
                 if (replace != null)
                 {
                     state.Context.FieldContext.CurrentFieldNumber = i + 1;
-                    splitData[i * 2] = replace.Compute(state);
+                    builder.Append(replace.Compute(state));
+                    index++;
+                }
+                else
+                {
+                    builder.Append(splitData[index++]);
+                }
+
+                if (index < splitData.Length)
+                {
+                    builder.Append(splitData[index++]);
                 }
             }
 
             for (var i = limit; i < splitCount; i++)
             {
+                CompiledFormat? foundReplace = null;
                 foreach (var (rangeList, replace) in _outOfRangeReplaceFields)
                 {
                     if (rangeList.Contains(i))
                     {
-                        state.Context.FieldContext.CurrentFieldNumber = i + 1;
-                        splitData[i * 2] = replace.Compute(state);
+                        foundReplace = replace;
                         break;
                     }
                 }
+
+                if (foundReplace != null)
+                {
+                    state.Context.FieldContext.CurrentFieldNumber = i + 1;
+                    builder.Append(foundReplace.Compute(state));
+                    index++;
+                }
+                else
+                {
+                    builder.Append(splitData[index++]);
+                }
+
+                if (index < splitData.Length)
+                {
+                    builder.Append(splitData[index++]);
+                }
             }
 
-            return string.Join("", splitData);
+            return builder.Append(newline)
+                .ToString();
         }
     }
 }

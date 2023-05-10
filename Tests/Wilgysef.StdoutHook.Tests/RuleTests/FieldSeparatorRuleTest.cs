@@ -185,6 +185,21 @@ public class FieldSeparatorRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void Newline()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
+        {
+            MaxFields = 2,
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
+            {
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "123"),
+            },
+        };
+
+        ShouldRuleBe(rule, "test asdf\r\n", "test 123\r\n");
+    }
+
+    [Fact]
     public void Field_Current()
     {
         var rule = new FieldSeparatorRule(new Regex(@"\s+"))

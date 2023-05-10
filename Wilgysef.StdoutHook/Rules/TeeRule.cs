@@ -15,7 +15,12 @@ namespace Wilgysef.StdoutHook.Rules
 
         public bool ExtractColors { get; set; }
 
-        private string _absolutePath;
+        private string _absolutePath = null!;
+
+        public TeeRule(string filename)
+        {
+            Filename = filename;
+        }
 
         internal override void Build(ProfileState state, Formatter formatter)
         {

@@ -118,6 +118,16 @@ public class RegexGroupRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void Replace_Newline()
+    {
+        var rule = new RegexGroupRule(new Regex(@"(?<test>[0-9]+)$"), new Dictionary<string, string>
+        {
+            { "test", "abc" },
+        });
+        ShouldRuleBe(rule, "abc123\n", "abcabc\n");
+    }
+
+    [Fact]
     public void ReplaceAll()
     {
         var rule = new RegexGroupRule(new Regex(@"a([a-z]+)f"), "aaa %G1");
