@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Formatters;
@@ -34,9 +35,25 @@ namespace Wilgysef.StdoutHook.Rules
 
         private protected Formatter Formatter { get; private set; } = null!;
 
+        protected SortedListIncrementMatch<long> _activationLines = null!;
+        protected SortedListIncrementMatch<long> _activationLinesStdoutOnly = null!;
+        protected SortedListIncrementMatch<long> _activationLinesStderrOnly = null!;
+        protected SortedListIncrementMatch<long> _deactivationLines = null!;
+        protected SortedListIncrementMatch<long> _deactivationLinesStdoutOnly = null!;
+        protected SortedListIncrementMatch<long> _deactivationLinesStderrOnly = null!;
+
+        protected bool _active = true;
+
         internal virtual void Build(ProfileState state, Formatter formatter)
         {
             Formatter = formatter;
+
+            _activationLines = new SortedListIncrementMatch<long>(ActivationLines);
+            _activationLinesStdoutOnly = new SortedListIncrementMatch<long>(ActivationLinesStdoutOnly);
+            _activationLinesStderrOnly = new SortedListIncrementMatch<long>(ActivationLinesStderrOnly);
+            _deactivationLines = new SortedListIncrementMatch<long>(DeactivationLines);
+            _deactivationLinesStdoutOnly = new SortedListIncrementMatch<long>(DeactivationLinesStdoutOnly);
+            _deactivationLinesStderrOnly = new SortedListIncrementMatch<long>(DeactivationLinesStderrOnly);
         }
 
         internal abstract string Apply(DataState state);
@@ -45,15 +62,64 @@ namespace Wilgysef.StdoutHook.Rules
         {
             if (!Enabled
                 || StdoutOnly && !state.Stdout
-                || StderrOnly && state.Stdout
-                || state.Data != null && EnableRegex != null && EnableRegex.MatchExtractedColor(state.Data.TrimEndNewline(out _)) == null)
+                || StderrOnly && state.Stdout)
             {
                 return false;
             }
 
-            // TODO: finish
+            var profileState = state.ProfileState;
+            var lineCount = profileState.LineCount;
+
+            // bitwise or boolean operations to prevent short-circuiting
+            if (_deactivationLines.MatchesCurrent(lineCount)
+                | _deactivationLinesStdoutOnly.MatchesCurrent(profileState.StdoutLineCount)
+                | _deactivationLinesStderrOnly.MatchesCurrent(profileState.StderrLineCount))
+            {
+                _active = false;
+            }
+
+            // activation takes priority over deactivation
+            // bitwise or boolean operations to prevent short-circuiting
+            if (_activationLines.MatchesCurrent(lineCount)
+                | _activationLinesStdoutOnly.MatchesCurrent(profileState.StdoutLineCount)
+                | _activationLinesStderrOnly.MatchesCurrent(profileState.StderrLineCount))
+            {
+                _active = true;
+            }
+
+            if (!_active)
+            {
+                return false;
+            }
+
+            if (state.Data != null && EnableRegex != null && EnableRegex.MatchExtractedColor(state.Data.TrimEndNewline(out _)) == null)
+            {
+                return false;
+            }
 
             return true;
+        }
+
+        protected class SortedListIncrementMatch<T> where T : IEquatable<T>
+        {
+            private readonly List<T> _items;
+
+            private int _index = 0;
+
+            public SortedListIncrementMatch(IList<T> items)
+            {
+                _items = new List<T>(items);
+                _items.Sort();
+            }
+
+            public bool MatchesCurrent(T item)
+            {
+                var originalIndex = _index;
+
+                for (; _index < _items.Count && item.Equals(_items[_index]); _index++) { }
+
+                return originalIndex != _index;
+            }
         }
     }
 }

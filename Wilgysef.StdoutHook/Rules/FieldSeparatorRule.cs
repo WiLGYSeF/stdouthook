@@ -72,7 +72,7 @@ namespace Wilgysef.StdoutHook.Rules
             if (MinFields.HasValue && MinFields.Value > splitCount
                 || MaxFields.HasValue && MaxFields.Value < splitCount)
             {
-                return state.Data;
+                return state.Data!;
             }
 
             using var contextScope = state.GetContextScope();
