@@ -164,8 +164,28 @@ public class ActivationRuleTest
         var state = new ProfileState();
         rule.Build(state, null!);
 
-        SendLine(rule, "test", true, state).ShouldBeFalse();
-        SendLine(rule, "abc", true, state).ShouldBeTrue();
+        SendLine(rule, "test", true, state).ShouldBe(false);
+        SendLine(rule, "abc", true, state).ShouldBe(true);
+    }
+
+    [Fact]
+    public void ActivationExpression()
+    {
+        var rule = new TestRule
+        {
+            DeactivationExpressions = new List<ActivationExpression>
+            {
+                new ActivationExpression(new Regex(@"abc"), 2),
+            },
+        };
+
+        var state = new ProfileState();
+        rule.Build(state, null!);
+
+        SendLine(rule, "abc", true, state).ShouldBe(true);
+        SendLine(rule, "test", true, state).ShouldBe(true);
+        SendLine(rule, "test", true, state).ShouldBe(false);
+        SendLine(rule, "test", true, state).ShouldBe(false);
     }
 
     private static bool SendLine(Rule rule, string data, bool stdout, ProfileState profileState)
