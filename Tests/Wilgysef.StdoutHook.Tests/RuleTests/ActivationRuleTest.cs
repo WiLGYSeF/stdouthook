@@ -158,7 +158,7 @@ public class ActivationRuleTest
     {
         var rule = new TestRule
         {
-            EnableRegex = new Regex(@"abc"),
+            EnableExpression = new Regex(@"abc"),
         };
 
         var state = new ProfileState();

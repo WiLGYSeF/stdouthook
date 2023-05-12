@@ -12,7 +12,7 @@ namespace Wilgysef.StdoutHook.Rules
     {
         private static readonly int MaximumFieldCount = 128;
 
-        public Regex SeparatorRegex { get; set; }
+        public Regex SeparatorExpression { get; set; }
 
         public int? MinFields { get; set; }
 
@@ -30,25 +30,30 @@ namespace Wilgysef.StdoutHook.Rules
 
         public FieldSeparatorRule(Regex separatorRegex)
         {
-            SeparatorRegex = separatorRegex;
+            SeparatorExpression = separatorRegex;
             ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>();
         }
 
         public FieldSeparatorRule(Regex separatorRegex, IList<KeyValuePair<FieldRangeList, string>> replaceFields)
         {
-            SeparatorRegex = separatorRegex;
+            SeparatorExpression = separatorRegex;
             ReplaceFields = replaceFields;
         }
 
         public FieldSeparatorRule(Regex separatorRegex, string replaceAllFormat)
         {
-            SeparatorRegex = separatorRegex;
+            SeparatorExpression = separatorRegex;
             ReplaceAllFormat = replaceAllFormat;
         }
 
         internal override void Build(ProfileState state, Formatter formatter)
         {
             base.Build(state, formatter);
+
+            if (ReplaceAllFormat != null && ReplaceFields != null && ReplaceFields.Count > 0)
+            {
+                throw new Exception($"Cannot have {nameof(ReplaceAllFormat)} and {nameof(ReplaceFields)} set.");
+            }
 
             if (ReplaceAllFormat != null)
             {
@@ -65,7 +70,7 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            var splitData = SeparatorRegex.SplitWithSeparatorsExtractedColor(
+            var splitData = SeparatorExpression.SplitWithSeparatorsExtractedColor(
                 state.Data!.TrimEndNewline(out var newline),
                 out var splitCount);
 

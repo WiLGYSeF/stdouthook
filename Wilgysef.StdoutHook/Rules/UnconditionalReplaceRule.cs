@@ -23,6 +23,8 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
+            // TODO: formatter with current data
+
             return _compiledFormat.Compute(state);
         }
     }

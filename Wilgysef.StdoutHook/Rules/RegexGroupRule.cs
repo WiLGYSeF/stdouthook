@@ -66,6 +66,11 @@ namespace Wilgysef.StdoutHook.Rules
         {
             base.Build(state, formatter);
 
+            if (ReplaceAllFormat != null && ReplaceGroups != null && ReplaceGroups.Count > 0)
+            {
+                throw new Exception($"Cannot have {nameof(ReplaceAllFormat)} and {nameof(ReplaceGroups)} set.");
+            }
+
             if (ReplaceGroups != null)
             {
                 _groupReplacers = FieldRangeFormatCompiler.CompileFieldRangeFormats(

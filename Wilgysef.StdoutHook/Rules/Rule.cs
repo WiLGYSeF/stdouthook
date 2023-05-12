@@ -11,7 +11,7 @@ namespace Wilgysef.StdoutHook.Rules
     {
         public bool Enabled { get; set; } = true;
 
-        public Regex? EnableRegex { get; set; }
+        public Regex? EnableExpression { get; set; }
 
         public bool StdoutOnly { get; set; }
 
@@ -133,7 +133,7 @@ namespace Wilgysef.StdoutHook.Rules
                 return false;
             }
 
-            if (data != null && EnableRegex != null && EnableRegex.MatchExtractedColor(data) == null)
+            if (data != null && EnableExpression != null && EnableExpression.MatchExtractedColor(data) == null)
             {
                 return false;
             }

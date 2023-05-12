@@ -37,6 +37,9 @@ if (process == null)
 profileState.SetProcess(process);
 
 using var streamOutputHandler = new StreamOutputHandler(profile, process.StandardOutput, process.StandardError);
+streamOutputHandler.FlushOutput = profile.Flush;
+streamOutputHandler.FlushError = profile.Flush;
+
 var cancellationTokenSource = new CancellationTokenSource();
 var readStreamTask = streamOutputHandler.ReadLinesAsync(cancellationTokenSource.Token);
 
