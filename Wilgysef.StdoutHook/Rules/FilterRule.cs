@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using Wilgysef.StdoutHook.Profiles;
+﻿using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Rules
 {

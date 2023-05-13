@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -34,7 +33,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         private class ObjectConverter : JsonConverter<object>
         {
-            private Dictionary<JsonSerializerOptions, JsonConverter<JsonElement>> _converters = new Dictionary<JsonSerializerOptions, JsonConverter<JsonElement>>();
+            private readonly Dictionary<JsonSerializerOptions, JsonConverter<JsonElement>> _converters = new Dictionary<JsonSerializerOptions, JsonConverter<JsonElement>>();
 
             public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {

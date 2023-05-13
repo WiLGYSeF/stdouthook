@@ -38,7 +38,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             }
             else if (dto.ReplaceFields != null)
             {
-                rule.ReplaceFields = BuildReplaceFields(dto.ReplaceFields);
+                rule.ReplaceFields = BuildReplaceFields(dto.ReplaceFields, null);
             }
             else
             {
@@ -67,7 +67,18 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             }
             else if (dto.ReplaceGroups != null)
             {
-                rule.ReplaceGroups = BuildReplaceFields(dto.ReplaceGroups);
+                var otherKeys = new List<KeyValuePair<string, string>>();
+
+                rule.ReplaceGroups = BuildReplaceFields(dto.ReplaceGroups, otherKeys);
+
+                if (otherKeys.Count > 0)
+                {
+                    rule.ReplaceNamedGroups = new Dictionary<string, string>();
+                    foreach (var (key, val) in otherKeys)
+                    {
+                        rule.ReplaceNamedGroups[key] = val;
+                    }
+                }
             }
             else
             {
@@ -78,7 +89,9 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             return rule;
         }
 
-        private static List<KeyValuePair<FieldRangeList, string>> BuildReplaceFields(object replace)
+        private static List<KeyValuePair<FieldRangeList, string>> BuildReplaceFields(
+            object replace,
+            List<KeyValuePair<string, string>>? otherObjectKeys)
         {
             if (replace is IList<object?> fieldsList)
             {
@@ -109,9 +122,16 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                         throw new Exception();
                     }
 
-                    replaceFields.Add(new KeyValuePair<FieldRangeList, string>(
-                        FieldRangeList.Parse(key),
-                        str));
+                    if (FieldRangeList.TryParse(key, out var rangeList))
+                    {
+                        replaceFields.Add(new KeyValuePair<FieldRangeList, string>(
+                            rangeList,
+                            str));
+                    }
+                    else
+                    {
+                        otherObjectKeys?.Add(new KeyValuePair<string, string>(key, str));
+                    }
                 }
 
                 return replaceFields;
@@ -191,7 +211,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         private static Type GetRuleType(RuleDto rule)
         {
-            if (rule.Filter != null)
+            if (rule.Filter.HasValue && rule.Filter.Value)
             {
                 return typeof(FilterRule);
             }
