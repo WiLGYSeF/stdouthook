@@ -41,7 +41,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         protected override Process GetValue(DataState state)
         {
-            return state.ProfileState.Process;
+            return state.Profile.State!.Process;
         }
     }
 }

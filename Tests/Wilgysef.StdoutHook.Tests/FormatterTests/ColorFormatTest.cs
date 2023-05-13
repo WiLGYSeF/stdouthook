@@ -1,5 +1,4 @@
 ﻿using Wilgysef.StdoutHook.Formatters.FormatBuilders;
-using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Tests.FormatterTests;
 
@@ -84,7 +83,7 @@ public class ColorFormatTest : RuleTestBase
         colorFormatBuilder.CustomColors.Add("customMulti", "bold;123");
 
         GetFormatter(colorFormatBuilder)
-            .Format("%C(customMulti)test%C(custom)abc", new DataState(new ProfileState()))
+            .Format("%C(customMulti)test%C(custom)abc", CreateDummyDataState())
             .ShouldBe("\x1b[1;38;5;123mtest\x1b[3mabc");
     }
 
@@ -121,7 +120,7 @@ public class ColorFormatTest : RuleTestBase
     private static void ShouldFormatBe(string format, string expected)
     {
         GetFormatter(new ColorFormatBuilder())
-            .Format(format, new DataState(new ProfileState()))
+            .Format(format, CreateDummyDataState())
             .ShouldBe(expected);
     }
 }

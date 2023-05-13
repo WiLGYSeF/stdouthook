@@ -23,7 +23,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         protected override ProfileState GetValue(DataState state)
         {
-            return state.ProfileState;
+            return state.Profile.State!;
         }
     }
 }

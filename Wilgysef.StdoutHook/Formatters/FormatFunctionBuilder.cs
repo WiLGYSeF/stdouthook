@@ -54,19 +54,19 @@ namespace Wilgysef.StdoutHook.Formatters
         public Func<DataState, string> Build(
             string key,
             string contents,
-            ProfileState state,
+            Profile profile,
             out bool isConstant)
         {
             foreach (var builder in _formatBuilders)
             {
                 if (builder.Key != null && key.Equals(builder.Key, StringComparison.OrdinalIgnoreCase))
                 {
-                    return builder.Build(new FormatBuildState(contents, state), out isConstant);
+                    return builder.Build(new FormatBuildState(contents, profile), out isConstant);
                 }
 
                 if (builder.KeyShort.HasValue && key.Length >= 1 && key[0] == builder.KeyShort.Value)
                 {
-                    return builder.Build(new FormatBuildState(key[1..] + contents, state), out isConstant);
+                    return builder.Build(new FormatBuildState(key[1..] + contents, profile), out isConstant);
                 }
             }
 

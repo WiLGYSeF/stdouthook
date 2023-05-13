@@ -15,11 +15,11 @@ namespace Wilgysef.StdoutHook.Rules
             Format = format;
         }
 
-        internal override void Build(ProfileState state, Formatter formatter)
+        internal override void Build(Profile profile, Formatter formatter)
         {
-            base.Build(state, formatter);
+            base.Build(profile, formatter);
 
-            _compiledFormat = Formatter.CompileFormat(Format, state);
+            _compiledFormat = Formatter.CompileFormat(Format, profile);
         }
 
         internal override string Apply(DataState state)

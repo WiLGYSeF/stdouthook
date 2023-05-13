@@ -9,20 +9,20 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public bool Stdout { get; }
 
-        public ProfileState ProfileState { get; }
+        public Profile Profile { get; }
 
         public RuleContext Context { get; private set; } = new RuleContext();
 
-        public DataState(string data, bool stdout, ProfileState profileState)
+        public DataState(string data, bool stdout, Profile profile)
         {
             Data = data;
             Stdout = stdout;
-            ProfileState = profileState;
+            Profile = profile;
         }
 
-        public DataState(ProfileState profileState)
+        public DataState(Profile profile)
         {
-            ProfileState = profileState;
+            Profile = profile;
         }
 
         public IDisposable GetContextScope()

@@ -6,12 +6,12 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
     {
         public string Contents { get; }
 
-        public ProfileState ProfileState { get; }
+        public Profile Profile { get; }
 
-        public FormatBuildState(string contents, ProfileState profileState)
+        public FormatBuildState(string contents, Profile profile)
         {
             Contents = contents;
-            ProfileState = profileState;
+            Profile = profile;
         }
     }
 }
