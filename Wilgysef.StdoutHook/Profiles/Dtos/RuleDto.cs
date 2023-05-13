@@ -16,6 +16,8 @@ namespace Wilgysef.StdoutHook.Profiles.Dtos
 
         public bool? Terminal { get; set; }
 
+        public bool? TrimNewline { get; set; }
+
         public IList<long>? ActivationLines { get; set; }
 
         public IList<long>? ActivationLinesStdoutOnly { get; set; }

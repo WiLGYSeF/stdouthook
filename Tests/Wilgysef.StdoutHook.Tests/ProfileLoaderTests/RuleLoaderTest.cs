@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using Wilgysef.StdoutHook.Profiles.Dtos;
+﻿using Wilgysef.StdoutHook.Profiles.Dtos;
 using Wilgysef.StdoutHook.Profiles.Loaders;
 using Wilgysef.StdoutHook.Rules;
 
@@ -62,6 +61,17 @@ public class RuleLoaderTest
         });
 
         rule.Terminal.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TrimNewline()
+    {
+        var rule = LoadBaseRule(new RuleDto
+        {
+            TrimNewline = true,
+        });
+
+        rule.TrimNewline.ShouldBeTrue();
     }
 
     [Fact]

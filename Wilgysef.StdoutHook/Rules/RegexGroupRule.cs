@@ -148,9 +148,14 @@ namespace Wilgysef.StdoutHook.Rules
                 AppendGroup(i + 1, foundReplace);
             }
 
-            return builder.Append(data[last..])
-                .Append(newline)
-                .ToString();
+            builder.Append(data[last..]);
+
+            if (!TrimNewline)
+            {
+                builder.Append(newline);
+            }
+
+            return builder.ToString();
 
             void AppendGroup(int groupNumber, CompiledFormat? format)
             {

@@ -166,6 +166,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             rule.StdoutOnly = dto.StdoutOnly.GetValueOrDefault(false);
             rule.StderrOnly = dto.StderrOnly.GetValueOrDefault(false);
             rule.Terminal = dto.Terminal.GetValueOrDefault(false);
+            rule.TrimNewline = dto.TrimNewline.GetValueOrDefault(false);
             rule.ActivationLines = dto.ActivationLines ?? new List<long>();
             rule.ActivationLinesStdoutOnly = dto.ActivationLinesStdoutOnly ?? new List<long>();
             rule.ActivationLinesStderrOnly = dto.ActivationLinesStderrOnly ?? new List<long>();

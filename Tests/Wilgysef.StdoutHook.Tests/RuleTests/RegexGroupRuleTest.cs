@@ -179,6 +179,17 @@ public class RegexGroupRuleTest : RuleTestBase
         ShouldRuleBe(rule, "abc123", "");
     }
 
+    [Fact]
+    public void TrimNewline()
+    {
+        var rule = new RegexGroupRule(new Regex(@"."), "a")
+        {
+            TrimNewline = true,
+        };
+
+        ShouldRuleBe(rule, "abc123\n", "a");
+    }
+
     private static void ShouldRuleBe(Rule rule, string input, string expected)
     {
         var state = new ProfileState();

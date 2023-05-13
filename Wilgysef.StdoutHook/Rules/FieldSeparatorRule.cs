@@ -144,8 +144,12 @@ namespace Wilgysef.StdoutHook.Rules
                 }
             }
 
-            return builder.Append(newline)
-                .ToString();
+            if (!TrimNewline)
+            {
+                builder.Append(newline);
+            }
+
+            return builder.ToString();
         }
     }
 }

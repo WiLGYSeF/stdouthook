@@ -4,7 +4,7 @@ using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Tests.RuleTests;
 
-public class ActivationRuleTest
+public class ActivationTest
 {
     [Fact]
     public void NotEnabled()

@@ -19,6 +19,8 @@ namespace Wilgysef.StdoutHook.Rules
 
         public bool Terminal { get; set; }
 
+        public bool TrimNewline { get; set; }
+
         public ICollection<long> ActivationLines { get; set; } = new List<long>();
 
         public ICollection<long> ActivationLinesStdoutOnly { get; set; } = new List<long>();

@@ -328,6 +328,17 @@ public class FieldSeparatorRuleTest : RuleTestBase
         ShouldRuleBe(rule, "test-\x1b[32m--\x1b[31masdf---abc", "test \x1b[31masdf abc");
     }
 
+    [Fact]
+    public void TrimNewline()
+    {
+        var rule = new FieldSeparatorRule(new Regex(" "), "%F1 %F2 %F3")
+        {
+            TrimNewline = true
+        };
+
+        ShouldRuleBe(rule, "a b c\n", "a b c");
+    }
+
     private static void ShouldRuleBe(Rule rule, string input, string expected)
     {
         var state = new ProfileState();

@@ -11,6 +11,7 @@ namespace Wilgysef.StdoutHook.Formatters
         {
             new ByteFormatBuilder(),
             new ColorFormatBuilder(),
+            new DataFormatBuilder(),
             new FieldFormatBuilder(),
             new ProcessFormatBuilder(),
             new ProfileFormatBuilder(),

@@ -43,11 +43,11 @@ namespace Wilgysef.StdoutHook.Rules
 
             if (lockedStream == null)
             {
-                return state.Data;
+                return state.Data!;
             }
 
             var data = Encoding.UTF8.GetBytes(ExtractColors
-                ? ColorExtractor.ExtractColor(state.Data, new List<KeyValuePair<int, string>>())
+                ? ColorExtractor.ExtractColor(state.Data!, new List<KeyValuePair<int, string>>())
                 : state.Data);
 
             lock (lockedStream.Lock)
@@ -60,7 +60,7 @@ namespace Wilgysef.StdoutHook.Rules
                 }
             }
 
-            return state.Data;
+            return state.Data!;
 
             ProfileState.LockedFileStream? CreateStream(string key)
             {
@@ -71,6 +71,7 @@ namespace Wilgysef.StdoutHook.Rules
                 }
                 catch (Exception e)
                 {
+                    // TODO: log?
                     return null;
                 }
             }
