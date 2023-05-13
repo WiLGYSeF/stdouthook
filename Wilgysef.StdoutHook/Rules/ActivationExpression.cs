@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 
 namespace Wilgysef.StdoutHook.Rules
 {
@@ -6,14 +7,15 @@ namespace Wilgysef.StdoutHook.Rules
     {
         public Regex Expression { get; set; }
 
-        public long? ActivationOffset { get; set; }
-
-        public long? ActivationOffsetStdoutOnly { get; set; }
-
-        public long? ActivationOffsetStderrOnly { get; set; }
+        public long ActivationOffset { get; set; }
 
         public ActivationExpression(Regex expression, long activationOffset = 0)
         {
+            if (activationOffset < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(activationOffset), "Activation offset cannot be negative.");
+            }
+
             Expression = expression;
             ActivationOffset = activationOffset;
         }
