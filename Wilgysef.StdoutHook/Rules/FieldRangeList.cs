@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Wilgysef.StdoutHook.Rules
 {
@@ -80,6 +81,11 @@ namespace Wilgysef.StdoutHook.Rules
             }
 
             return false;
+        }
+
+        public override string ToString()
+        {
+            return string.Join(", ", Fields.Select(f => f.ToString()));
         }
 
         public static FieldRangeList Parse(string s)

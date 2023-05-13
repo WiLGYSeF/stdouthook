@@ -40,12 +40,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             return dataState =>
             {
                 var context = dataState.Context.RegexGroupContext;
-                if (context == null)
-                {
-                    return "";
-                }
-
-                return context.Groups.TryGetValue(contents, out var value)
+                return context != null && context.Groups.TryGetValue(contents, out var value)
                     ? value
                     : "";
             };

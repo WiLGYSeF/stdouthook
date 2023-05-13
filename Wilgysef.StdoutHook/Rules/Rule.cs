@@ -11,13 +11,15 @@ namespace Wilgysef.StdoutHook.Rules
     {
         public bool Enabled { get; set; } = true;
 
-        public Regex? EnableRegex { get; set; }
+        public Regex? EnableExpression { get; set; }
 
         public bool StdoutOnly { get; set; }
 
         public bool StderrOnly { get; set; }
 
         public bool Terminal { get; set; }
+
+        public bool TrimNewline { get; set; }
 
         public ICollection<long> ActivationLines { get; set; } = new List<long>();
 
@@ -93,7 +95,7 @@ namespace Wilgysef.StdoutHook.Rules
             var stdoutLineCount = profileState.StdoutLineCount;
             var stderrLineCount = profileState.StderrLineCount;
 
-            var data = state.Data?.TrimEndNewline(out var newline);
+            var data = state.Data?.TrimEndNewline(out _);
 
             if (data != null)
             {
@@ -133,7 +135,7 @@ namespace Wilgysef.StdoutHook.Rules
                 return false;
             }
 
-            if (data != null && EnableRegex != null && EnableRegex.MatchExtractedColor(data) == null)
+            if (data != null && EnableExpression != null && EnableExpression.MatchExtractedColor(data) == null)
             {
                 return false;
             }

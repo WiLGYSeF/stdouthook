@@ -66,6 +66,11 @@ namespace Wilgysef.StdoutHook.Rules
         {
             base.Build(state, formatter);
 
+            if (ReplaceAllFormat != null && ReplaceGroups != null && ReplaceGroups.Count > 0)
+            {
+                throw new Exception($"Cannot have {nameof(ReplaceAllFormat)} and {nameof(ReplaceGroups)} set.");
+            }
+
             if (ReplaceGroups != null)
             {
                 _groupReplacers = FieldRangeFormatCompiler.CompileFieldRangeFormats(
@@ -143,9 +148,14 @@ namespace Wilgysef.StdoutHook.Rules
                 AppendGroup(i + 1, foundReplace);
             }
 
-            return builder.Append(data[last..])
-                .Append(newline)
-                .ToString();
+            builder.Append(data[last..]);
+
+            if (!TrimNewline)
+            {
+                builder.Append(newline);
+            }
+
+            return builder.ToString();
 
             void AppendGroup(int groupNumber, CompiledFormat? format)
             {

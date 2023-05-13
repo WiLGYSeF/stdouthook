@@ -4,7 +4,7 @@ using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Tests.RuleTests;
 
-public class ActivationRuleTest
+public class ActivationTest
 {
     [Fact]
     public void NotEnabled()
@@ -158,7 +158,7 @@ public class ActivationRuleTest
     {
         var rule = new TestRule
         {
-            EnableRegex = new Regex(@"abc"),
+            EnableExpression = new Regex(@"abc"),
         };
 
         var state = new ProfileState();

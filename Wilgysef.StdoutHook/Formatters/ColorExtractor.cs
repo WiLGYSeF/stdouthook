@@ -9,7 +9,7 @@ namespace Wilgysef.StdoutHook.Formatters
     {
         private static readonly Regex ColorRegex = new Regex(@"\x1b\[([0-9;]+)m", RegexOptions.Compiled);
 
-        public static string ExtractColor(string data, IList<KeyValuePair<int, string>> colors)
+        public static string ExtractColor(string data, IList<KeyValuePair<int, string>>? colors)
         {
             var parts = ColorRegex.SplitWithSeparators(data, out var _);
 
@@ -27,7 +27,7 @@ namespace Wilgysef.StdoutHook.Formatters
                 }
                 else
                 {
-                    colors.Add(new KeyValuePair<int, string>(offset, parts[i]));
+                    colors?.Add(new KeyValuePair<int, string>(offset, parts[i]));
                     useBuilder = true;
                 }
             }

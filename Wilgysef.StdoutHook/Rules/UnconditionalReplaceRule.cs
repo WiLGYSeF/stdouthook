@@ -1,4 +1,5 @@
-﻿using Wilgysef.StdoutHook.Formatters;
+﻿using Wilgysef.StdoutHook.Extensions;
+using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Rules
@@ -23,7 +24,12 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            return _compiledFormat.Compute(state);
+            state.Data!.TrimEndNewline(out var newline);
+            var result = _compiledFormat.Compute(state);
+
+            return TrimNewline || result.EndsWith(newline)
+                ? result
+                : result + newline;
         }
     }
 }

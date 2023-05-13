@@ -45,6 +45,21 @@ namespace Wilgysef.StdoutHook.Rules
             return Min <= number && (!Max.HasValue || number <= Max.Value);
         }
 
+        public override string ToString()
+        {
+            if (SingleValue.HasValue)
+            {
+                return Min.ToString();
+            }
+
+            if (!Max.HasValue)
+            {
+                return $"{Min}-Inf";
+            }
+
+            return $"{Min}-{Max}";
+        }
+
         public static FieldRange Parse(string s)
         {
             if (!TryParse(s, out var range))
