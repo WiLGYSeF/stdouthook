@@ -36,8 +36,6 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public IDictionary<string, string> CustomColors { get; set; } = new Dictionary<string, string>();
 
-        public IList<string> InheritProfileNames { get; set; } = new List<string>();
-
         public ProfileState? State { get; set; }
 
         public Profile() { }

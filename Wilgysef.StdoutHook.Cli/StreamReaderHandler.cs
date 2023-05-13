@@ -13,7 +13,7 @@ public class StreamReaderHandler
         _action = action;
     }
 
-    public async Task ReadLinesAsync(int bufferSize = 2048, CancellationToken cancellationToken = default)
+    public async Task ReadLinesAsync(int bufferSize = 4096, CancellationToken cancellationToken = default)
     {
         await Task.Yield();
 
@@ -50,19 +50,22 @@ public class StreamReaderHandler
                 {
                     if (index != bytesRead - 1)
                     {
+                        string data;
                         if (buffer[index + 1] == '\n')
                         {
-                            builder.Append(new Span<char>(buffer, last, index - last + 2));
+                            data = builder.Append(new Span<char>(buffer, last, index - last + 2))
+                                .ToString();
                             last = index + 2;
                             index++;
                         }
                         else
                         {
-                            builder.Append(new Span<char>(buffer, last, index - last + 1));
+                            data = builder.Append(new Span<char>(buffer, last, index - last + 1))
+                                .ToString();
                             last = index + 1;
                         }
 
-                        _action(builder.ToString());
+                        _action(data);
                         builder.Clear();
                     }
                     else
@@ -72,8 +75,7 @@ public class StreamReaderHandler
                 }
                 else if (buffer[index] == '\n')
                 {
-                    builder.Append(new Span<char>(buffer, last, index - last + 1));
-                    _action(builder.ToString());
+                    _action(builder.Append(new Span<char>(buffer, last, index - last + 1)).ToString());
                     builder.Clear();
                     last = index + 1;
                 }

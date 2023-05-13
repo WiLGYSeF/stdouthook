@@ -109,22 +109,11 @@ public class ProfileLoaderTest
         profile.CustomColors["a"].ShouldBe("b");
     }
 
-    [Fact]
-    public async Task InheritProfileNames()
-    {
-        var loader = new TestProfileLoader();
-        loader.Profile.InheritProfileNames = new List<string> { "a" };
-
-        var profile = await loader.LoadProfileAsync(new MemoryStream());
-        profile.InheritProfileNames.Count.ShouldBe(1);
-        profile.InheritProfileNames[0].ShouldBe(loader.Profile.InheritProfileNames[0]);
-    }
-
     private class TestProfileLoader : ProfileLoader
     {
         public ProfileDto Profile { get; set; } = new ProfileDto();
 
-        protected override Task<ProfileDto> LoadProfileDtoAsync(Stream stream, CancellationToken cancellationToken)
+        public override Task<ProfileDto> LoadProfileDtoAsync(Stream stream, CancellationToken cancellationToken)
         {
             return Task.FromResult(Profile);
         }

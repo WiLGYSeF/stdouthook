@@ -131,7 +131,7 @@ public class StreamReaderHandlerTest
     private static async Task ShouldReadLinesAsync(
         Stream stream,
         IEnumerable<string> expected,
-        int bufferSize = 2048)
+        int bufferSize = 4096)
     {
         using var reader = new StreamReader(stream);
         using var enumerator = expected.GetEnumerator();
