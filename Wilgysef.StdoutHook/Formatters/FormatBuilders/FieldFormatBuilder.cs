@@ -19,6 +19,26 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             }
 
             var contents = state.Contents;
+            isConstant = false;
+
+            if (contents.Equals("c", StringComparison.OrdinalIgnoreCase))
+            {
+                return dataState =>
+                {
+                    var context = dataState.Context.FieldContext;
+                    if (context == null)
+                    {
+                        return "";
+                    }
+
+                    var fieldNumber = context.GetCurrentFieldNumber();
+
+                    return fieldNumber <= context.Fields!.Count
+                        ? context.Fields[fieldNumber - 1]
+                        : "";
+                };
+            }
+
             var separator = false;
 
             if (contents[0] == 'S' || contents[0] == 's')
@@ -37,22 +57,22 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 throw new ArgumentException("Field separator must be a single number");
             }
 
-            isConstant = false;
-
             if (fieldRange.SingleValue.HasValue)
             {
                 if (separator)
                 {
                     return dataState =>
                     {
-                        if (!Preface(dataState, fieldRange))
+                        var context = dataState.Context.FieldContext;
+                        if (context == null)
                         {
                             return "";
                         }
 
                         var singleVal = fieldRange.SingleValue.Value;
-                        return singleVal <= dataState.Context.FieldSeparators!.Count
-                            ? dataState.Context.FieldSeparators[singleVal - 1]
+
+                        return singleVal <= context.FieldSeparators!.Count
+                            ? context.FieldSeparators[singleVal - 1]
                             : "";
                     };
                 }
@@ -60,14 +80,16 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 {
                     return dataState =>
                     {
-                        if (!Preface(dataState, fieldRange))
+                        var context = dataState.Context.FieldContext;
+                        if (context == null)
                         {
                             return "";
                         }
 
                         var singleVal = fieldRange.SingleValue.Value;
-                        return singleVal <= dataState.Context.Fields!.Count
-                            ? dataState.Context.Fields[singleVal - 1]
+
+                        return singleVal <= context.Fields!.Count
+                            ? context.Fields[singleVal - 1]
                             : "";
                     };
                 }
@@ -75,39 +97,25 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
             return dataState =>
             {
-                if (!Preface(dataState, fieldRange))
+                var context = dataState.Context.FieldContext;
+                if (context == null)
                 {
                     return "";
                 }
 
                 var builder = new StringBuilder();
 
-                for (var i = fieldRange.Min; i < dataState.Context.Fields!.Count && i <= fieldRange.Max; i++)
+                for (var i = fieldRange.Min; i < context.Fields!.Count && i <= fieldRange.Max; i++)
                 {
-                    builder.Append(dataState.Context.Fields[i - 1]);
+                    builder.Append(context.Fields[i - 1]);
                     if (i < fieldRange.Max)
                     {
-                        builder.Append(dataState.Context.FieldSeparators![i - 1]);
+                        builder.Append(context.FieldSeparators![i - 1]);
                     }
                 }
 
                 return builder.ToString();
             };
-        }
-
-        private static bool Preface(DataState dataState, FieldRange range)
-        {
-            if (!dataState.Context.HasFields)
-            {
-                return false;
-            }
-
-            if (range.Max.HasValue && range.Max.Value > dataState.Context.HighestFieldNumber)
-            {
-                dataState.Context.HighestFieldNumber = range.Max.Value;
-            }
-
-            return true;
         }
     }
 }

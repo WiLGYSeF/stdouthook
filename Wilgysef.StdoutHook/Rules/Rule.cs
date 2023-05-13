@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
@@ -44,7 +45,8 @@ namespace Wilgysef.StdoutHook.Rules
         {
             if (!Enabled
                 || StdoutOnly && !state.Stdout
-                || StderrOnly && state.Stdout)
+                || StderrOnly && state.Stdout
+                || state.Data != null && EnableRegex != null && EnableRegex.MatchExtractedColor(state.Data.TrimEndNewline(out _)) == null)
             {
                 return false;
             }

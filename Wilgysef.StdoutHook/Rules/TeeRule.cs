@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Wilgysef.StdoutHook.Formatters;
@@ -12,7 +13,14 @@ namespace Wilgysef.StdoutHook.Rules
 
         public bool Flush { get; set; }
 
-        private string _absolutePath;
+        public bool ExtractColors { get; set; }
+
+        private string _absolutePath = null!;
+
+        public TeeRule(string filename)
+        {
+            Filename = filename;
+        }
 
         internal override void Build(ProfileState state, Formatter formatter)
         {
@@ -38,9 +46,13 @@ namespace Wilgysef.StdoutHook.Rules
                 return state.Data;
             }
 
+            var data = Encoding.UTF8.GetBytes(ExtractColors
+                ? ColorExtractor.ExtractColor(state.Data, new List<KeyValuePair<int, string>>())
+                : state.Data);
+
             lock (lockedStream.Lock)
             {
-                lockedStream.Stream.Write(Encoding.UTF8.GetBytes(state.Data));
+                lockedStream.Stream.Write(data);
 
                 if (Flush)
                 {

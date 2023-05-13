@@ -185,6 +185,49 @@ public class FieldSeparatorRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void Newline()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
+        {
+            MaxFields = 2,
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
+            {
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "123"),
+            },
+        };
+
+        ShouldRuleBe(rule, "test asdf\r\n", "test 123\r\n");
+    }
+
+    [Fact]
+    public void Field_Current()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
+        {
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
+            {
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2-4"), "=%Fc="),
+            },
+        };
+
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "test =asdf= =abc=  =def=   ghi");
+    }
+
+    [Fact]
+    public void Field_Current_Multiple()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
+        {
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
+            {
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "=%Fc%Fc="),
+            },
+        };
+
+        ShouldRuleBe(rule, "test asdf abc", "test =asdfasdf= abc");
+    }
+
+    [Fact]
     public void ReplaceAll()
     {
         var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%F3 %F4 %F2");
@@ -242,6 +285,14 @@ public class FieldSeparatorRuleTest : RuleTestBase
         var rule = new FieldSeparatorRule(new Regex(@"\s+"), "a%F(s1-3)b");
 
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "a%F(s1-3)b");
+    }
+
+    [Fact]
+    public void ReplaceAll_Current()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%Fc %Fc");
+
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "test asdf");
     }
 
     [Fact]

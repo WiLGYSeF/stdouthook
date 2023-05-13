@@ -21,10 +21,20 @@ processInfo.ArgumentList.Add("D:\\projects\\stdouthook\\Wilgysef.StdoutHook\\tes
 //processInfo.ArgumentList.Add("install");
 //processInfo.ArgumentList.Add("yt-dlp");
 
-var profile = new Profile();
+using var profileState = new ProfileState();
+var profile = new Profile(profileState);
+
+profile.Build();
 
 var stopwatch = Stopwatch.StartNew();
 var process = Process.Start(processInfo);
+
+if (process == null)
+{
+    throw new Exception("Process could not start.");
+}
+
+profileState.SetProcess(process);
 
 using var streamOutputHandler = new StreamOutputHandler(profile, process.StandardOutput, process.StandardError);
 var cancellationTokenSource = new CancellationTokenSource();

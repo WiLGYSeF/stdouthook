@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 
 namespace Wilgysef.StdoutHook.Profiles
 {
     public class ProfileState : IDisposable
     {
+        public Process Process { get; private set; } = null!;
+
         public long StdoutLineCount { get; set; }
 
         public long StderrLineCount { get; set; }
@@ -14,8 +17,15 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public ConcurrentDictionary<string, LockedFileStream?> FileStreams { get; } = new ConcurrentDictionary<string, LockedFileStream?>();
 
+        public void SetProcess(Process process)
+        {
+            Process = process;
+        }
+
         public void Dispose()
         {
+            Process.Dispose();
+
             foreach (var stream in FileStreams.Values)
             {
                 stream?.Dispose();
@@ -28,7 +38,7 @@ namespace Wilgysef.StdoutHook.Profiles
         {
             public FileStream Stream { get; }
 
-            public object Lock = new object();
+            public object Lock { get; } = new object();
 
             public LockedFileStream(FileStream stream)
             {
