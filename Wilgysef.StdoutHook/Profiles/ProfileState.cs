@@ -15,7 +15,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public long LineCount => StdoutLineCount + StderrLineCount;
 
-        public ConcurrentDictionary<string, LockedFileStream?> FileStreams { get; } = new ConcurrentDictionary<string, LockedFileStream?>();
+        private readonly ConcurrentDictionary<string, ConcurrentStream> _fileStreams = new ConcurrentDictionary<string, ConcurrentStream>();
 
         public void SetProcess(Process process)
         {
@@ -26,28 +26,47 @@ namespace Wilgysef.StdoutHook.Profiles
         {
             Process.Dispose();
 
-            foreach (var stream in FileStreams.Values)
+            foreach (var lockedStream in _fileStreams.Values)
             {
-                stream?.Dispose();
+                lockedStream?.Dispose();
             }
 
-            FileStreams.Clear();
+            _fileStreams.Clear();
         }
 
-        public class LockedFileStream : IDisposable
+        internal ConcurrentStream GetOrCreateFileStream(string absolutePath, Func<string, FileStream> streamFactory)
         {
-            public FileStream Stream { get; }
+            ConcurrentStream stream;
+            FileStream? createdStream = null;
 
-            public object Lock { get; } = new object();
-
-            public LockedFileStream(FileStream stream)
+            try
             {
-                Stream = stream;
+                stream = _fileStreams.GetOrAdd(absolutePath, CreateStream);
+
+                if (createdStream != null && !stream.IsStream(createdStream))
+                {
+                    // a stream was created but the key already exists
+                    createdStream.Dispose();
+                    createdStream = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (!_fileStreams.TryGetValue(absolutePath, out stream))
+                {
+                    throw;
+                }
+
+                // exception was thrown but the stream exists, continue
+                // TODO: log
             }
 
-            public void Dispose()
+            return stream;
+
+            ConcurrentStream CreateStream(string key)
             {
-                Stream?.Dispose();
+                createdStream = streamFactory(key);
+                return new ConcurrentStream(createdStream);
             }
         }
     }

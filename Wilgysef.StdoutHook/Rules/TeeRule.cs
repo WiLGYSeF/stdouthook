@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Wilgysef.StdoutHook.Formatters;
@@ -31,50 +30,24 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            FileStream? factoryStream = null;
-            var lockedStream = state.ProfileState.FileStreams.GetOrAdd(_absolutePath, CreateStream);
-
-            if (factoryStream != null && factoryStream != lockedStream?.Stream)
-            {
-                // a stream was created but the key already exists
-                factoryStream.Dispose();
-                factoryStream = null;
-            }
-
-            if (lockedStream == null)
-            {
-                return state.Data!;
-            }
+            var stream = state.ProfileState.GetOrCreateFileStream(
+                _absolutePath,
+                key => new FileStream(key, FileMode.Append));
 
             var data = Encoding.UTF8.GetBytes(ExtractColors
-                ? ColorExtractor.ExtractColor(state.Data!, new List<KeyValuePair<int, string>>())
+                ? ColorExtractor.ExtractColor(state.Data!, null)
                 : state.Data);
 
-            lock (lockedStream.Lock)
+            try
             {
-                lockedStream.Stream.Write(data);
-
-                if (Flush)
-                {
-                    lockedStream.Stream.Flush();
-                }
+                stream.Write(data, Flush);
+            }
+            catch (Exception ex)
+            {
+                // TODO: log
             }
 
             return state.Data!;
-
-            ProfileState.LockedFileStream? CreateStream(string key)
-            {
-                try
-                {
-                    factoryStream = new FileStream(key, FileMode.Append);
-                    return new ProfileState.LockedFileStream(factoryStream);
-                }
-                catch (Exception e)
-                {
-                    // TODO: log?
-                    return null;
-                }
-            }
         }
     }
 }

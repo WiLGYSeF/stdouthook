@@ -27,7 +27,7 @@ namespace Wilgysef.StdoutHook.Rules
             state.Data!.TrimEndNewline(out var newline);
             var result = _compiledFormat.Compute(state);
 
-            return result.EndsWith(newline) || TrimNewline
+            return TrimNewline || result.EndsWith(newline)
                 ? result
                 : result + newline;
         }
