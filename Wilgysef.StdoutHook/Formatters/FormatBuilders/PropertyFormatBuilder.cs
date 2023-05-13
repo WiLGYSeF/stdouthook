@@ -17,8 +17,17 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             {
                 if (prop.Matches(state.Contents, out var func))
                 {
-                    isConstant = false;
-                    return dataState => func(GetValue(dataState));
+                    if (prop.IsConstant)
+                    {
+                        isConstant = true;
+                        var vaule = func(GetValue(new DataState(state.Profile)));
+                        return _ => vaule;
+                    }
+                    else
+                    {
+                        isConstant = false;
+                        return dataState => func(GetValue(dataState));
+                    }
                 }
             }
 
@@ -29,23 +38,24 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
         {
             private const char Separator = ':';
 
+            public bool IsConstant { get; }
+
             private readonly string[] _names;
             private readonly Func<T, string>? _func;
             private readonly Func<T, string, string>? _funcFormat;
-            private readonly bool _isConstant;
 
             public Property(string[] names, Func<T, string> func, bool isConstant)
             {
                 _names = names;
                 _func = func;
-                _isConstant = isConstant;
+                IsConstant = isConstant;
             }
 
             public Property(string[] names, Func<T, string, string> func, bool isConstant)
             {
                 _names = names;
                 _funcFormat = func;
-                _isConstant = isConstant;
+                IsConstant = isConstant;
             }
 
             public bool Matches(
