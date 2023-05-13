@@ -33,9 +33,23 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
                     var fieldNumber = context.GetCurrentFieldNumber();
 
-                    return fieldNumber <= context.Fields!.Count
+                    return fieldNumber <= context.Fields.Count
                         ? context.Fields[fieldNumber - 1]
                         : "";
+                };
+            }
+
+            if (contents == "#")
+            {
+                return dataState =>
+                {
+                    var context = dataState.Context.FieldContext;
+                    if (context == null)
+                    {
+                        return "";
+                    }
+
+                    return context.Fields.Count.ToString();
                 };
             }
 
@@ -71,7 +85,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
                         var singleVal = fieldRange.SingleValue.Value;
 
-                        return singleVal <= context.FieldSeparators!.Count
+                        return singleVal <= context.FieldSeparators.Count
                             ? context.FieldSeparators[singleVal - 1]
                             : "";
                     };
@@ -88,7 +102,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
                         var singleVal = fieldRange.SingleValue.Value;
 
-                        return singleVal <= context.Fields!.Count
+                        return singleVal <= context.Fields.Count
                             ? context.Fields[singleVal - 1]
                             : "";
                     };
@@ -105,12 +119,12 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
                 var builder = new StringBuilder();
 
-                for (var i = fieldRange.Min; i < context.Fields!.Count && i <= fieldRange.Max; i++)
+                for (var i = fieldRange.Min; i < context.Fields.Count && i <= fieldRange.Max; i++)
                 {
                     builder.Append(context.Fields[i - 1]);
                     if (i < fieldRange.Max)
                     {
-                        builder.Append(context.FieldSeparators![i - 1]);
+                        builder.Append(context.FieldSeparators[i - 1]);
                     }
                 }
 

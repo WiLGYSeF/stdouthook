@@ -294,6 +294,14 @@ public class FieldSeparatorRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void ReplaceAll_Count()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%F(#)");
+
+        ShouldRuleBe(rule, "test asdf abc  def   ghi", "5");
+    }
+
+    [Fact]
     public void WithColors()
     {
         var rule = new FieldSeparatorRule(new Regex("---"), "%F1 %F2 %F3");

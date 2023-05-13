@@ -4,11 +4,9 @@ namespace Wilgysef.StdoutHook.Profiles
 {
     internal class RuleFieldContext
     {
-        public IReadOnlyList<string>? FieldsWithSeparators { get; private set; }
+        public IReadOnlyList<string> Fields { get; }
 
-        public IReadOnlyList<string>? Fields { get; private set; }
-
-        public IReadOnlyList<string>? FieldSeparators { get; private set; }
+        public IReadOnlyList<string> FieldSeparators { get; }
 
         public int CurrentFieldNumber { get; set; } = 1;
 
@@ -16,25 +14,26 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public RuleFieldContext(IReadOnlyList<string> fieldsWithSeparators)
         {
-            var fieldsWithSeparatorsList = new List<string>(fieldsWithSeparators.Count);
-
             var fieldCount = fieldsWithSeparators.Count / 2 + 1;
-            var fields = new List<string>(fieldCount);
-            var fieldSeparators = new List<string>(fieldsWithSeparators.Count - fieldCount);
+            var fields = new string[fieldCount];
+            var fieldSeparators = new string[fieldsWithSeparators.Count - fieldCount];
 
-            FieldsWithSeparators = fieldsWithSeparatorsList;
             Fields = fields;
             FieldSeparators = fieldSeparators;
 
-            var currentList = fields;
-            foreach (var field in fieldsWithSeparators)
-            {
-                fieldsWithSeparatorsList.Add(field);
-                currentList.Add(field);
+            var fieldIndex = 0;
+            var fieldSeparatorIndex = 0;
 
-                currentList = currentList == fields
-                    ? fieldSeparators
-                    : fields;
+            for (var i = 0; i < fieldsWithSeparators.Count; i++)
+            {
+                if ((i & 1) == 0)
+                {
+                    fields[fieldIndex++] = fieldsWithSeparators[i];
+                }
+                else
+                {
+                    fieldSeparators[fieldSeparatorIndex++] = fieldsWithSeparators[i];
+                }
             }
         }
 

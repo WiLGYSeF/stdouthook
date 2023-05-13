@@ -31,7 +31,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
                     var groupNumber = context.GetCurrentGroupNumber();
 
-                    return groupNumber <= context.Groups!.Count
+                    return groupNumber <= context.Groups.Count
                         ? context.Groups[groupNumber.ToString()]
                         : "";
                 };
