@@ -65,7 +65,7 @@ namespace Wilgysef.StdoutHook.Rules
 
         protected bool _active = true;
 
-        internal virtual void Build(ProfileState state, Formatter formatter)
+        internal virtual void Build(Profile profile, Formatter formatter)
         {
             Formatter = formatter;
 
@@ -88,7 +88,7 @@ namespace Wilgysef.StdoutHook.Rules
                 return false;
             }
 
-            var profileState = state.ProfileState;
+            var profileState = state.Profile.State!;
 
             // avoid potential race conditions
             var lineCount = profileState.LineCount;

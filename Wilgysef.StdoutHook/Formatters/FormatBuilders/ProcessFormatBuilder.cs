@@ -9,9 +9,10 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
     {
         private static readonly Property[] ProcessProperties = new[]
         {
+            // all properties are not constant because formatters are built before the process starts
             new Property(new[] { "basePriority", "priority" }, process => process.BasePriority.ToString(), false),
-            new Property(new[] { "id", "pid", "processId" }, process => process.Id.ToString(), true),
-            new Property(new[] { "fullpath" }, process => process.MainModule.FileName, true),
+            new Property(new[] { "id", "pid", "processId" }, process => process.Id.ToString(), false),
+            new Property(new[] { "fullpath" }, process => process.MainModule.FileName, false),
             new Property(new[] { "nonpagedSystemMemorySize" }, process => process.NonpagedSystemMemorySize64.ToString(), false),
             new Property(new[] { "pagedSystemMemorySize" }, process => process.PagedSystemMemorySize64.ToString(), false),
             new Property(new[] { "pagedMemorySize" }, process => process.PagedMemorySize64.ToString(), false),
@@ -21,8 +22,8 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             new Property(new[] { "privateMemorySize" }, process => process.PrivateMemorySize64.ToString(), false),
             new Property(new[] { "privilegedProcessorTime" }, (process, format) => process.PrivilegedProcessorTime.ToString(format), false),
             new Property(new[] { "priorityClass" }, process => process.PriorityClass.ToString(), false),
-            new Property(new[] { "name", "processName" }, process => process.ProcessName.ToString(), true),
-            new Property(new[] { "start", "started", "startTime" }, (process, format) => process.StartTime.ToString(format), true),
+            new Property(new[] { "name", "processName" }, process => process.ProcessName.ToString(), false),
+            new Property(new[] { "start", "started", "startTime" }, (process, format) => process.StartTime.ToString(format), false),
             new Property(new[] { "processorTime", "totalProcessorTime" }, (process, format) => process.TotalProcessorTime.ToString(format), false),
             new Property(new[] { "userProcessorTime" }, (process, format) => process.UserProcessorTime.ToString(format), false),
             new Property(new[] { "virtualMemorySize" }, process => process.VirtualMemorySize64.ToString(), false),
@@ -41,7 +42,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         protected override Process GetValue(DataState state)
         {
-            return state.ProfileState.Process;
+            return state.Profile.State!.Process;
         }
     }
 }

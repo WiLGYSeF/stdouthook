@@ -204,10 +204,10 @@ public class FormatTest : RuleTestBase
         string expected,
         params string[] expectedFuncs)
     {
-        var state = new ProfileState();
-        var dataState = CreateDataState(state);
+        var profile = new Profile(new ProfileState());
+        var dataState = new DataState("", true, profile);
 
-        var compiledFormat = formatter.CompileFormat(format, state);
+        var compiledFormat = formatter.CompileFormat(format, profile);
         compiledFormat.Compute(dataState).ShouldBe(expected);
         compiledFormat.Parts.Length.ShouldBe(expectedFuncs.Length + 1);
         compiledFormat.Funcs.Length.ShouldBe(expectedFuncs.Length);
@@ -216,10 +216,5 @@ public class FormatTest : RuleTestBase
         {
             compiledFormat.Funcs[i](dataState).ShouldBe(expectedFuncs[i]);
         }
-    }
-
-    private static DataState CreateDataState(ProfileState state)
-    {
-        return new DataState("", true, state);
     }
 }

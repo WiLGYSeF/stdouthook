@@ -66,7 +66,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public bool ApplyRules(ref string line, bool stdout)
         {
-            var dataState = new DataState(line, stdout, State!);
+            var dataState = new DataState(line, stdout, this);
 
             for (var i = 0; i < Rules.Count; i++)
             {
@@ -102,7 +102,7 @@ namespace Wilgysef.StdoutHook.Profiles
         {
             for (var i = 0; i < Rules.Count; i++)
             {
-                Rules[i].Build(State!, formatter);
+                Rules[i].Build(this, formatter);
             }
         }
     }

@@ -1,6 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using Wilgysef.StdoutHook.Formatters;
-using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Tests.RuleTests;
@@ -337,12 +335,5 @@ public class FieldSeparatorRuleTest : RuleTestBase
         };
 
         ShouldRuleBe(rule, "a b c\n", "a b c");
-    }
-
-    private static void ShouldRuleBe(Rule rule, string input, string expected)
-    {
-        var state = new ProfileState();
-        rule.Build(state, GetFormatter(FormatFunctionBuilder.FormatBuilders));
-        rule.Apply(new DataState(input, true, state)).ShouldBe(expected);
     }
 }

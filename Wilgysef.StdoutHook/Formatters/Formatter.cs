@@ -17,7 +17,7 @@ namespace Wilgysef.StdoutHook.Formatters
             _formatFunctionBuilder = formatFunctionBuilder;
         }
 
-        public CompiledFormat CompileFormat(string format, ProfileState state)
+        public CompiledFormat CompileFormat(string format, Profile profile)
         {
             var parts = new List<string>();
             var funcs = new List<Func<DataState, string>>();
@@ -136,11 +136,11 @@ namespace Wilgysef.StdoutHook.Formatters
             {
                 try
                 {
-                    var func = _formatFunctionBuilder.Build(key, contents, state, out var isConstant);
+                    var func = _formatFunctionBuilder.Build(key, contents, profile, out var isConstant);
 
                     if (isConstant)
                     {
-                        lastPart += format[last..startIndex] + func(new DataState(state));
+                        lastPart += format[last..startIndex] + func(new DataState(profile));
                     }
                     else
                     {
@@ -161,7 +161,7 @@ namespace Wilgysef.StdoutHook.Formatters
 
         public string Format(string format, DataState state)
         {
-            return CompileFormat(format, state.ProfileState).Compute(state);
+            return CompileFormat(format, state.Profile).Compute(state);
         }
 
         private static bool IsNameChar(char c)

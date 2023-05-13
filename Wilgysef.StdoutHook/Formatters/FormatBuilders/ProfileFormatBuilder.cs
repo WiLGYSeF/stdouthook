@@ -3,13 +3,15 @@ using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
-    internal class ProfileFormatBuilder : PropertyFormatBuilder<ProfileState>
+    internal class ProfileFormatBuilder : PropertyFormatBuilder<Profile>
     {
         private static readonly Property[] ProfileProperties = new[]
         {
-            new Property(new[] { "stderrLines", "stderrLinecount" }, state => state.StderrLineCount.ToString(), false),
-            new Property(new[] { "lines", "linecount", "stdoutLines", "stdoutLinecount" }, state => state.StdoutLineCount.ToString(), false),
-            new Property(new[] { "totalLines", "totalLineCount" }, state => state.LineCount.ToString(), false),
+            new Property(new[] { "name", "profileName" }, profile => profile.ProfileName ?? "", true),
+
+            new Property(new[] { "stderrLines", "stderrLinecount" }, profile => profile.State!.StderrLineCount.ToString(), false),
+            new Property(new[] { "lines", "linecount", "stdoutLines", "stdoutLinecount" }, profile => profile.State!.StdoutLineCount.ToString(), false),
+            new Property(new[] { "totalLines", "totalLineCount" }, profile => profile.State!.LineCount.ToString(), false),
         };
 
         public override string? Key => "profile";
@@ -21,9 +23,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             return ProfileProperties;
         }
 
-        protected override ProfileState GetValue(DataState state)
+        protected override Profile GetValue(DataState state)
         {
-            return state.ProfileState;
+            return state.Profile;
         }
     }
 }

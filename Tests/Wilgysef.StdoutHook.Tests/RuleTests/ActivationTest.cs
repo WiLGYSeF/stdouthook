@@ -14,10 +14,10 @@ public class ActivationTest
             Enabled = false,
         };
 
-        var state = new ProfileState();
-        rule.Build(state, null!);
+        var profile = CreateDummyProfile();
+        rule.Build(profile, null!);
 
-        SendLine(rule, "test", true, state).ShouldBe(false);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
     }
 
     [Fact]
@@ -28,11 +28,11 @@ public class ActivationTest
             StdoutOnly = true,
         };
 
-        var state = new ProfileState();
-        rule.Build(state, null!);
+        var profile = CreateDummyProfile();
+        rule.Build(profile, null!);
 
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", false, state).ShouldBe(false);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", false, profile).ShouldBe(false);
     }
 
     [Fact]
@@ -43,11 +43,11 @@ public class ActivationTest
             StderrOnly = true,
         };
 
-        var state = new ProfileState();
-        rule.Build(state, null!);
+        var profile = CreateDummyProfile();
+        rule.Build(profile, null!);
 
-        SendLine(rule, "test", true, state).ShouldBe(false);
-        SendLine(rule, "test", false, state).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
+        SendLine(rule, "test", false, profile).ShouldBe(true);
     }
 
     [Fact]
@@ -59,14 +59,14 @@ public class ActivationTest
             DeactivationLines = new List<long> { 3 },
         };
 
-        var state = new ProfileState();
-        rule.Build(state, null!);
+        var profile = CreateDummyProfile();
+        rule.Build(profile, null!);
 
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(false);
-        SendLine(rule, "test", true, state).ShouldBe(false);
-        SendLine(rule, "test", true, state).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
     }
 
     [Fact]
@@ -78,17 +78,17 @@ public class ActivationTest
             DeactivationLinesStdoutOnly = new List<long> { 3 },
         };
 
-        var state = new ProfileState();
-        rule.Build(state, null!);
+        var profile = CreateDummyProfile();
+        rule.Build(profile, null!);
 
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", false, state).ShouldBe(true);
-        SendLine(rule, "test", false, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(false);
-        SendLine(rule, "test", false, state).ShouldBe(false);
-        SendLine(rule, "test", true, state).ShouldBe(false);
-        SendLine(rule, "test", true, state).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", false, profile).ShouldBe(true);
+        SendLine(rule, "test", false, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
+        SendLine(rule, "test", false, profile).ShouldBe(false);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
     }
 
     [Fact]
@@ -100,17 +100,17 @@ public class ActivationTest
             DeactivationLinesStderrOnly = new List<long> { 3 },
         };
 
-        var state = new ProfileState();
-        rule.Build(state, null!);
+        var profile = CreateDummyProfile();
+        rule.Build(profile, null!);
 
-        SendLine(rule, "test", false, state).ShouldBe(true);
-        SendLine(rule, "test", false, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", false, state).ShouldBe(false);
-        SendLine(rule, "test", true, state).ShouldBe(false);
-        SendLine(rule, "test", false, state).ShouldBe(false);
-        SendLine(rule, "test", false, state).ShouldBe(true);
+        SendLine(rule, "test", false, profile).ShouldBe(true);
+        SendLine(rule, "test", false, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", false, profile).ShouldBe(false);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
+        SendLine(rule, "test", false, profile).ShouldBe(false);
+        SendLine(rule, "test", false, profile).ShouldBe(true);
     }
 
     [Fact]
@@ -122,13 +122,13 @@ public class ActivationTest
             DeactivationLinesStderrOnly = new List<long> { 3 },
         };
 
-        var state = new ProfileState();
-        rule.Build(state, null!);
+        var profile = CreateDummyProfile();
+        rule.Build(profile, null!);
 
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
     }
 
     [Fact]
@@ -140,17 +140,17 @@ public class ActivationTest
             DeactivationLines = new List<long> { 3, 6, 3 },
         };
 
-        var state = new ProfileState();
-        rule.Build(state, null!);
+        var profile = CreateDummyProfile();
+        rule.Build(profile, null!);
 
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(false);
-        SendLine(rule, "test", true, state).ShouldBe(false);
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(false);
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
     }
 
     [Fact]
@@ -161,11 +161,11 @@ public class ActivationTest
             EnableExpression = new Regex(@"abc"),
         };
 
-        var state = new ProfileState();
-        rule.Build(state, null!);
+        var profile = CreateDummyProfile();
+        rule.Build(profile, null!);
 
-        SendLine(rule, "test", true, state).ShouldBe(false);
-        SendLine(rule, "abc", true, state).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
+        SendLine(rule, "abc", true, profile).ShouldBe(true);
     }
 
     [Fact]
@@ -179,27 +179,32 @@ public class ActivationTest
             },
         };
 
-        var state = new ProfileState();
-        rule.Build(state, null!);
+        var profile = CreateDummyProfile();
+        rule.Build(profile, null!);
 
-        SendLine(rule, "abc", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(true);
-        SendLine(rule, "test", true, state).ShouldBe(false);
-        SendLine(rule, "test", true, state).ShouldBe(false);
+        SendLine(rule, "abc", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(true);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
+        SendLine(rule, "test", true, profile).ShouldBe(false);
     }
 
-    private static bool SendLine(Rule rule, string data, bool stdout, ProfileState profileState)
+    private static bool SendLine(Rule rule, string data, bool stdout, Profile profile)
     {
         if (stdout)
         {
-            profileState.StdoutLineCount++;
+            profile.State!.StdoutLineCount++;
         }
         else
         {
-            profileState.StderrLineCount++;
+            profile.State!.StderrLineCount++;
         }
 
-        return rule.IsActive(new DataState(data, stdout, profileState));
+        return rule.IsActive(new DataState(data, stdout, profile));
+    }
+
+    private static Profile CreateDummyProfile()
+    {
+        return new Profile(new ProfileState());
     }
 
     private class TestRule : Rule

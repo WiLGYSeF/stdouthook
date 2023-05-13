@@ -62,9 +62,9 @@ namespace Wilgysef.StdoutHook.Rules
             ReplaceAllFormat = replaceAllFormat;
         }
 
-        internal override void Build(ProfileState state, Formatter formatter)
+        internal override void Build(Profile profile, Formatter formatter)
         {
-            base.Build(state, formatter);
+            base.Build(profile, formatter);
 
             if (ReplaceAllFormat != null && ReplaceGroups != null && ReplaceGroups.Count > 0)
             {
@@ -77,20 +77,20 @@ namespace Wilgysef.StdoutHook.Rules
                     ReplaceGroups,
                     MaximumGroupCount,
                     _outOfRangeReplaceGroups,
-                    format => Formatter.CompileFormat(format, state));
+                    format => Formatter.CompileFormat(format, profile));
             }
 
             if (ReplaceNamedGroups != null)
             {
                 foreach (var (name, format) in ReplaceNamedGroups)
                 {
-                    _namedGroups[name] = Formatter.CompileFormat(format, state);
+                    _namedGroups[name] = Formatter.CompileFormat(format, profile);
                 }
             }
 
             if (ReplaceAllFormat != null)
             {
-                _compiledFormat = Formatter.CompileFormat(ReplaceAllFormat, state);
+                _compiledFormat = Formatter.CompileFormat(ReplaceAllFormat, profile);
             }
         }
 

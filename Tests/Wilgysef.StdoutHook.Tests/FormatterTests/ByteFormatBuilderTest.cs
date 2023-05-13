@@ -1,5 +1,4 @@
 ﻿using Wilgysef.StdoutHook.Formatters.FormatBuilders;
-using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Tests.FormatterTests;
 
@@ -10,7 +9,7 @@ public class ByteFormatBuilderTest : RuleTestBase
     {
         var formatter = GetFormatter(new ByteFormatBuilder());
 
-        formatter.Format("test%x41", new DataState(new ProfileState())).ShouldBe("testA");
+        formatter.Format("test%x41", CreateDummyDataState()).ShouldBe("testA");
     }
 
     [Fact]
@@ -18,6 +17,6 @@ public class ByteFormatBuilderTest : RuleTestBase
     {
         var formatter = GetFormatter(new ByteFormatBuilder());
 
-        formatter.Format("test%xgh", new DataState(new ProfileState())).ShouldBe("test");
+        formatter.Format("test%xgh", CreateDummyDataState()).ShouldBe("test");
     }
 }

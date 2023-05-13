@@ -46,9 +46,9 @@ namespace Wilgysef.StdoutHook.Rules
             ReplaceAllFormat = replaceAllFormat;
         }
 
-        internal override void Build(ProfileState state, Formatter formatter)
+        internal override void Build(Profile profile, Formatter formatter)
         {
-            base.Build(state, formatter);
+            base.Build(profile, formatter);
 
             if (ReplaceAllFormat != null && ReplaceFields != null && ReplaceFields.Count > 0)
             {
@@ -57,7 +57,7 @@ namespace Wilgysef.StdoutHook.Rules
 
             if (ReplaceAllFormat != null)
             {
-                _replaceAll = Formatter.CompileFormat(ReplaceAllFormat, state);
+                _replaceAll = Formatter.CompileFormat(ReplaceAllFormat, profile);
                 return;
             }
 
@@ -65,7 +65,7 @@ namespace Wilgysef.StdoutHook.Rules
                 ReplaceFields!,
                 MaximumFieldCount,
                 _outOfRangeReplaceFields,
-                format => Formatter.CompileFormat(format, state));
+                format => Formatter.CompileFormat(format, profile));
         }
 
         internal override string Apply(DataState state)

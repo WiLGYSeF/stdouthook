@@ -19,10 +19,12 @@ namespace Wilgysef.StdoutHook.Formatters
                 colorFormatBuilder.CustomColors.Add(key, val);
             }
 
-            var formatter = new Formatter(new FormatFunctionBuilder(colorFormatBuilder));
-            formatter.InvalidFormatBlank = InvalidFormatBlank;
+            var formatter = new Formatter(new FormatFunctionBuilder(colorFormatBuilder))
+            {
+                InvalidFormatBlank = InvalidFormatBlank
+            };
 
-            return formatter.Format(format, new DataState(new ProfileState()));
+            return formatter.Format(format, new DataState(new Profile(new ProfileState())));
         }
     }
 }

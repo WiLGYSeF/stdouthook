@@ -21,16 +21,16 @@ namespace Wilgysef.StdoutHook.Rules
             Filename = filename;
         }
 
-        internal override void Build(ProfileState state, Formatter formatter)
+        internal override void Build(Profile profile, Formatter formatter)
         {
-            base.Build(state, formatter);
+            base.Build(profile, formatter);
 
             _absolutePath = Path.GetFullPath(Filename);
         }
 
         internal override string Apply(DataState state)
         {
-            var stream = state.ProfileState.GetOrCreateFileStream(
+            var stream = state.Profile.State!.GetOrCreateFileStream(
                 _absolutePath,
                 key => new FileStream(key, FileMode.Append));
 
