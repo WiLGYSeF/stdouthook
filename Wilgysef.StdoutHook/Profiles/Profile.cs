@@ -6,7 +6,7 @@ using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Profiles
 {
-    public class Profile
+    public class Profile : IDisposable
     {
         public string? ProfileName { get; set; }
 
@@ -36,22 +36,10 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public IDictionary<string, string> CustomColors { get; set; } = new Dictionary<string, string>();
 
-        public ProfileState? State { get; set; }
-
-        public Profile() { }
-
-        public Profile(ProfileState state)
-        {
-            State = state;
-        }
+        public ProfileState State { get; set; } = new ProfileState();
 
         public void Build()
         {
-            if (State == null)
-            {
-                throw new Exception($"{nameof(State)} cannot be null.");
-            }
-
             var formatFunctionBuilder = FormatFunctionBuilder.Create();
 
             if (CustomColors.Count > 0)
@@ -94,6 +82,11 @@ namespace Wilgysef.StdoutHook.Profiles
             }
 
             return true;
+        }
+
+        public void Dispose()
+        {
+            State.Dispose();
         }
 
         internal void Build(Formatter formatter)

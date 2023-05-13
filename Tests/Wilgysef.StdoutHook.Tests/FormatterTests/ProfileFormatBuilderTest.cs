@@ -23,11 +23,8 @@ public class ProfileFormatBuilderTest : RuleTestBase
     {
         var formatter = GetFormatter(new ProfileFormatBuilder());
 
-        var state = new ProfileState()
-        {
-            StdoutLineCount = 123,
-        };
-        var profile = new Profile(state);
+        using var profile = new Profile();
+        profile.State.StdoutLineCount = 123;
 
         formatter.Format("%(profile:stdoutLines)", new DataState(profile)).ShouldBe("123");
     }
@@ -37,11 +34,8 @@ public class ProfileFormatBuilderTest : RuleTestBase
     {
         var formatter = GetFormatter(new ProfileFormatBuilder());
 
-        var state = new ProfileState()
-        {
-            StderrLineCount = 123,
-        };
-        var profile = new Profile(state);
+        using var profile = new Profile();
+        profile.State.StderrLineCount = 123;
 
         formatter.Format("%(profile:stderrLines)", new DataState(profile)).ShouldBe("123");
     }
@@ -51,12 +45,9 @@ public class ProfileFormatBuilderTest : RuleTestBase
     {
         var formatter = GetFormatter(new ProfileFormatBuilder());
 
-        var state = new ProfileState()
-        {
-            StdoutLineCount = 100,
-            StderrLineCount = 23,
-        };
-        var profile = new Profile(state);
+        using var profile = new Profile();
+        profile.State.StdoutLineCount = 100;
+        profile.State.StderrLineCount = 23;
 
         formatter.Format("%(profile:totalLines)", new DataState(profile)).ShouldBe("123");
     }

@@ -14,7 +14,7 @@ public class ActivationTest
             Enabled = false,
         };
 
-        var profile = CreateDummyProfile();
+        using var profile = CreateDummyProfile();
         rule.Build(profile, null!);
 
         SendLine(rule, "test", true, profile).ShouldBe(false);
@@ -28,7 +28,7 @@ public class ActivationTest
             StdoutOnly = true,
         };
 
-        var profile = CreateDummyProfile();
+        using var profile = CreateDummyProfile();
         rule.Build(profile, null!);
 
         SendLine(rule, "test", true, profile).ShouldBe(true);
@@ -43,7 +43,7 @@ public class ActivationTest
             StderrOnly = true,
         };
 
-        var profile = CreateDummyProfile();
+        using var profile = CreateDummyProfile();
         rule.Build(profile, null!);
 
         SendLine(rule, "test", true, profile).ShouldBe(false);
@@ -59,7 +59,7 @@ public class ActivationTest
             DeactivationLines = new List<long> { 3 },
         };
 
-        var profile = CreateDummyProfile();
+        using var profile = CreateDummyProfile();
         rule.Build(profile, null!);
 
         SendLine(rule, "test", true, profile).ShouldBe(true);
@@ -78,7 +78,7 @@ public class ActivationTest
             DeactivationLinesStdoutOnly = new List<long> { 3 },
         };
 
-        var profile = CreateDummyProfile();
+        using var profile = CreateDummyProfile();
         rule.Build(profile, null!);
 
         SendLine(rule, "test", true, profile).ShouldBe(true);
@@ -100,7 +100,7 @@ public class ActivationTest
             DeactivationLinesStderrOnly = new List<long> { 3 },
         };
 
-        var profile = CreateDummyProfile();
+        using var profile = CreateDummyProfile();
         rule.Build(profile, null!);
 
         SendLine(rule, "test", false, profile).ShouldBe(true);
@@ -122,7 +122,7 @@ public class ActivationTest
             DeactivationLinesStderrOnly = new List<long> { 3 },
         };
 
-        var profile = CreateDummyProfile();
+        using var profile = CreateDummyProfile();
         rule.Build(profile, null!);
 
         SendLine(rule, "test", true, profile).ShouldBe(true);
@@ -140,7 +140,7 @@ public class ActivationTest
             DeactivationLines = new List<long> { 3, 6, 3 },
         };
 
-        var profile = CreateDummyProfile();
+        using var profile = CreateDummyProfile();
         rule.Build(profile, null!);
 
         SendLine(rule, "test", true, profile).ShouldBe(true);
@@ -161,7 +161,7 @@ public class ActivationTest
             EnableExpression = new Regex(@"abc"),
         };
 
-        var profile = CreateDummyProfile();
+        using var profile = CreateDummyProfile();
         rule.Build(profile, null!);
 
         SendLine(rule, "test", true, profile).ShouldBe(false);
@@ -179,7 +179,7 @@ public class ActivationTest
             },
         };
 
-        var profile = CreateDummyProfile();
+        using var profile = CreateDummyProfile();
         rule.Build(profile, null!);
 
         SendLine(rule, "abc", true, profile).ShouldBe(true);
@@ -192,11 +192,11 @@ public class ActivationTest
     {
         if (stdout)
         {
-            profile.State!.StdoutLineCount++;
+            profile.State.StdoutLineCount++;
         }
         else
         {
-            profile.State!.StderrLineCount++;
+            profile.State.StderrLineCount++;
         }
 
         return rule.IsActive(new DataState(data, stdout, profile));
@@ -204,7 +204,7 @@ public class ActivationTest
 
     private static Profile CreateDummyProfile()
     {
-        return new Profile(new ProfileState());
+        return new Profile();
     }
 
     private class TestRule : Rule

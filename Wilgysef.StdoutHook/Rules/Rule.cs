@@ -88,7 +88,7 @@ namespace Wilgysef.StdoutHook.Rules
                 return false;
             }
 
-            var profileState = state.Profile.State!;
+            var profileState = state.Profile.State;
 
             // avoid potential race conditions
             var lineCount = profileState.LineCount;

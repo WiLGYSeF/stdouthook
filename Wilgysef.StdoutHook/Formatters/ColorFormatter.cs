@@ -24,7 +24,8 @@ namespace Wilgysef.StdoutHook.Formatters
                 InvalidFormatBlank = InvalidFormatBlank
             };
 
-            return formatter.Format(format, new DataState(new Profile(new ProfileState())));
+            using var profile = new Profile();
+            return formatter.Format(format, new DataState(profile));
         }
     }
 }

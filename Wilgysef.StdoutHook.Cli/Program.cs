@@ -2,15 +2,51 @@
 
 using System.Diagnostics;
 using Wilgysef.StdoutHook.Cli;
-using Wilgysef.StdoutHook.Profiles;
+using Wilgysef.StdoutHook.CommandLocator;
+using Wilgysef.StdoutHook.Profiles.Dtos;
+using Wilgysef.StdoutHook.Profiles.Loaders;
 
-var processInfo = new ProcessStartInfo("python")
+var command = "python";
+var commandPaths = new CommandLocator().LocateCommand(command);
+
+var fullCommandPath = commandPaths.FirstOrDefault();
+var arguments = new[]
+{
+    "D:\\projects\\stdouthook\\Wilgysef.StdoutHook\\testproc.py",
+};
+
+var loader = new JsonProfileLoader();
+using var stream = File.Open("test.json", FileMode.Open);
+using var stream1 = File.Open("test1.json", FileMode.Open);
+
+var dtos = new List<ProfileDto>
+{
+    await loader.LoadProfileDtoAsync(stream),
+    await loader.LoadProfileDtoAsync(stream1),
+};
+
+var picker = new ProfileDtoPicker();
+var pickedDto = picker.PickProfileDto(
+    dtos,
+    profileName: "test",
+    command: command,
+    fullCommandPath: fullCommandPath,
+    arguments: arguments);
+using var profile = loader.LoadProfile(dtos, pickedDto);
+
+//ColorDebug.GetColorDebug(Console.Out);
+//return;
+
+var processInfo = new ProcessStartInfo(command)
 {
     RedirectStandardError = true,
     RedirectStandardOutput = true,
 };
 
-processInfo.ArgumentList.Add("D:\\projects\\stdouthook\\Wilgysef.StdoutHook\\testproc.py");
+for (var i = 0; i < arguments.Length; i++)
+{
+    processInfo.ArgumentList.Add(arguments[i]);
+}
 
 //var processInfo = new ProcessStartInfo("pip")
 //{
@@ -20,9 +56,6 @@ processInfo.ArgumentList.Add("D:\\projects\\stdouthook\\Wilgysef.StdoutHook\\tes
 
 //processInfo.ArgumentList.Add("install");
 //processInfo.ArgumentList.Add("yt-dlp");
-
-using var profileState = new ProfileState();
-var profile = new Profile(profileState);
 
 profile.Build();
 
@@ -34,7 +67,7 @@ if (process == null)
     throw new Exception("Process could not start.");
 }
 
-profileState.SetProcess(process);
+profile.State.SetProcess(process);
 
 using var streamOutputHandler = new StreamOutputHandler(profile, process.StandardOutput, process.StandardError);
 streamOutputHandler.FlushOutput = profile.Flush;

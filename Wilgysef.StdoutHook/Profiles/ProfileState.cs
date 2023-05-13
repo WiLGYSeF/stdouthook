@@ -24,7 +24,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public void Dispose()
         {
-            Process.Dispose();
+            Process?.Dispose();
 
             foreach (var lockedStream in _fileStreams.Values)
             {

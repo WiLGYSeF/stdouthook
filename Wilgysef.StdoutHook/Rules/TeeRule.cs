@@ -30,7 +30,7 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            var stream = state.Profile.State!.GetOrCreateFileStream(
+            var stream = state.Profile.State.GetOrCreateFileStream(
                 _absolutePath,
                 key => new FileStream(key, FileMode.Append));
 
