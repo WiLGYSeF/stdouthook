@@ -24,7 +24,7 @@ namespace Wilgysef.StdoutHook.Profiles.Dtos
 
         public IList<RuleDto>? Rules { get; set; }
 
-        public IDictionary<string, string>? ColorAliases { get; set; }
+        public IDictionary<string, string>? CustomColors { get; set; }
 
         public IList<string>? InheritProfileNames { get; set; }
 

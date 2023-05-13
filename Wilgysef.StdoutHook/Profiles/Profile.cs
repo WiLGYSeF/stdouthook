@@ -32,11 +32,11 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public int MaxArguments { get; set; }
 
-        public IList<Rule> Rules { get; set; }
+        public IList<Rule> Rules { get; set; } = new List<Rule>();
 
-        public IDictionary<string, string> ColorAliases { get; set; }
+        public IDictionary<string, string> CustomColors { get; set; } = new Dictionary<string, string>();
 
-        public IList<string> InheritProfileNames { get; set; }
+        public IList<string> InheritProfileNames { get; set; } = new List<string>();
 
         public ProfileState? State { get; set; }
 
@@ -51,10 +51,17 @@ namespace Wilgysef.StdoutHook.Profiles
         {
             if (State == null)
             {
-                throw new Exception($"{nameof(State)} cannot not be null.");
+                throw new Exception($"{nameof(State)} cannot be null.");
             }
 
-            Build(new Formatter(FormatFunctionBuilder.Create()));
+            var formatFunctionBuilder = FormatFunctionBuilder.Create();
+
+            if (CustomColors.Count > 0)
+            {
+                formatFunctionBuilder.SetCustomColors(CustomColors);
+            }
+
+            Build(new Formatter(formatFunctionBuilder));
         }
 
         public bool ApplyRules(ref string line, bool stdout)
@@ -81,7 +88,7 @@ namespace Wilgysef.StdoutHook.Profiles
                             break;
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception ex)
                     {
 
                     }

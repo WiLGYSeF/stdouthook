@@ -21,6 +21,11 @@ namespace Wilgysef.StdoutHook.Formatters
 
         private readonly List<FormatBuilder> _formatBuilders;
 
+        public static FormatFunctionBuilder Create()
+        {
+            return new FormatFunctionBuilder(FormatBuilders);
+        }
+
         public FormatFunctionBuilder(params FormatBuilder[] formatBuilders)
         {
             _formatBuilders = new List<FormatBuilder>(formatBuilders);
@@ -31,9 +36,19 @@ namespace Wilgysef.StdoutHook.Formatters
             _formatBuilders = new List<FormatBuilder>(formatBuilders);
         }
 
-        public static FormatFunctionBuilder Create()
+        public void SetCustomColors(IDictionary<string, string> colors)
         {
-            return new FormatFunctionBuilder(FormatBuilders);
+            foreach (var formatBuilder in _formatBuilders)
+            {
+                if (formatBuilder is ColorFormatBuilder colorFormatBuilder)
+                {
+                    colorFormatBuilder.CustomColors.Clear();
+                    foreach (var (key, val) in colors)
+                    {
+                        colorFormatBuilder.CustomColors[key] = val;
+                    }
+                }
+            }
         }
 
         public Func<DataState, string> Build(

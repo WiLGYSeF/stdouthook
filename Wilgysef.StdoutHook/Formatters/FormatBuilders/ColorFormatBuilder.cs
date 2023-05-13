@@ -76,7 +76,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         public override char? KeyShort => 'C';
 
-        public IDictionary<string, string> CustomColors = new Dictionary<string, string>();
+        public IDictionary<string, string> CustomColors { get; set; } = new Dictionary<string, string>();
 
         public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
         {

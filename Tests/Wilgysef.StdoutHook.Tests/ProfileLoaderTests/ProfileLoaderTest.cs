@@ -96,17 +96,17 @@ public class ProfileLoaderTest
     }
 
     [Fact]
-    public async Task ColorAliases()
+    public async Task CustomColors()
     {
         var loader = new TestProfileLoader();
-        loader.Profile.ColorAliases = new Dictionary<string, string>
+        loader.Profile.CustomColors = new Dictionary<string, string>
         {
             ["a"] = "b",
         };
 
         var profile = await loader.LoadProfileAsync(new MemoryStream());
-        profile.ColorAliases.Count.ShouldBe(1);
-        profile.ColorAliases["a"].ShouldBe("b");
+        profile.CustomColors.Count.ShouldBe(1);
+        profile.CustomColors["a"].ShouldBe("b");
     }
 
     [Fact]

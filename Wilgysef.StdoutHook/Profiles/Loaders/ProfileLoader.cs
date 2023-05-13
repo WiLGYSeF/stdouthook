@@ -30,7 +30,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 PseudoTty = dto.PseudoTty.GetValueOrDefault(false),
                 Flush = dto.Flush.GetValueOrDefault(false),
                 Rules = LoadRules(dto.Rules),
-                ColorAliases = dto.ColorAliases ?? new Dictionary<string, string>(),
+                CustomColors = dto.CustomColors ?? new Dictionary<string, string>(),
                 InheritProfileNames = dto.InheritProfileNames ?? new List<string>()
             };
 
