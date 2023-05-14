@@ -10,27 +10,9 @@ namespace Wilgysef.StdoutHook.Profiles
     {
         public string? ProfileName { get; set; }
 
-        public string? Command { get; set; }
-
-        public Regex? CommandExpression { get; set; }
-
-        public string? FullCommandPath { get; set; }
-
-        public Regex? FullCommandPathExpression { get; set; }
-
-        public bool CommandIgnoreCase { get; set; }
-
-        public bool Enabled { get; set; }
-
         public bool PseudoTty { get; set; }
 
         public bool Flush { get; set; }
-
-        public IList<object> ArgumentPatterns { get; }
-
-        public int MinArguments { get; set; }
-
-        public int MaxArguments { get; set; }
 
         public IList<Rule> Rules { get; set; } = new List<Rule>();
 

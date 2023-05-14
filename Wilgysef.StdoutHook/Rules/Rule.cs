@@ -9,8 +9,6 @@ namespace Wilgysef.StdoutHook.Rules
 {
     public abstract class Rule
     {
-        public bool Enabled { get; set; } = true;
-
         public Regex? EnableExpression { get; set; }
 
         public bool StdoutOnly { get; set; }
@@ -81,8 +79,7 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal virtual bool IsActive(DataState state)
         {
-            if (!Enabled
-                || StdoutOnly && !state.Stdout
+            if (StdoutOnly && !state.Stdout
                 || StderrOnly && state.Stdout)
             {
                 return false;

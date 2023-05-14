@@ -109,7 +109,11 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
             for (var i = 0; i < ruleDtos.Count; i++)
             {
-                rules.Add(_ruleLoader.LoadRule(ruleDtos[i]));
+                var rule = ruleDtos[i];
+                if (rule.Enabled.GetValueOrDefault(true))
+                {
+                    rules.Add(_ruleLoader.LoadRule(rule));
+                }
             }
 
             return rules;
@@ -120,12 +124,6 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             return new Profile
             {
                 ProfileName = dto.ProfileName,
-                Command = dto.Command,
-                CommandExpression = GetRegex(dto.CommandExpression),
-                FullCommandPath = dto.FullCommandPath,
-                FullCommandPathExpression = GetRegex(dto.FullCommandPathExpression),
-                CommandIgnoreCase = dto.CommandIgnoreCase.GetValueOrDefault(false),
-                Enabled = dto.Enabled.GetValueOrDefault(true),
                 PseudoTty = dto.PseudoTty.GetValueOrDefault(false),
                 Flush = dto.Flush.GetValueOrDefault(false),
                 Rules = LoadRules(dto.Rules),
@@ -166,13 +164,6 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                     target.CustomColors.TryAdd(key, val);
                 }
             }
-        }
-
-        private static Regex? GetRegex(string? expression)
-        {
-            return expression != null
-                ? new Regex(expression, RegexOptions.Compiled)
-                : null;
         }
 
         private class ProfileDtoNode

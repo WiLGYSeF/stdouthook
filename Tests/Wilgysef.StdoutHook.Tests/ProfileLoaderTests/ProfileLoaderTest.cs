@@ -16,66 +16,6 @@ public class ProfileLoaderTest
     }
 
     [Fact]
-    public async Task Command()
-    {
-        var loader = new TestProfileLoader();
-        loader.Profile.Command = "test";
-
-        var profile = await loader.LoadProfileAsync(new MemoryStream());
-        profile.Command.ShouldBe(loader.Profile.Command);
-    }
-
-    [Fact]
-    public async Task CommandExpression()
-    {
-        var loader = new TestProfileLoader();
-        loader.Profile.CommandExpression = "test";
-
-        var profile = await loader.LoadProfileAsync(new MemoryStream());
-        profile.CommandExpression!.ToString().ShouldBe(loader.Profile.CommandExpression);
-    }
-
-    [Fact]
-    public async Task FullCommandPath()
-    {
-        var loader = new TestProfileLoader();
-        loader.Profile.FullCommandPath = "test";
-
-        var profile = await loader.LoadProfileAsync(new MemoryStream());
-        profile.FullCommandPath.ShouldBe(loader.Profile.FullCommandPath);
-    }
-
-    [Fact]
-    public async Task FullCommandPathExpression()
-    {
-        var loader = new TestProfileLoader();
-        loader.Profile.FullCommandPathExpression = "test";
-
-        var profile = await loader.LoadProfileAsync(new MemoryStream());
-        profile.FullCommandPathExpression!.ToString().ShouldBe(loader.Profile.FullCommandPathExpression);
-    }
-
-    [Fact]
-    public async Task CommandIgnoreCase()
-    {
-        var loader = new TestProfileLoader();
-        loader.Profile.CommandIgnoreCase = true;
-
-        var profile = await loader.LoadProfileAsync(new MemoryStream());
-        profile.CommandIgnoreCase.ShouldBe(loader.Profile.CommandIgnoreCase.Value);
-    }
-
-    [Fact]
-    public async Task Enabled()
-    {
-        var loader = new TestProfileLoader();
-        loader.Profile.Enabled = false;
-
-        var profile = await loader.LoadProfileAsync(new MemoryStream());
-        profile.Enabled.ShouldBe(loader.Profile.Enabled.Value);
-    }
-
-    [Fact]
     public async Task PseudoTty()
     {
         var loader = new TestProfileLoader();
@@ -107,6 +47,27 @@ public class ProfileLoaderTest
         var profile = await loader.LoadProfileAsync(new MemoryStream());
         profile.CustomColors.Count.ShouldBe(1);
         profile.CustomColors["a"].ShouldBe("b");
+    }
+
+    [Fact]
+    public async Task SkipDisabledRules()
+    {
+        var loader = new TestProfileLoader();
+        loader.Profile.Rules = new List<RuleDto>
+        {
+            new RuleDto
+            {
+                Enabled = false,
+                ReplaceAllFormat = "a",
+            },
+            new RuleDto
+            {
+                ReplaceAllFormat = "a",
+            },
+        };
+
+        var profile = await loader.LoadProfileAsync(new MemoryStream());
+        profile.Rules.Count.ShouldBe(1);
     }
 
     private class TestProfileLoader : ProfileLoader

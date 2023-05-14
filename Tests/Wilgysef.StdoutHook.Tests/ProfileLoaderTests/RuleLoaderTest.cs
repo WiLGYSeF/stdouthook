@@ -9,17 +9,6 @@ public class RuleLoaderTest
     #region Base Rule
 
     [Fact]
-    public void Enabled()
-    {
-        var rule = LoadBaseRule(new RuleDto
-        {
-            Enabled = false,
-        });
-
-        rule.Enabled.ShouldBeFalse();
-    }
-
-    [Fact]
     public void EnableExpression()
     {
         var rule = LoadBaseRule(new RuleDto

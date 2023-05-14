@@ -7,20 +7,6 @@ namespace Wilgysef.StdoutHook.Tests.RuleTests;
 public class ActivationTest
 {
     [Fact]
-    public void NotEnabled()
-    {
-        var rule = new TestRule
-        {
-            Enabled = false,
-        };
-
-        using var profile = CreateDummyProfile();
-        rule.Build(profile, null!);
-
-        SendLine(rule, "test", true, profile).ShouldBe(false);
-    }
-
-    [Fact]
     public void StdoutOnly()
     {
         var rule = new TestRule

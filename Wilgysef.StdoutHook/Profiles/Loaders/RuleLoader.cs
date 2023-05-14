@@ -161,7 +161,6 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         private static void SetBaseRuleProperties(Rule rule, RuleDto dto)
         {
-            rule.Enabled = dto.Enabled.GetValueOrDefault(true);
             rule.EnableExpression = GetRegex(dto.EnableExpression);
             rule.StdoutOnly = dto.StdoutOnly.GetValueOrDefault(false);
             rule.StderrOnly = dto.StderrOnly.GetValueOrDefault(false);

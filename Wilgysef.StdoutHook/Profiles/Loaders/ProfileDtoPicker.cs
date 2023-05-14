@@ -16,6 +16,11 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             for (var i = 0; i < profileDtos.Count; i++)
             {
                 var dto = profileDtos[i];
+                if (!dto.Enabled.GetValueOrDefault(true))
+                {
+                    continue;
+                }
+
                 if (profileName != null && profileName == dto.ProfileName
                     || command != null
                         && (command == dto.Command
