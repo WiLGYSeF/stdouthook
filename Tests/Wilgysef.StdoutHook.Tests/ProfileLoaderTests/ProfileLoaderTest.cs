@@ -74,7 +74,7 @@ public class ProfileLoaderTest
     {
         public ProfileDto Profile { get; set; } = new ProfileDto();
 
-        public override Task<ProfileDto> LoadProfileDtoAsync(Stream stream, CancellationToken cancellationToken)
+        protected override Task<ProfileDto> LoadProfileDtoInternalAsync(Stream stream, CancellationToken cancellationToken)
         {
             return Task.FromResult(Profile);
         }

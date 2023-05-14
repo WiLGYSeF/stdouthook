@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Wilgysef.StdoutHook.Profiles.Dtos;
@@ -13,7 +12,42 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
     {
         protected RuleLoader _ruleLoader = new RuleLoader();
 
-        public abstract Task<ProfileDto> LoadProfileDtoAsync(Stream stream, CancellationToken cancellationToken = default);
+        protected abstract Task<ProfileDto> LoadProfileDtoInternalAsync(Stream stream, CancellationToken cancellationToken);
+
+        public async Task<ProfileDto> LoadProfileDtoAsync(Stream stream, CancellationToken cancellationToken = default)
+        {
+            var dto = await LoadProfileDtoInternalAsync(stream, cancellationToken);
+
+            if (dto.Subcommand != null
+                && !(dto.Subcommand is string)
+                && !(dto.Subcommand is IList<object>))
+            {
+                throw new Exception();
+            }
+
+            if (dto.Rules != null)
+            {
+                for (var ruleIndex = 0; ruleIndex < dto.Rules.Count; ruleIndex++)
+                {
+                    var rule = dto.Rules[ruleIndex];
+                    if (rule.ReplaceFields != null
+                        && !(rule.ReplaceFields is IList<object>)
+                        && !(rule.ReplaceFields is IDictionary<string, object>))
+                    {
+                        throw new Exception();
+                    }
+
+                    if (rule.ReplaceGroups != null
+                        && !(rule.ReplaceGroups is IList<object>)
+                        && !(rule.ReplaceGroups is IDictionary<string, object>))
+                    {
+                        throw new Exception();
+                    }
+                }
+            }
+
+            return dto;
+        }
 
         public Profile LoadProfile(IReadOnlyList<ProfileDto> profileDtos, ProfileDto profileToLoad)
         {
@@ -46,8 +80,11 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                     {
                         if (profileDtoMap.TryGetValue(dto.InheritProfileNames[i], out var dtoByName))
                         {
-                            stack.Push(node.AddChild(dtoByName));
-                            count++;
+                            if (dtoByName.Enabled.GetValueOrDefault(true))
+                            {
+                                stack.Push(node.AddChild(dtoByName));
+                                count++;
+                            }
                         }
                         else
                         {
@@ -124,8 +161,8 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             return new Profile
             {
                 ProfileName = dto.ProfileName,
-                PseudoTty = dto.PseudoTty.GetValueOrDefault(false),
-                Flush = dto.Flush.GetValueOrDefault(false),
+                PseudoTty = dto.PseudoTty ?? false,
+                Flush = dto.Flush ?? false,
                 Rules = LoadRules(dto.Rules),
                 CustomColors = dto.CustomColors ?? new Dictionary<string, string>(),
             };
@@ -133,13 +170,16 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         private static void SetProfileDtoMetaProperties(ProfileDto target, ProfileDto source)
         {
+            target.Enabled = source.Enabled;
             target.ProfileName = source.ProfileName;
             target.Command = source.Command;
             target.CommandExpression = source.CommandExpression;
             target.FullCommandPath = source.FullCommandPath;
             target.FullCommandPathExpression = source.FullCommandPathExpression;
             target.CommandIgnoreCase = source.CommandIgnoreCase;
-            target.Enabled = source.Enabled;
+            target.ArgumentPatterns = source.ArgumentPatterns;
+            target.MinArguments = source.MinArguments;
+            target.MaxArguments = source.MaxArguments;
         }
 
         private static void CombineProfileDto(ProfileDto target, ProfileDto source)

@@ -11,7 +11,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 {
     public class JsonProfileLoader : ProfileLoader
     {
-        public override async Task<ProfileDto> LoadProfileDtoAsync(Stream stream, CancellationToken cancellationToken = default)
+        protected override async Task<ProfileDto> LoadProfileDtoInternalAsync(Stream stream, CancellationToken cancellationToken)
         {
             var options = new JsonSerializerOptions
             {

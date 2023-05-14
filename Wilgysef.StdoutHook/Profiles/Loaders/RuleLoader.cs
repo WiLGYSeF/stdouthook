@@ -145,8 +145,8 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             var rule = new TeeRule(dto.Filename!);
             SetBaseRuleProperties(rule, dto);
 
-            rule.Flush = dto.Flush.GetValueOrDefault(false);
-            rule.ExtractColors = dto.ExtractColors.GetValueOrDefault(false);
+            rule.Flush = dto.Flush ?? false;
+            rule.ExtractColors = dto.ExtractColors ?? false;
 
             return rule;
         }
@@ -162,10 +162,10 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
         private static void SetBaseRuleProperties(Rule rule, RuleDto dto)
         {
             rule.EnableExpression = GetRegex(dto.EnableExpression);
-            rule.StdoutOnly = dto.StdoutOnly.GetValueOrDefault(false);
-            rule.StderrOnly = dto.StderrOnly.GetValueOrDefault(false);
-            rule.Terminal = dto.Terminal.GetValueOrDefault(false);
-            rule.TrimNewline = dto.TrimNewline.GetValueOrDefault(false);
+            rule.StdoutOnly = dto.StdoutOnly ?? false;
+            rule.StderrOnly = dto.StderrOnly ?? false;
+            rule.Terminal = dto.Terminal ?? false;
+            rule.TrimNewline = dto.TrimNewline ?? false;
             rule.ActivationLines = dto.ActivationLines ?? new List<long>();
             rule.ActivationLinesStdoutOnly = dto.ActivationLinesStdoutOnly ?? new List<long>();
             rule.ActivationLinesStderrOnly = dto.ActivationLinesStderrOnly ?? new List<long>();
@@ -206,7 +206,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
             return new ActivationExpression(
                 CreateRegex(dto.Expression),
-                dto.ActivationOffset.GetValueOrDefault());
+                dto.ActivationOffset ?? 0);
         }
 
         private static Type GetRuleType(RuleDto rule)
