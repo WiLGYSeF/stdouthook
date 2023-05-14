@@ -141,11 +141,15 @@ namespace Wilgysef.StdoutHook.Rules
 
             static void MatchExpressions(ICollection<ActivationExpression> expressions, HashSet<long> set, long lineOffset, string data)
             {
-                foreach (var expression in expressions)
+                // optimized for empty collections
+                if (expressions.Count > 0)
                 {
-                    if (expression.Expression.Match(data).Success)
+                    foreach (var expression in expressions)
                     {
-                        set.Add(lineOffset + expression.ActivationOffset);
+                        if (expression.Expression.IsMatch(data))
+                        {
+                            set.Add(lineOffset + expression.ActivationOffset);
+                        }
                     }
                 }
             }
@@ -165,6 +169,11 @@ namespace Wilgysef.StdoutHook.Rules
 
             public bool MatchesCurrent(T item)
             {
+                if (_index == _items.Count)
+                {
+                    return false;
+                }
+
                 var originalIndex = _index;
 
                 for (; _index < _items.Count && item.Equals(_items[_index]); _index++) { }

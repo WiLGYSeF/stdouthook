@@ -69,7 +69,12 @@ if (process == null)
 
 profile.State.SetProcess(process);
 
-using var streamOutputHandler = new StreamOutputHandler(profile, process.StandardOutput, process.StandardError);
+var streamOutputHandler = new StreamOutputHandler(
+    profile,
+    process.StandardOutput,
+    process.StandardError,
+    Console.Out,
+    Console.Error);
 streamOutputHandler.FlushOutput = profile.Flush;
 streamOutputHandler.FlushError = profile.Flush;
 
