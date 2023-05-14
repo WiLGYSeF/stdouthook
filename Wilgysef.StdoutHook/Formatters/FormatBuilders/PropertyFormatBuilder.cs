@@ -20,13 +20,24 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                     if (prop.IsConstant)
                     {
                         isConstant = true;
-                        var vaule = func(GetValue(new DataState(state.Profile)));
-                        return _ => vaule;
+                        var value = func(GetValue(new DataState(state.Profile)));
+                        return _ => value;
                     }
                     else
                     {
                         isConstant = false;
-                        return dataState => func(GetValue(dataState));
+                        return dataState =>
+                        {
+                            try
+                            {
+                                return func(GetValue(dataState));
+                            }
+                            catch (Exception ex)
+                            {
+                                // TODO: log?
+                                return "";
+                            }
+                        };
                     }
                 }
             }

@@ -20,6 +20,12 @@
                 }
             }
 
+            if (index == str.Length)
+            {
+                newline = "";
+                return str;
+            }
+
             newline = str[index..];
             return str[..index];
         }

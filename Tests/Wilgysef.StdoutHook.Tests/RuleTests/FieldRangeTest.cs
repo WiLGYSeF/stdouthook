@@ -47,6 +47,8 @@ public class FieldRangeTest
         Should.Throw<ArgumentException>(() => new FieldRange(3, -1));
         Should.Throw<ArgumentException>(() => new FieldRange(-1));
         Should.Throw<ArgumentException>(() => FieldRange.Parse("abc"));
+        Should.Throw<ArgumentException>(() => FieldRange.Parse("abc-def"));
+        Should.Throw<ArgumentException>(() => FieldRange.Parse("1-eee"));
     }
 
     [Fact]
@@ -68,5 +70,13 @@ public class FieldRangeTest
         range.Contains(1).ShouldBeTrue();
         range.Contains(2).ShouldBeTrue();
         range.Contains(3).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Range_ToString()
+    {
+        new FieldRange(1, 4).ToString().ShouldBe("1-4");
+        new FieldRange(5, null).ToString().ShouldBe("5-Inf");
+        new FieldRange(7, 7).ToString().ShouldBe("7");
     }
 }

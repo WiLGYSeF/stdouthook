@@ -129,7 +129,6 @@ public class RegexGroupRuleTest : RuleTestBase
     public void ReplaceAll()
     {
         var rule = new RegexGroupRule(new Regex(@"a([a-z]+)f"), "aaa %G1");
-
         ShouldRuleBe(rule, "test asdf abc", "aaa sd");
     }
 
@@ -137,7 +136,6 @@ public class RegexGroupRuleTest : RuleTestBase
     public void ReplaceAll_NoMatch()
     {
         var rule = new RegexGroupRule(new Regex(@"zxcv"), "aaa");
-
         ShouldRuleBe(rule, "test asdf abc", "test asdf abc");
     }
 
@@ -152,7 +150,6 @@ public class RegexGroupRuleTest : RuleTestBase
     public void ReplaceAll_Replace_Color()
     {
         var rule = new RegexGroupRule(new Regex(@"a([a-z]+)f"), "%G1");
-
         ShouldRuleBe(rule, "test as\x1b[31mdf abc", "s\x1b[31md");
     }
 
@@ -161,6 +158,13 @@ public class RegexGroupRuleTest : RuleTestBase
     {
         var rule = new RegexGroupRule(new Regex(@"([0-9]+)\.([0-9]+)"), "=%Gc=.=%Gc=");
         ShouldRuleBe(rule, "123.456", "=123=.=456=");
+    }
+
+    [Fact]
+    public void ReplaceAll_Current_MoreThanGroupCount()
+    {
+        var rule = new RegexGroupRule(new Regex(@"([0-9]+)\.([0-9]+)"), "%Gc%Gc%Gc");
+        ShouldRuleBe(rule, "123.456", "123456");
     }
 
     [Fact]
@@ -178,13 +182,26 @@ public class RegexGroupRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void ReplaceAll_NoGroup()
+    {
+        var rule = new RegexGroupRule(new Regex(@"(?<test>[0-9]+)"), "%G");
+        ShouldRuleBe(rule, "abc123", "%G");
+    }
+
+    [Fact]
     public void TrimNewline()
     {
         var rule = new RegexGroupRule(new Regex(@"."), "a")
         {
             TrimNewline = true,
         };
-
         ShouldRuleBe(rule, "abc123\n", "a");
+    }
+
+    [Fact]
+    public void NoContext()
+    {
+        var rule = new UnconditionalReplaceRule("%Gc %G0");
+        ShouldRuleBe(rule, "abc123", " ");
     }
 }

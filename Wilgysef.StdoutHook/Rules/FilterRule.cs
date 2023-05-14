@@ -8,6 +8,7 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
+            // should not be reached
             return state.Data!;
         }
     }

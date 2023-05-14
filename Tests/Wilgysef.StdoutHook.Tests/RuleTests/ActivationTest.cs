@@ -174,6 +174,12 @@ public class ActivationTest
         SendLine(rule, "test", true, profile).ShouldBe(false);
     }
 
+    [Fact]
+    public void Invalid()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => new ActivationExpression(new Regex(""), -1));
+    }
+
     private static bool SendLine(Rule rule, string data, bool stdout, Profile profile)
     {
         if (stdout)
