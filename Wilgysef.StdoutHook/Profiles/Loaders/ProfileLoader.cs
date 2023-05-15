@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Profiles.Dtos;
 using Wilgysef.StdoutHook.Rules;
 
@@ -22,7 +23,10 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 && !(dto.Subcommand is string)
                 && !(dto.Subcommand is IList<object>))
             {
-                throw new Exception();
+                throw new InvalidPropertyTypeException(
+                    nameof(dto.Subcommand),
+                    dto.Subcommand.GetType().Name,
+                    new[] { "string", "list of strings" });
             }
 
             if (dto.Rules != null)
@@ -34,14 +38,20 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                         && !(rule.ReplaceFields is IList<object>)
                         && !(rule.ReplaceFields is IDictionary<string, object>))
                     {
-                        throw new Exception();
+                        throw new InvalidPropertyTypeException(
+                            nameof(rule.ReplaceFields),
+                            rule.ReplaceFields.GetType().Name,
+                            new[] { "list of strings", "object with string keys and string values" });
                     }
 
                     if (rule.ReplaceGroups != null
                         && !(rule.ReplaceGroups is IList<object>)
                         && !(rule.ReplaceGroups is IDictionary<string, object>))
                     {
-                        throw new Exception();
+                        throw new InvalidPropertyTypeException(
+                            nameof(rule.ReplaceFields),
+                            rule.ReplaceGroups.GetType().Name,
+                            new[] { "list of strings", "object with string keys and string values" });
                     }
                 }
             }
@@ -49,7 +59,10 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             return dto;
         }
 
-        public Profile LoadProfile(IReadOnlyList<ProfileDto> profileDtos, ProfileDto profileToLoad)
+        public Profile LoadProfile(
+            IReadOnlyList<ProfileDto> profileDtos,
+            ProfileDto profileToLoad,
+            bool throwIfInheritedProfileNotFound = true)
         {
             var profileDtoMap = new Dictionary<string, ProfileDto>();
 
@@ -88,15 +101,20 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                         }
                         else
                         {
-                            throw new Exception();
+                            // TODO: log
+                            if (throwIfInheritedProfileNotFound)
+                            {
+                                throw new InheritedProfileNotFoundException();
+                            }
                         }
                     }
                 }
             }
 
-            var traversal = new Stack<ProfileDto>(count);
-
-            traversal.Push(root.ProfileDto);
+            var traversal = new List<ProfileDto>(count)
+            {
+                root.ProfileDto
+            };
             stack.Push(root);
 
             while (stack.Count > 0)
@@ -106,7 +124,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 for (var i = 0; i < node.Children.Count; i++)
                 {
                     var child = node.Children[i];
-                    traversal.Push(child.ProfileDto);
+                    traversal.Add(child.ProfileDto);
                     stack.Push(child);
                 }
             }
@@ -114,9 +132,9 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             var loaded = new HashSet<ProfileDto>(count);
             var currentDto = new ProfileDto();
 
-            while (traversal.Count > 0)
+            for (var i = 0; i < traversal.Count; i++)
             {
-                var dto = traversal.Pop();
+                var dto = traversal[i];
                 if (!loaded.Add(dto))
                 {
                     continue;
@@ -170,16 +188,16 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         private static void SetProfileDtoMetaProperties(ProfileDto target, ProfileDto source)
         {
-            target.Enabled = source.Enabled;
-            target.ProfileName = source.ProfileName;
-            target.Command = source.Command;
-            target.CommandExpression = source.CommandExpression;
-            target.FullCommandPath = source.FullCommandPath;
-            target.FullCommandPathExpression = source.FullCommandPathExpression;
-            target.CommandIgnoreCase = source.CommandIgnoreCase;
-            target.ArgumentPatterns = source.ArgumentPatterns;
-            target.MinArguments = source.MinArguments;
-            target.MaxArguments = source.MaxArguments;
+            target.Enabled ??= source.Enabled;
+            target.ProfileName ??= source.ProfileName;
+            target.Command ??= source.Command;
+            target.CommandExpression ??= source.CommandExpression;
+            target.FullCommandPath ??= source.FullCommandPath;
+            target.FullCommandPathExpression ??= source.FullCommandPathExpression;
+            target.CommandIgnoreCase ??= source.CommandIgnoreCase;
+            target.ArgumentPatterns ??= source.ArgumentPatterns;
+            target.MinArguments ??= source.MinArguments;
+            target.MaxArguments ??= source.MaxArguments;
         }
 
         private static void CombineProfileDto(ProfileDto target, ProfileDto source)
@@ -189,11 +207,8 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
             if (source.Rules != null)
             {
-                target.Rules ??= new List<RuleDto>();
-                for (var i = 0; i < source.Rules.Count; i++)
-                {
-                    target.Rules.Add(source.Rules[i]);
-                }
+                target.Rules ??= new List<RuleDto>(source.Rules.Count);
+                target.Rules.InsertRange(0, source.Rules);
             }
 
             if (source.CustomColors != null)
@@ -226,7 +241,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 {
                     if (current.ProfileDto == profileDto)
                     {
-                        throw new Exception();
+                        throw new ProfileInheritanceRecursionException(profileDto.ProfileName!);
                     }
                 }
 
