@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Wilgysef.StdoutHook.Profiles;
+using Wilgysef.StdoutHook.Utilities;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
@@ -15,8 +16,12 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         private DateTime? _startTime;
 
+        private OffsetStopwatch _durationStopwatch;
+
         public ProcessFormatBuilder()
         {
+            _durationStopwatch = new OffsetStopwatch();
+
             _processProperties = new[]
             {
                 // all properties are not constant because formatters are built before the process starts
@@ -38,7 +43,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 new Property(new[] { "userProcessorTime" }, (process, format) => process.UserProcessorTime.ToString(format), false),
                 new Property(new[] { "virtualMemorySize" }, process => process.VirtualMemorySize64.ToString(), false),
                 new Property(new[] { "workingSet" }, process => process.WorkingSet64.ToString(), false),
-                new Property(new[] { "duration" }, (process, format) => (DateTime.Now - _startTime!.Value).ToString(format), false),
+                new Property(new[] { "duration" }, (process, format) => _durationStopwatch.Elapsed.ToString(format), false),
             };
         }
 
@@ -52,6 +57,12 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             var process = state.Profile.State.Process;
 
             _startTime ??= process.StartTime;
+
+            if (!_durationStopwatch.IsRunning)
+            {
+                _durationStopwatch.Offset = DateTime.Now - _startTime!.Value;
+                _durationStopwatch.Start();
+            }
 
             return process;
         }

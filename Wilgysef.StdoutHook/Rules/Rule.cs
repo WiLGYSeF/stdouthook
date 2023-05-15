@@ -158,6 +158,7 @@ namespace Wilgysef.StdoutHook.Rules
         protected class SortedListIncrementMatch<T> where T : IEquatable<T>
         {
             private readonly List<T> _items;
+            private readonly int _itemCount;
 
             private int _index = 0;
 
@@ -165,18 +166,20 @@ namespace Wilgysef.StdoutHook.Rules
             {
                 _items = new List<T>(items);
                 _items.Sort();
+
+                _itemCount = _items.Count;
             }
 
             public bool MatchesCurrent(T item)
             {
-                if (_index == _items.Count)
+                if (_index == _itemCount)
                 {
                     return false;
                 }
 
                 var originalIndex = _index;
 
-                for (; _index < _items.Count && item.Equals(_items[_index]); _index++) { }
+                for (; _index < _itemCount && item.Equals(_items[_index]); _index++) { }
 
                 return originalIndex != _index;
             }

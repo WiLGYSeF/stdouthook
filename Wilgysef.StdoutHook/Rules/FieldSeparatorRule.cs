@@ -80,7 +80,6 @@ namespace Wilgysef.StdoutHook.Rules
                 return state.Data!;
             }
 
-            using var contextScope = state.GetContextScope();
             state.Context.SetFieldContext(splitData);
 
             if (_replaceAll != null)

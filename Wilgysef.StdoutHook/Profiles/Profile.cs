@@ -38,6 +38,8 @@ namespace Wilgysef.StdoutHook.Profiles
 
             for (var i = 0; i < Rules.Count; i++)
             {
+                dataState.ResetContext();
+
                 var rule = Rules[i];
                 if (rule.IsActive(dataState))
                 {

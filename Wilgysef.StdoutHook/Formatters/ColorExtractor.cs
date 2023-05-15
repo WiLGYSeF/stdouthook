@@ -13,7 +13,7 @@ namespace Wilgysef.StdoutHook.Formatters
         {
             var parts = ColorRegex.SplitWithSeparators(data, out var _);
 
-            var builder = new StringBuilder();
+            var builder = new StringBuilder(data.Length);
             var offset = 0;
             var useBuilder = true;
 
