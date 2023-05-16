@@ -8,15 +8,14 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
     internal class ProcessFormatBuilder : PropertyFormatBuilder<Process>
     {
-        private readonly Property[] _processProperties;
-
         public override string? Key => "process";
 
         public override char? KeyShort => null;
 
-        private DateTime? _startTime;
+        private readonly Property[] _processProperties;
+        private readonly OffsetStopwatch _durationStopwatch;
 
-        private OffsetStopwatch _durationStopwatch;
+        private DateTime? _startTime;
 
         public ProcessFormatBuilder()
         {

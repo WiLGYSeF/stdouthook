@@ -26,13 +26,14 @@ var dtos = new List<ProfileDto>
 };
 
 var picker = new ProfileDtoPicker();
-var pickedDto = picker.PickProfileDto(
+using var profile = loader.LoadProfile(
     dtos,
-    profileName: "test",
-    command: command,
-    fullCommandPath: fullCommandPath,
-    arguments: arguments);
-using var profile = loader.LoadProfile(dtos, pickedDto);
+    profileDtos => picker.PickProfileDto(
+        profileDtos,
+        profileName: "test",
+        command: command,
+        fullCommandPath: fullCommandPath,
+        arguments: arguments));
 
 //ColorDebug.GetColorDebug(Console.Out);
 //return;

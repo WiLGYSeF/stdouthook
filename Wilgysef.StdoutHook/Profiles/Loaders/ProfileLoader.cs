@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Profiles.Dtos;
 using Wilgysef.StdoutHook.Rules;
 
@@ -59,98 +58,93 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             return dto;
         }
 
-        public Profile LoadProfile(
+        public Profile? LoadProfile(
             IReadOnlyList<ProfileDto> profileDtos,
-            ProfileDto profileToLoad,
+            Func<IReadOnlyList<ProfileDto>, ProfileDto?> profileDtoPicker,
             bool throwIfInheritedProfileNotFound = true)
         {
-            var profileDtoMap = new Dictionary<string, ProfileDto>();
+            var graph = new ProfileDtoGraph(profileDtos.Count);
+            var disabledProfileNames = new HashSet<string>();
 
             for (var i = 0; i < profileDtos.Count; i++)
             {
                 var profile = profileDtos[i];
-                if (profile.ProfileName != null)
+                if (profile.Enabled ?? true)
                 {
-                    profileDtoMap.TryAdd(profile.ProfileName, profile);
+                    graph.Add(profile);
+                }
+                else if (profile.ProfileName != null)
+                {
+                    disabledProfileNames.Add(profile.ProfileName);
                 }
             }
 
-            var root = new ProfileDtoNode(profileToLoad, null);
-
-            var stack = new Stack<ProfileDtoNode>();
-            stack.Push(root);
-
-            var count = 0;
-
-            while (stack.Count > 0)
+            for (var i = 0; i < profileDtos.Count; i++)
             {
-                var node = stack.Pop();
-                var dto = node.ProfileDto;
-
-                if (dto.InheritProfileNames != null)
+                var profile = profileDtos[i];
+                if (!(profile.Enabled ?? true) || profile.InheritProfileNames == null)
                 {
-                    for (var i = 0; i < dto.InheritProfileNames.Count; i++)
+                    continue;
+                }
+
+                for (var index = 0; index < profile.InheritProfileNames.Count; index++)
+                {
+                    var name = profile.InheritProfileNames[index];
+                    if (!graph.Link(profile, name))
                     {
-                        if (profileDtoMap.TryGetValue(dto.InheritProfileNames[i], out var dtoByName))
+                        // TODO: log
+                        if (throwIfInheritedProfileNotFound && !disabledProfileNames.Contains(name))
                         {
-                            if (dtoByName.Enabled.GetValueOrDefault(true))
-                            {
-                                stack.Push(node.AddChild(dtoByName));
-                                count++;
-                            }
-                        }
-                        else
-                        {
-                            // TODO: log
-                            if (throwIfInheritedProfileNotFound)
-                            {
-                                throw new InheritedProfileNotFoundException();
-                            }
+                            throw new InheritedProfileNotFoundException();
                         }
                     }
                 }
             }
 
-            var traversal = new List<ProfileDto>(count)
-            {
-                root.ProfileDto
-            };
-            stack.Push(root);
+            var order = graph.GetTopologicalOrder();
+            var loadedProfileDtos = new Dictionary<ProfileDto, ProfileDto>(order.Count);
 
-            while (stack.Count > 0)
+            for (var i = order.Count - 1; i >= 0; i--)
             {
-                var node = stack.Pop();
+                var names = order[i].InheritProfileNames;
+                var currentCopy = new ProfileDto();
 
-                for (var i = 0; i < node.Children.Count; i++)
+                CombineProfileDto(currentCopy, order[i]);
+
+                if (names != null)
                 {
-                    var child = node.Children[i];
-                    traversal.Add(child.ProfileDto);
-                    stack.Push(child);
+                    for (var j = 0; j < names.Count; j++)
+                    {
+                        if (graph.TryGetProfileDtoByName(names[j], out var other))
+                        {
+                            loadedProfileDtos.TryGetValue(other, out var loadedOther);
+                            CombineProfileDto(currentCopy, loadedOther);
+                        }
+                    }
+                }
+
+                loadedProfileDtos[order[i]] = currentCopy;
+            }
+
+            var loadedProfileDtosOrdered = new List<ProfileDto>(order.Count);
+            for (var i = 0; i < profileDtos.Count; i++)
+            {
+                var profile = profileDtos[i];
+                if (profile.Enabled ?? true)
+                {
+                    loadedProfileDtosOrdered.Add(loadedProfileDtos[profile]);
                 }
             }
 
-            var loaded = new HashSet<ProfileDto>(count);
-            var currentDto = new ProfileDto();
-
-            for (var i = 0; i < traversal.Count; i++)
-            {
-                var dto = traversal[i];
-                if (!loaded.Add(dto))
-                {
-                    continue;
-                }
-
-                CombineProfileDto(currentDto, dto);
-            }
-
-            SetProfileDtoMetaProperties(currentDto, profileToLoad);
-            return CreateProfile(currentDto);
+            var profileDtoPicked = profileDtoPicker(loadedProfileDtosOrdered);
+            return profileDtoPicked != null
+                ? CreateProfile(profileDtoPicked)
+                : null;
         }
 
         public async Task<Profile> LoadProfileAsync(Stream stream, CancellationToken cancellationToken = default)
         {
-            var dto = await LoadProfileDtoAsync(stream, cancellationToken);
-            return CreateProfile(dto);
+            return CreateProfile(await LoadProfileDtoAsync(stream, cancellationToken));
         }
 
         private List<Rule> LoadRules(IList<RuleDto>? ruleDtos)
@@ -161,11 +155,12 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             }
 
             var rules = new List<Rule>(ruleDtos.Count);
+            var rulesAdded = new HashSet<RuleDto>();
 
             for (var i = 0; i < ruleDtos.Count; i++)
             {
                 var rule = ruleDtos[i];
-                if (rule.Enabled.GetValueOrDefault(true))
+                if (rule.Enabled.GetValueOrDefault(true) && rulesAdded.Add(rule))
                 {
                     rules.Add(_ruleLoader.LoadRule(rule));
                 }
@@ -186,9 +181,8 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             };
         }
 
-        private static void SetProfileDtoMetaProperties(ProfileDto target, ProfileDto source)
+        private static void CombineProfileDto(ProfileDto target, ProfileDto source)
         {
-            target.Enabled ??= source.Enabled;
             target.ProfileName ??= source.ProfileName;
             target.Command ??= source.Command;
             target.CommandExpression ??= source.CommandExpression;
@@ -198,17 +192,16 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             target.ArgumentPatterns ??= source.ArgumentPatterns;
             target.MinArguments ??= source.MinArguments;
             target.MaxArguments ??= source.MaxArguments;
-        }
-
-        private static void CombineProfileDto(ProfileDto target, ProfileDto source)
-        {
             target.PseudoTty ??= source.PseudoTty;
             target.Flush ??= source.Flush;
 
             if (source.Rules != null)
             {
                 target.Rules ??= new List<RuleDto>(source.Rules.Count);
-                target.Rules.InsertRange(0, source.Rules);
+                for (var i = 0; i < source.Rules.Count; i++)
+                {
+                    target.Rules.Add(source.Rules[i]);
+                }
             }
 
             if (source.CustomColors != null)
@@ -221,33 +214,106 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             }
         }
 
-        private class ProfileDtoNode
+        private class ProfileDtoGraph
         {
-            public ProfileDto ProfileDto { get; }
+            private readonly Dictionary<ProfileDto, List<ProfileDto>> _adjacencyLists;
+            private readonly Dictionary<string, ProfileDto> _profileDtos;
 
-            public ProfileDtoNode? Parent { get; }
-
-            public List<ProfileDtoNode> Children { get; } = new List<ProfileDtoNode>();
-
-            public ProfileDtoNode(ProfileDto profileDto, ProfileDtoNode? parent)
+            public ProfileDtoGraph(int capacity)
             {
-                ProfileDto = profileDto;
-                Parent = parent;
+                _adjacencyLists = new Dictionary<ProfileDto, List<ProfileDto>>(capacity);
+                _profileDtos = new Dictionary<string, ProfileDto>(capacity);
             }
 
-            public ProfileDtoNode AddChild(ProfileDto profileDto)
+            public void Add(ProfileDto profile)
             {
-                for (var current = this; current != null; current = current.Parent)
+                _adjacencyLists[profile] = new List<ProfileDto>();
+
+                if (profile.ProfileName != null)
                 {
-                    if (current.ProfileDto == profileDto)
+                    // only the first profile with the name is used
+                    _profileDtos.TryAdd(profile.ProfileName, profile);
+                }
+            }
+
+            public bool Link(ProfileDto profile, string profileName)
+            {
+                if (TryGetProfileDtoByName(profileName, out var other))
+                {
+                    _adjacencyLists[profile].Add(other);
+                    return true;
+                }
+
+                return false;
+            }
+
+            public bool TryGetProfileDtoByName(string profileName, out ProfileDto profile)
+            {
+                return _profileDtos.TryGetValue(profileName, out profile);
+            }
+
+            public List<ProfileDto> GetTopologicalOrder()
+            {
+                var dtos = new List<ProfileDto>(_adjacencyLists.Count);
+                var inDegrees = new Dictionary<ProfileDto, int>(_adjacencyLists.Count);
+
+                foreach (var adjacents in _adjacencyLists.Values)
+                {
+                    for (var i = 0; i < adjacents.Count; i++)
                     {
-                        throw new ProfileInheritanceRecursionException(profileDto.ProfileName!);
+                        var other = adjacents[i];
+                        inDegrees.TryGetValue(other, out var count);
+                        inDegrees[other] = count + 1;
                     }
                 }
 
-                var node = new ProfileDtoNode(profileDto, this);
-                Children.Add(node);
-                return node;
+                var queue = new Queue<ProfileDto>();
+
+                foreach (var profile in _adjacencyLists.Keys)
+                {
+                    if (!inDegrees.ContainsKey(profile))
+                    {
+                        queue.Enqueue(profile);
+                    }
+                }
+
+                while (queue.Count > 0)
+                {
+                    var profile = queue.Dequeue();
+                    dtos.Add(profile);
+
+                    var adjacents = _adjacencyLists[profile];
+                    for (var i = 0; i < adjacents.Count; i++)
+                    {
+                        var other = adjacents[i];
+                        var count = inDegrees[other];
+                        if (count > 1)
+                        {
+                            inDegrees[other] = count - 1;
+                        }
+                        else
+                        {
+                            queue.Enqueue(other);
+                        }
+                    }
+                }
+
+                if (dtos.Count < _adjacencyLists.Count)
+                {
+                    var name = "";
+                    foreach (var profile in _adjacencyLists.Keys)
+                    {
+                        if (!dtos.Contains(profile))
+                        {
+                            name = profile.ProfileName;
+                            break;
+                        }
+                    }
+
+                    throw new ProfileInheritanceRecursionException(name);
+                }
+
+                return dtos;
             }
         }
     }

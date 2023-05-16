@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Rules;
 
