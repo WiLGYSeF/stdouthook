@@ -119,16 +119,16 @@ public class ProfileLoaderTest
             new ProfileDto
             {
                 ProfileName = "inherited",
-                Command = "donotuse",
-                CommandExpression = "donotuse",
-                FullCommandPath = "donotuse",
-                FullCommandPathExpression = "donotuse",
+                Command = "command",
+                CommandExpression = "commandexpression",
+                FullCommandPath = "fullcommandpath",
+                FullCommandPathExpression = "fullcommandpathexpression",
                 CommandIgnoreCase = true,
                 ArgumentPatterns = new List<ArgumentPatternDto>
                 {
                     new ArgumentPatternDto
                     {
-                        ArgumentExpression = "donotuse",
+                        ArgumentExpression = "argumentexpression",
                     }
                 },
                 MinArguments = 1,
@@ -155,6 +155,13 @@ public class ProfileLoaderTest
             {
                 var selected = profiles.Single(p => p.ProfileName == "testprofile");
 
+                selected.Command.ShouldBe("command");
+                selected.CommandExpression.ShouldBe("commandexpression");
+                selected.FullCommandPath.ShouldBe("fullcommandpath");
+                selected.FullCommandPathExpression.ShouldBe("fullcommandpathexpression");
+                selected.CommandIgnoreCase.ShouldBe(true);
+                selected.ArgumentPatterns!.Count.ShouldBe(1);
+                selected.ArgumentPatterns[0].ArgumentExpression.ShouldBe("argumentexpression");
                 selected.MinArguments.ShouldBe(3);
                 selected.MaxArguments.ShouldBe(4);
 

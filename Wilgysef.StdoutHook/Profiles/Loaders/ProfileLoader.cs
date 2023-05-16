@@ -106,10 +106,14 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
             for (var i = order.Count - 1; i >= 0; i--)
             {
-                var names = order[i].InheritProfileNames;
-                var currentCopy = new ProfileDto();
+                var current = order[i];
+                var names = current.InheritProfileNames;
+                var currentCopy = new ProfileDto
+                {
+                    ProfileName = current.ProfileName
+                };
 
-                CombineProfileDto(currentCopy, order[i]);
+                CombineProfileDto(currentCopy, current);
 
                 if (names != null)
                 {
@@ -123,7 +127,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                     }
                 }
 
-                loadedProfileDtos[order[i]] = currentCopy;
+                loadedProfileDtos[current] = currentCopy;
             }
 
             var loadedProfileDtosOrdered = new List<ProfileDto>(order.Count);
@@ -183,7 +187,6 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         private static void CombineProfileDto(ProfileDto target, ProfileDto source)
         {
-            target.ProfileName ??= source.ProfileName;
             target.Command ??= source.Command;
             target.CommandExpression ??= source.CommandExpression;
             target.FullCommandPath ??= source.FullCommandPath;
