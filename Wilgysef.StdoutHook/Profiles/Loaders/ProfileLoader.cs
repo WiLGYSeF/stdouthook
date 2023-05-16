@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Profiles.Dtos;
 using Wilgysef.StdoutHook.Rules;
 
@@ -148,6 +149,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         public async Task<Profile> LoadProfileAsync(Stream stream, CancellationToken cancellationToken = default)
         {
+            // TODO: load inherited
             return CreateProfile(await LoadProfileDtoAsync(stream, cancellationToken));
         }
 
@@ -201,10 +203,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             if (source.Rules != null)
             {
                 target.Rules ??= new List<RuleDto>(source.Rules.Count);
-                for (var i = 0; i < source.Rules.Count; i++)
-                {
-                    target.Rules.Add(source.Rules[i]);
-                }
+                target.Rules.InsertRange(0, source.Rules);
             }
 
             if (source.CustomColors != null)

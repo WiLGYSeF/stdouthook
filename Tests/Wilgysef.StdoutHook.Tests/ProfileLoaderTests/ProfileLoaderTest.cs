@@ -115,6 +115,10 @@ public class ProfileLoaderTest
                 ProfileName = "testprofile",
                 InheritProfileNames = new List<string> { "inherited" },
                 MinArguments = 3,
+                CustomColors = new Dictionary<string, string>
+                {
+                    ["a"] = "1",
+                },
             },
             new ProfileDto
             {
@@ -138,6 +142,7 @@ public class ProfileLoaderTest
                 CustomColors = new Dictionary<string, string>
                 {
                     ["a"] = "b",
+                    ["c"] = "d",
                 },
                 Rules = new List<RuleDto>
                 {
@@ -171,6 +176,9 @@ public class ProfileLoaderTest
         profile!.ProfileName.ShouldBe("testprofile");
         profile.PseudoTty.ShouldBeTrue();
         profile.Flush.ShouldBeTrue();
+        profile.CustomColors.Count.ShouldBe(2);
+        profile.CustomColors["a"].ShouldBe("1");
+        profile.CustomColors["c"].ShouldBe("d");
     }
 
     [Fact]
@@ -360,9 +368,9 @@ public class ProfileLoaderTest
 
         profile!.ProfileName.ShouldBe("testprofile");
         profile.Rules.Count.ShouldBe(3);
-        ((UnconditionalReplaceRule)profile.Rules[0]).Format.ShouldBe("test1");
+        ((UnconditionalReplaceRule)profile.Rules[0]).Format.ShouldBe("test3");
         ((UnconditionalReplaceRule)profile.Rules[1]).Format.ShouldBe("test2");
-        ((UnconditionalReplaceRule)profile.Rules[2]).Format.ShouldBe("test3");
+        ((UnconditionalReplaceRule)profile.Rules[2]).Format.ShouldBe("test1");
     }
 
     [Fact]
