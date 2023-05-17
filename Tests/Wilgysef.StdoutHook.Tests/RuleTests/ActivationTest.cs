@@ -175,6 +175,17 @@ public class ActivationTest
     }
 
     [Fact]
+    public void NoData()
+    {
+        var rule = new TestRule();
+
+        using var profile = CreateDummyProfile();
+        rule.Build(profile, null!);
+
+        SendLine(rule, null!, true, profile).ShouldBe(true);
+    }
+
+    [Fact]
     public void Invalid()
     {
         Should.Throw<ArgumentOutOfRangeException>(() => new ActivationExpression(new Regex(""), -1));

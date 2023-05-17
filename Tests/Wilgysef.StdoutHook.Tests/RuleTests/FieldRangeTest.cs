@@ -10,10 +10,15 @@ public class FieldRangeTest
         var range = new FieldRange(4);
         range.Min.ShouldBe(4);
         range.Max.ShouldBe(4);
+        range.SingleValue.ShouldBe(4);
 
         range = FieldRange.Parse("4");
         range.Min.ShouldBe(4);
         range.Max.ShouldBe(4);
+        range.SingleValue.ShouldBe(4);
+
+        range = new FieldRange(1, 3);
+        range.SingleValue.ShouldBeNull();
     }
 
     [Fact]

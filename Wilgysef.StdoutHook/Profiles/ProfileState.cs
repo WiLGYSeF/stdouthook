@@ -15,6 +15,8 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public long LineCount => StdoutLineCount + StderrLineCount;
 
+        internal Func<string, Stream> StreamFactory { get; set; } = absolutePath => new FileStream(absolutePath, FileMode.Append);
+
         private readonly ConcurrentDictionary<string, ConcurrentStream> _fileStreams = new ConcurrentDictionary<string, ConcurrentStream>();
 
         public void SetProcess(Process process)
@@ -34,10 +36,10 @@ namespace Wilgysef.StdoutHook.Profiles
             _fileStreams.Clear();
         }
 
-        internal ConcurrentStream GetOrCreateFileStream(string absolutePath, Func<string, FileStream> streamFactory)
+        internal ConcurrentStream GetOrCreateFileStream(string absolutePath)
         {
             ConcurrentStream stream;
-            FileStream? createdStream = null;
+            Stream? createdStream = null;
 
             try
             {
@@ -65,7 +67,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
             ConcurrentStream CreateStream(string key)
             {
-                createdStream = streamFactory(key);
+                createdStream = StreamFactory(key);
                 return new ConcurrentStream(createdStream);
             }
         }

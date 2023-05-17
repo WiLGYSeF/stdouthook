@@ -10,7 +10,7 @@ public class ProfileFormatBuilderTest : RuleTestBase
     {
         var formatter = GetFormatter(new ProfileFormatBuilder());
 
-        var profile = new Profile
+        using var profile = new Profile
         {
             ProfileName = "test",
         };
@@ -50,5 +50,14 @@ public class ProfileFormatBuilderTest : RuleTestBase
         profile.State.StderrLineCount = 23;
 
         formatter.Format("%(profile:totalLines)", new DataState(profile)).ShouldBe("123");
+    }
+
+    [Fact]
+    public void Invalid()
+    {
+        var formatter = GetFormatter(new ProfileFormatBuilder());
+
+        using var profile = new Profile();
+        formatter.Format("%(profile:notexist)", new DataState(profile)).ShouldBe("%(profile:notexist)");
     }
 }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Wilgysef.StdoutHook.Profiles
+﻿namespace Wilgysef.StdoutHook.Profiles
 {
     internal class DataState
     {

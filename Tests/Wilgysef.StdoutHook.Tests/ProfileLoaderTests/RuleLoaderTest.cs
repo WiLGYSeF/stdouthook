@@ -264,6 +264,16 @@ public class RuleLoaderTest
         expression.ActivationOffset.ShouldBe(2);
     }
 
+    [Fact]
+    public void MultipleMatchingTypes()
+    {
+        Should.Throw<UnknownRuleException>(() => LoadBaseRule(new RuleDto
+        {
+            SeparatorExpression = "a",
+            Regex = "b",
+        }));
+    }
+
     private static Rule LoadBaseRule(RuleDto dto)
     {
         var loader = new RuleLoader();

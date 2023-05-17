@@ -15,6 +15,11 @@ public abstract class RuleTestBase
     protected private static void ShouldRuleBe(Rule rule, Formatter formatter, string input, string expected)
     {
         using var profile = new Profile();
+        ShouldRuleBe(profile, rule, formatter, input, expected);
+    }
+
+    protected private static void ShouldRuleBe(Profile profile, Rule rule, Formatter formatter, string input, string expected)
+    {
         rule.Build(profile, formatter);
         rule.Apply(new DataState(input, true, profile)).ShouldBe(expected);
     }
