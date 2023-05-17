@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
@@ -34,7 +35,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                             }
                             catch (Exception ex)
                             {
-                                // TODO: log?
+                                GlobalLogger.Error($"failed to get property value \"{state.Contents}\": {ex.Message}");
                                 return "";
                             }
                         };

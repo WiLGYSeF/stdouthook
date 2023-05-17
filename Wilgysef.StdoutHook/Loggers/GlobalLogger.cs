@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace Wilgysef.StdoutHook.Loggers
 {
@@ -9,6 +10,8 @@ namespace Wilgysef.StdoutHook.Loggers
         public static void Log(LogLevel level, string message) => Logger.Log(level, message);
 
         public static void Error(string message) => Logger.Error(message);
+
+        public static void Error(Exception exception, string message) => Logger.Error(exception, message);
 
         public static void Warn(string message) => Logger.Warn(message);
 

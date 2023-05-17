@@ -4,25 +4,19 @@ using System.Diagnostics;
 using Wilgysef.StdoutHook.Cli;
 using Wilgysef.StdoutHook.CommandLocator;
 using Wilgysef.StdoutHook.Loggers;
+using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Profiles.Dtos;
 using Wilgysef.StdoutHook.Profiles.Loaders;
 
-Stream logStream;
-try
-{
-    logStream = new FileStream("log.txt", FileMode.Append);
-}
-catch
-{
-    logStream = new MemoryStream();
-}
+//ColorDebug.GetColorDebug(Console.Out);
+//return;
 
-using var _ = logStream;
+using var logStream = GetLogStream("log.txt");
 GlobalLogger.Logger = new Logger(new StreamWriter(logStream));
 
+var profileName = "test";
 var command = "python";
 var commandPaths = new CommandLocator().LocateCommand(command);
-
 var fullCommandPath = commandPaths.FirstOrDefault();
 var arguments = new[]
 {
@@ -30,82 +24,145 @@ var arguments = new[]
 };
 
 var loader = new JsonProfileLoader();
-var profiles = new List<ProfileDto>();
-var files = Directory.GetFiles(".");
-
-for (var i = 0; i < files.Length; i++)
-{
-    try
-    {
-        using var stream = File.Open(files[i], FileMode.Open);
-        profiles.AddRange(await loader.LoadProfileDtosAsync(stream));
-    }
-    catch (Exception ex)
-    {
-
-    }
-}
+var extensions = new HashSet<string> { "", ".json", ".txt", ".yaml", ".yml" };
+var profileDtos = await LoadProfilesFromDirectoryAsync(loader, ".", extensions);
 
 var picker = new ProfileDtoPicker();
 using var profile = loader.LoadProfile(
-    profiles,
-    profileDtos => picker.PickProfileDto(
-        profileDtos,
-        profileName: "test",
+    profileDtos,
+    profiles => picker.PickProfileDto(
+        profiles,
+        profileName: profileName,
         command: command,
         fullCommandPath: fullCommandPath,
-        arguments: arguments));
+        arguments: arguments),
+    throwIfInheritedProfileNotFound: false);
+var profileLoaded = profile != null;
 
-//ColorDebug.GetColorDebug(Console.Out);
-//return;
-
-var processInfo = new ProcessStartInfo(command)
+try
 {
-    RedirectStandardError = true,
-    RedirectStandardOutput = true,
-};
-
-for (var i = 0; i < arguments.Length; i++)
+    profile?.Build();
+}
+catch (Exception ex)
 {
-    processInfo.ArgumentList.Add(arguments[i]);
+    GlobalLogger.Error(ex, "failed to build profile");
+    profileLoaded = false;
 }
 
-//var processInfo = new ProcessStartInfo("pip")
-//{
-//    RedirectStandardError = true,
-//    RedirectStandardOutput = true,
-//};
+Process? process;
 
-//processInfo.ArgumentList.Add("install");
-//processInfo.ArgumentList.Add("yt-dlp");
-
-profile.Build();
-
-var stopwatch = Stopwatch.StartNew();
-var process = Process.Start(processInfo);
-
-if (process == null)
+try
 {
-    throw new Exception("Process could not start.");
+    process = Process.Start(CreateProcessStartInfo(profile, command, arguments));
+    if (process == null)
+    {
+        Console.Error.WriteLine($"process could not be started: {command}");
+        GlobalLogger.Error($"process could not be started: {command}");
+        return 1;
+    }
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"process could not be started: {ex.Message}: {command}");
+    GlobalLogger.Error(ex, $"process could not be started: {command}");
+    return 1;
 }
 
-profile.State.SetProcess(process);
+using var _ = process;
 
-var streamOutputHandler = new StreamOutputHandler(
-    profile,
-    process.StandardOutput,
-    process.StandardError,
-    Console.Out,
-    Console.Error);
-streamOutputHandler.FlushOutput = profile.Flush;
-streamOutputHandler.FlushError = profile.Flush;
+if (profileLoaded)
+{
+    profile!.State.SetProcess(process);
 
-var cancellationTokenSource = new CancellationTokenSource();
-var readStreamTask = streamOutputHandler.ReadLinesAsync(cancellationTokenSource.Token);
+    var streamOutputHandler = new StreamOutputHandler(
+        profile,
+        process.StandardOutput,
+        process.StandardError,
+        Console.Out,
+        Console.Error)
+    {
+        FlushOutput = profile.Flush,
+        FlushError = profile.Flush,
+    };
 
-//process.WaitForExit();
-Console.ReadLine();
+    var cancellationTokenSource = new CancellationTokenSource();
+    var readStreamTask = streamOutputHandler.ReadLinesAsync(cancellationTokenSource.Token);
 
-stopwatch.Stop();
-cancellationTokenSource.Cancel();
-process.Kill();
+    // TODO: remove test code
+    Console.ReadLine();
+    process.Kill();
+
+    cancellationTokenSource.Cancel();
+}
+else
+{
+    // TODO: remove test code
+    Console.ReadLine();
+    process.Kill();
+}
+
+process.WaitForExit();
+
+return process.HasExited
+    ? process.ExitCode
+    : 0;
+
+ProcessStartInfo CreateProcessStartInfo(Profile? profile, string command, string[] arguments)
+{
+    var redirect = profile != null;
+
+    var processInfo = new ProcessStartInfo(command)
+    {
+        RedirectStandardError = redirect,
+        RedirectStandardOutput = redirect,
+    };
+
+    for (var i = 0; i < arguments.Length; i++)
+    {
+        processInfo.ArgumentList.Add(arguments[i]);
+    }
+
+    return processInfo;
+}
+
+async Task<List<ProfileDto>> LoadProfilesFromDirectoryAsync(ProfileLoader loader, string path, IReadOnlyCollection<string> extensions)
+{
+    var profiles = new List<ProfileDto>();
+    var files = Directory.GetFiles(path);
+
+    for (var i = 0; i < files.Length; i++)
+    {
+        var file = files[i];
+        var extension = Path.GetExtension(file);
+
+        if (!extensions.Contains(extension))
+        {
+            continue;
+        }
+
+        try
+        {
+            using var stream = File.Open(file, FileMode.Open, FileAccess.Read);
+            profiles.AddRange(await loader.LoadProfileDtosAsync(stream));
+        }
+        catch (Exception ex)
+        {
+            GlobalLogger.Error($"failed to load profiles from '{file}': {ex.Message}");
+        }
+    }
+
+    return profiles;
+}
+
+Stream GetLogStream(string filename)
+{
+    try
+    {
+        return new FileStream(filename, FileMode.Append);
+    }
+    catch
+    {
+        Debug.WriteLine("ERROR: failed to open log file");
+        return new MemoryStream();
+    }
+}

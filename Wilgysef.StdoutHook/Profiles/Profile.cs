@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Wilgysef.StdoutHook.Formatters;
+using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Profiles
@@ -59,7 +60,7 @@ namespace Wilgysef.StdoutHook.Profiles
                     }
                     catch (Exception ex)
                     {
-
+                        GlobalLogger.Error(ex, "exception occurred when applying rule");
                     }
                 }
             }

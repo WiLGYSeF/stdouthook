@@ -74,8 +74,8 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
                     for (var i = 0; i < arguments.Count && arguments[i][0] != '-'; i++)
                     {
-                        builder.Append(arguments[i]);
-                        builder.Append(' ');
+                        builder.Append(arguments[i])
+                            .Append(' ');
                     }
 
                     var argSubcommands = builder.Remove(builder.Length - 1, 1)

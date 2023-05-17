@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -16,16 +17,25 @@ namespace Wilgysef.StdoutHook.Loggers
         public void Log(LogLevel level, string message)
         {
             var builder = new StringBuilder();
-            _stream.WriteLine(builder
+            var result = builder
                 .Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"))
                 .Append(": ")
                 .Append(GetLogLevel(level))
                 .Append(": ")
                 .Append(message)
-                .ToString());
+                .ToString();
+
+            Debug.WriteLine(result);
+            _stream.WriteLine(result);
         }
 
         public void Error(string message) => Log(LogLevel.Error, message);
+
+        public void Error(Exception exception, string message)
+        {
+            Log(LogLevel.Error, message);
+            Log(LogLevel.Error, exception.ToString());
+        }
 
         public void Warn(string message) => Log(LogLevel.Warn, message);
 

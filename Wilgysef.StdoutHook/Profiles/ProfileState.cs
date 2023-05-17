@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using Wilgysef.StdoutHook.Loggers;
 
 namespace Wilgysef.StdoutHook.Profiles
 {
@@ -60,6 +61,7 @@ namespace Wilgysef.StdoutHook.Profiles
                 }
 
                 // exception was thrown but the stream exists, continue
+                GlobalLogger.Warn($"an exception was thrown when opening the file stream, although the file stream exists: {ex.Message}: {absolutePath}");
             }
 
             return stream;

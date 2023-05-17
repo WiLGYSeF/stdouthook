@@ -27,7 +27,10 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             try
             {
                 var profileListDto = await JsonSerializer.DeserializeAsync<ProfileListDto>(stream, options, cancellationToken);
-                profiles = (List<ProfileDto>)profileListDto!.Profiles;
+
+                profiles = profileListDto?.Profiles != null && profileListDto.Profiles.Count > 0
+                    ? (List<ProfileDto>)profileListDto.Profiles
+                    : null;
             }
             catch
             {
