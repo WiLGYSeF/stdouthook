@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Profiles.Loaders;
 using Wilgysef.StdoutHook.Rules;
 
@@ -10,7 +11,7 @@ public class JsonProfileLoaderTest
     public async Task ConvertReplaceFieldsObjectToList()
     {
         var loader = new JsonProfileLoader();
-        var profile = await loader.LoadProfileAsync(GetStream(@"{
+        var profile = await LoadProfileAsync(loader, GetStream(@"{
     ""Rules"": [
         {
             ""SeparatorExpression"": ""\\s+"",
@@ -31,7 +32,7 @@ public class JsonProfileLoaderTest
     public async Task ConvertReplaceFieldsObjectToDictionary()
     {
         var loader = new JsonProfileLoader();
-        var profile = await loader.LoadProfileAsync(GetStream(@"{
+        var profile = await LoadProfileAsync(loader, GetStream(@"{
     ""Rules"": [
         {
             ""SeparatorExpression"": ""\\s+"",
@@ -56,7 +57,13 @@ public class JsonProfileLoaderTest
     public async Task Invalid()
     {
         var loader = new JsonProfileLoader();
-        await Should.ThrowAsync<Exception>(() => loader.LoadProfileAsync(GetStream("test")));
+        await Should.ThrowAsync<Exception>(() => LoadProfileAsync(loader, GetStream("test")));
+    }
+
+    private async Task<Profile> LoadProfileAsync(ProfileLoader loader, Stream stream)
+    {
+        var profiles = await loader.LoadProfileDtosAsync(stream);
+        return loader.LoadProfile(profiles, profileDtos => profileDtos[0])!;
     }
 
     private static Stream GetStream(string data)

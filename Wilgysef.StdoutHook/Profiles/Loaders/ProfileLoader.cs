@@ -23,9 +23,13 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             {
                 var dto = dtos[i];
 
+                ThrowIfNotSplitExpression(dto.CommandExpression, nameof(dto.CommandExpression));
+                ThrowIfNotSplitExpression(dto.FullCommandPathExpression, nameof(dto.FullCommandPathExpression));
+                ThrowIfNotSplitExpression(dto.SubcommandExpression, nameof(dto.SubcommandExpression));
+
                 if (dto.Subcommand != null
                     && !(dto.Subcommand is string)
-                    && !(dto.Subcommand is IList<object?>))
+                    && !IsStringList(dto.Subcommand))
                 {
                     throw new InvalidPropertyTypeException(
                         nameof(dto.Subcommand),
@@ -33,11 +37,30 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                         new[] { "string", "list of strings" });
                 }
 
+                if (dto.ArgumentPatterns != null)
+                {
+                    for (var argIndex = 0; argIndex < dto.ArgumentPatterns.Count; argIndex++)
+                    {
+                        var argPattern = dto.ArgumentPatterns[argIndex];
+                        ThrowIfNotSplitExpression(argPattern.ArgumentExpression, nameof(argPattern.ArgumentExpression));
+                    }
+                }
+
                 if (dto.Rules != null)
                 {
                     for (var ruleIndex = 0; ruleIndex < dto.Rules.Count; ruleIndex++)
                     {
                         var rule = dto.Rules[ruleIndex];
+
+                        ThrowIfNotSplitExpression(rule.EnableExpression, nameof(rule.EnableExpression));
+
+                        ThrowIfActivationExpressionsNotSplitExpression(rule.ActivationExpressions);
+                        ThrowIfActivationExpressionsNotSplitExpression(rule.ActivationExpressionsStdoutOnly);
+                        ThrowIfActivationExpressionsNotSplitExpression(rule.ActivationExpressionsStderrOnly);
+                        ThrowIfActivationExpressionsNotSplitExpression(rule.DeactivationExpressions);
+                        ThrowIfActivationExpressionsNotSplitExpression(rule.DeactivationExpressionsStdoutOnly);
+                        ThrowIfActivationExpressionsNotSplitExpression(rule.DeactivationExpressionsStderrOnly);
+
                         if (rule.ReplaceFields != null
                             && !(rule.ReplaceFields is IList<object?>)
                             && !(rule.ReplaceFields is IDictionary<string, object?>))
@@ -62,6 +85,51 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             }
 
             return dtos;
+
+            static void ThrowIfActivationExpressionsNotSplitExpression(IList<ActivationExpressionDto>? expressions)
+            {
+                if (expressions == null)
+                {
+                    return;
+                }
+
+                for (var i = 0; i < expressions.Count; i++)
+                {
+                    var expression = expressions[i];
+                    ThrowIfNotSplitExpression(expression.Expression, nameof(expression.Expression));
+                }
+            }
+
+            static void ThrowIfNotSplitExpression(object? value, string name)
+            {
+                if (value != null && !IsSplitExpressionType(value))
+                {
+                    throw new InvalidPropertyTypeException(name, value.GetType().Name, new[] { "string", "list of strings" });
+                }
+            }
+
+            static bool IsSplitExpressionType(object? obj)
+            {
+                return obj is string || IsStringList(obj);
+            }
+
+            static bool IsStringList(object? obj)
+            {
+                if (!(obj is IList<object?> list))
+                {
+                    return false;
+                }
+
+                for (var i = 0; i < list.Count; i++)
+                {
+                    if (!(list[i] is string))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
         }
 
         public Profile? LoadProfile(
@@ -151,19 +219,6 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             return profileDtoPicked != null
                 ? CreateProfile(profileDtoPicked)
                 : null;
-        }
-
-        public async Task<Profile> LoadProfileAsync(Stream stream, CancellationToken cancellationToken = default)
-        {
-            // TODO: load inherited
-            var profiles = await LoadProfileDtosAsync(stream, cancellationToken);
-
-            if (profiles.Count > 1)
-            {
-                throw new Exception();
-            }
-
-            return CreateProfile(profiles[0]);
         }
 
         private List<Rule> LoadRules(IList<RuleDto>? ruleDtos)

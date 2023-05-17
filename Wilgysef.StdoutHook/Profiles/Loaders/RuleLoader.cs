@@ -202,14 +202,13 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         private static ActivationExpression? CreateActivationExpression(ActivationExpressionDto dto)
         {
-            if (dto.Expression == null)
+            var expression = dto.GetExpression();
+            if (expression == null)
             {
                 return null;
             }
 
-            return new ActivationExpression(
-                CreateRegex(dto.Expression),
-                dto.ActivationOffset ?? 0);
+            return new ActivationExpression(CreateRegex(expression), dto.ActivationOffset ?? 0);
         }
 
         private static Type GetRuleType(RuleDto rule)
