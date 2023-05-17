@@ -3,8 +3,22 @@
 using System.Diagnostics;
 using Wilgysef.StdoutHook.Cli;
 using Wilgysef.StdoutHook.CommandLocator;
+using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Profiles.Dtos;
 using Wilgysef.StdoutHook.Profiles.Loaders;
+
+Stream logStream;
+try
+{
+    logStream = new FileStream("log.txt", FileMode.Append);
+}
+catch
+{
+    logStream = new MemoryStream();
+}
+
+using var _ = logStream;
+GlobalLogger.Logger = new Logger(new StreamWriter(logStream));
 
 var command = "python";
 var commandPaths = new CommandLocator().LocateCommand(command);

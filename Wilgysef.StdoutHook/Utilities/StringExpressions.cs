@@ -26,7 +26,7 @@ namespace Wilgysef.StdoutHook.Utilities
                 {
                     if (!(list[i] is string item))
                     {
-                        throw new Exception();
+                        throw new ArgumentException("Invalid type.");
                     }
 
                     builder.Append(item);
@@ -35,7 +35,7 @@ namespace Wilgysef.StdoutHook.Utilities
                 return builder.ToString();
             }
 
-            throw new Exception();
+            throw new ArgumentException("Invalid type.");
         }
     }
 }

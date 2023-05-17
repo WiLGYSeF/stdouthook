@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using Wilgysef.StdoutHook.Formatters;
+using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Rules
@@ -42,7 +43,7 @@ namespace Wilgysef.StdoutHook.Rules
             }
             catch (Exception ex)
             {
-                // TODO: log
+                GlobalLogger.Error($"failed to write output to file: {ex.Message}: {_absolutePath}");
             }
 
             return state.Data!;
