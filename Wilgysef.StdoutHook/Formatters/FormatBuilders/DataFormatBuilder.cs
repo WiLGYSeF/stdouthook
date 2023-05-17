@@ -8,6 +8,8 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
     {
         private const string NoTrim = "noTrim";
 
+        private const string Newline = "newline";
+
         public override string? Key => "data";
 
         public override char? KeyShort => null;
@@ -16,10 +18,22 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
         {
             isConstant = false;
 
-            var noTrim = state.Contents.Equals(NoTrim, StringComparison.OrdinalIgnoreCase);
-            return dataState => noTrim
-                ? dataState.Data!
-                : dataState.Data!.TrimEndNewline(out _);
+            if (state.Contents.Equals(NoTrim, StringComparison.OrdinalIgnoreCase))
+            {
+                return dataState => dataState.Data!;
+            }
+            else if (state.Contents.Equals(Newline, StringComparison.OrdinalIgnoreCase))
+            {
+                return dataState =>
+                {
+                    dataState.Data!.TrimEndNewline(out var newline);
+                    return newline;
+                };
+            }
+            else
+            {
+                return dataState => dataState.Data!.TrimEndNewline(out _);
+            }
         }
     }
 }

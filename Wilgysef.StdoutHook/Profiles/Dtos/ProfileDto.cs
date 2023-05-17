@@ -1,22 +1,33 @@
 ﻿using System.Collections.Generic;
+using Wilgysef.StdoutHook.Utilities;
 
 namespace Wilgysef.StdoutHook.Profiles.Dtos
 {
     public class ProfileDto
     {
+        public bool? Enabled { get; set; }
+
         public string? ProfileName { get; set; }
 
         public string? Command { get; set; }
 
-        public string? CommandExpression { get; set; }
+        public object? CommandExpression { get; set; }
 
         public string? FullCommandPath { get; set; }
 
-        public string? FullCommandPathExpression { get; set; }
+        public object? FullCommandPathExpression { get; set; }
 
         public bool? CommandIgnoreCase { get; set; }
 
-        public bool? Enabled { get; set; }
+        public object? Subcommand { get; set; }
+
+        public object? SubcommandExpression { get; set; }
+
+        public IList<ArgumentPatternDto>? ArgumentPatterns { get; set; }
+
+        public int? MinArguments { get; set; }
+
+        public int? MaxArguments { get; set; }
 
         public bool? PseudoTty { get; set; }
 
@@ -26,7 +37,12 @@ namespace Wilgysef.StdoutHook.Profiles.Dtos
 
         public IDictionary<string, string>? CustomColors { get; set; }
 
-        public IList<string>? InheritProfileNames { get; set; }
+        public IList<string>? InheritProfiles { get; set; }
 
+        public string? GetCommandExpression() => StringExpressions.GetExpression(CommandExpression);
+
+        public string? GetFullCommandPathExpression() => StringExpressions.GetExpression(FullCommandPathExpression);
+
+        public string? GetSubcommandExpression() => StringExpressions.GetExpression(SubcommandExpression);
     }
 }

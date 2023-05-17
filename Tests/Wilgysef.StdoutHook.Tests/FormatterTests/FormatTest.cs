@@ -204,7 +204,7 @@ public class FormatTest : RuleTestBase
         string expected,
         params string[] expectedFuncs)
     {
-        var profile = new Profile(new ProfileState());
+        using var profile = new Profile();
         var dataState = new DataState("", true, profile);
 
         var compiledFormat = formatter.CompileFormat(format, profile);

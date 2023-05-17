@@ -19,7 +19,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
         {
             ReplaceFields = replaceFields,
         };
-
         ShouldRuleBe(rule, "test asdf", "123 asdf");
 
         rule = new FieldSeparatorRule(new Regex(@"\s+"), replaceFields);
@@ -36,7 +35,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "123"),
             },
         };
-
         ShouldRuleBe(rule, "test asdf abc", "test 123 abc");
     }
 
@@ -50,7 +48,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("3"), "123"),
             },
         };
-
         ShouldRuleBe(rule, "test asdf abc", "test asdf 123");
     }
 
@@ -65,7 +62,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("4"), "456"),
             },
         };
-
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "test 123 abc  456   ghi");
     }
 
@@ -79,7 +75,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2-4"), "123"),
             },
         };
-
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "test 123 123  123   ghi");
     }
 
@@ -93,7 +88,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2-*"), "123"),
             },
         };
-
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "test 123 123  123   123");
     }
 
@@ -108,7 +102,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "456"),
             },
         };
-
         ShouldRuleBe(rule, "test asdf abc", "test 123 abc");
     }
 
@@ -130,7 +123,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse($"{replaceField}"), "123"),
             },
         };
-
         ShouldRuleBe(rule, data, expected);
     }
 
@@ -152,7 +144,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse($"{replaceField}-*"), "123"),
             },
         };
-
         ShouldRuleBe(rule, data, expected);
     }
 
@@ -167,7 +158,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "123"),
             },
         };
-
         ShouldRuleBe(rule, "test asdf", "test asdf");
 
         rule = new FieldSeparatorRule(new Regex(@"\s+"))
@@ -178,7 +168,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "123"),
             },
         };
-
         ShouldRuleBe(rule, "test asdf", "test asdf");
     }
 
@@ -193,7 +182,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "123"),
             },
         };
-
         ShouldRuleBe(rule, "test asdf\r\n", "test 123\r\n");
     }
 
@@ -207,7 +195,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2-4"), "=%Fc="),
             },
         };
-
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "test =asdf= =abc=  =def=   ghi");
     }
 
@@ -221,7 +208,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
                 new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2"), "=%Fc%Fc="),
             },
         };
-
         ShouldRuleBe(rule, "test asdf abc", "test =asdfasdf= abc");
     }
 
@@ -229,7 +215,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
     public void ReplaceAll()
     {
         var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%F3 %F4 %F2");
-
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "abc def asdf");
     }
 
@@ -237,7 +222,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
     public void ReplaceAll_FieldRange()
     {
         var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%F(2-4)");
-
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "asdf abc  def");
     }
 
@@ -245,7 +229,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
     public void ReplaceAll_Field_OutOfRange()
     {
         var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%F9");
-
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "");
     }
 
@@ -273,7 +256,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
     public void ReplaceAll_FieldSeparator_OutOfRange()
     {
         var rule = new FieldSeparatorRule(new Regex(@"\s+"), "a%F(s9)b");
-
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "ab");
     }
 
@@ -281,7 +263,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
     public void ReplaceAll_FieldSeparator_Range()
     {
         var rule = new FieldSeparatorRule(new Regex(@"\s+"), "a%F(s1-3)b");
-
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "a%F(s1-3)b");
     }
 
@@ -289,15 +270,20 @@ public class FieldSeparatorRuleTest : RuleTestBase
     public void ReplaceAll_Current()
     {
         var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%Fc %Fc");
-
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "test asdf");
+    }
+
+    [Fact]
+    public void ReplaceAll_Current_MoreThanFieldCount()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%Fc %Fc %Fc");
+        ShouldRuleBe(rule, "test asdf", "test asdf ");
     }
 
     [Fact]
     public void ReplaceAll_Count()
     {
         var rule = new FieldSeparatorRule(new Regex(@"\s+"), "%F(#)");
-
         ShouldRuleBe(rule, "test asdf abc  def   ghi", "5");
     }
 
@@ -305,7 +291,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
     public void WithColors()
     {
         var rule = new FieldSeparatorRule(new Regex("---"), "%F1 %F2 %F3");
-
         ShouldRuleBe(rule, "\x1b[31mtest---asdf---abc", "\x1b[31mtest asdf abc");
     }
 
@@ -313,7 +298,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
     public void WithColors_Separator()
     {
         var rule = new FieldSeparatorRule(new Regex("---"), "%F1%Fs1%F2 %F3");
-
         ShouldRuleBe(rule, "test-\x1b[1m--asdf-\x1b[31m-\x1b[0m-abc", "test-\x1b[1m--asdf abc");
     }
 
@@ -321,7 +305,6 @@ public class FieldSeparatorRuleTest : RuleTestBase
     public void WithColors_ColorEndField()
     {
         var rule = new FieldSeparatorRule(new Regex("---"), "%F1 %F2 %F3");
-
         ShouldRuleBe(rule, "test\x1b[1m---asdf---abc", "test\x1b[1m asdf abc");
     }
 
@@ -341,7 +324,25 @@ public class FieldSeparatorRuleTest : RuleTestBase
         {
             TrimNewline = true
         };
-
         ShouldRuleBe(rule, "a b c\n", "a b c");
+    }
+
+    [Fact]
+    public void NoContext()
+    {
+        var rule = new UnconditionalReplaceRule("%Fc");
+        ShouldRuleBe(rule, "test", "");
+
+        rule = new UnconditionalReplaceRule("%F1");
+        ShouldRuleBe(rule, "test", "");
+
+        rule = new UnconditionalReplaceRule("%Fs1");
+        ShouldRuleBe(rule, "test", "");
+
+        rule = new UnconditionalReplaceRule("%F(1-4)");
+        ShouldRuleBe(rule, "test", "");
+
+        rule = new UnconditionalReplaceRule("%F(#)");
+        ShouldRuleBe(rule, "test", "");
     }
 }

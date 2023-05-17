@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Wilgysef.StdoutHook.Utilities;
 
 namespace Wilgysef.StdoutHook.Profiles.Dtos
 {
@@ -8,7 +9,7 @@ namespace Wilgysef.StdoutHook.Profiles.Dtos
 
         public bool? Enabled { get; set; }
 
-        public string? EnableExpression { get; set; }
+        public object? EnableExpression { get; set; }
 
         public bool? StdoutOnly { get; set; }
 
@@ -42,17 +43,21 @@ namespace Wilgysef.StdoutHook.Profiles.Dtos
 
         public IList<ActivationExpressionDto>? DeactivationExpressionsStderrOnly { get; set; }
 
+        public string? GetEnableExpression() => StringExpressions.GetExpression(EnableExpression);
+
         #endregion
 
         #region Field Separator Rule
 
-        public string? SeparatorExpression { get; set; }
+        public object? SeparatorExpression { get; set; }
 
         public int? MinFields { get; set; }
 
         public int? MaxFields { get; set; }
 
         public object? ReplaceFields { get; set; }
+
+        public string? GetSeparatorExpression() => StringExpressions.GetExpression(SeparatorExpression);
 
         #endregion
 
@@ -64,9 +69,11 @@ namespace Wilgysef.StdoutHook.Profiles.Dtos
 
         #region Regex Group Rule
 
-        public string? Regex { get; set; }
+        public object? Regex { get; set; }
 
         public object? ReplaceGroups { get; set; }
+
+        public string? GetRegex() => StringExpressions.GetExpression(Regex);
 
         #endregion
 

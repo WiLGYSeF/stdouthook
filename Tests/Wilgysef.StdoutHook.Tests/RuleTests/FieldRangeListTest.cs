@@ -42,6 +42,23 @@ public class FieldRangeListTest
         ranges.Contains(6).ShouldBeFalse();
     }
 
+    [Fact]
+    public void Maximum_Infinite()
+    {
+        var ranges = FieldRangeList.Parse("1-*");
+        ranges.GetMax().ShouldBe(int.MaxValue);
+    }
+
+    [Fact]
+    public void Single()
+    {
+        var ranges = FieldRangeList.Parse("5");
+        ranges.SingleValue.ShouldBe(5);
+
+        ranges = FieldRangeList.Parse("1-3");
+        ranges.SingleValue.ShouldBeNull();
+    }
+
     private static void ShouldFieldRangeBe(FieldRange range, int min, int max)
     {
         range.Min.ShouldBe(min);

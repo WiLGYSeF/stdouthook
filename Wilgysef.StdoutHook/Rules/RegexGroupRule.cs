@@ -103,7 +103,6 @@ namespace Wilgysef.StdoutHook.Rules
                 return state.Data!;
             }
 
-            using var contextScope = state.GetContextScope();
             var groupValues = new Dictionary<string, string>(groups.Length);
 
             for (var i = 0; i < groups.Length; i++)

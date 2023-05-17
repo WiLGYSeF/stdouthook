@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Wilgysef.StdoutHook.Profiles
+﻿namespace Wilgysef.StdoutHook.Profiles
 {
     internal class DataState
     {
@@ -25,24 +23,9 @@ namespace Wilgysef.StdoutHook.Profiles
             Profile = profile;
         }
 
-        public IDisposable GetContextScope()
+        public void ResetContext()
         {
-            return new ContextReset(this);
-        }
-
-        private class ContextReset : IDisposable
-        {
-            private readonly DataState _dataState;
-
-            public ContextReset(DataState dataState)
-            {
-                _dataState = dataState;
-            }
-
-            public void Dispose()
-            {
-                _dataState.Context = new RuleContext();
-            }
+            Context = new RuleContext();
         }
     }
 }

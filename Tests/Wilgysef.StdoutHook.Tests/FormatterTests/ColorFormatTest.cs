@@ -80,11 +80,20 @@ public class ColorFormatTest : RuleTestBase
     {
         var colorFormatBuilder = new ColorFormatBuilder();
         colorFormatBuilder.CustomColors.Add("custom", "italic");
-        colorFormatBuilder.CustomColors.Add("customMulti", "bold;123");
+        colorFormatBuilder.CustomColors.Add("customMulti", "bold;123;");
 
         GetFormatter(colorFormatBuilder)
             .Format("%C(customMulti)test%C(custom)abc", CreateDummyDataState())
             .ShouldBe("\x1b[1;38;5;123mtest\x1b[3mabc");
+    }
+
+    [Fact]
+    public void Color_CustomNamed()
+    {
+        var colorFormatBuilder = new ColorFormatBuilder();
+        GetFormatter(colorFormatBuilder)
+            .Format("%C(orange)test", CreateDummyDataState())
+            .ShouldBe("\x1b[38;2;255;165;0mtest");
     }
 
     [Fact]

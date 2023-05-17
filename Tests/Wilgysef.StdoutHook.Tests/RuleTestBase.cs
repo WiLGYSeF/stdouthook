@@ -14,7 +14,12 @@ public abstract class RuleTestBase
 
     protected private static void ShouldRuleBe(Rule rule, Formatter formatter, string input, string expected)
     {
-        var profile = new Profile(new ProfileState());
+        using var profile = new Profile();
+        ShouldRuleBe(profile, rule, formatter, input, expected);
+    }
+
+    protected private static void ShouldRuleBe(Profile profile, Rule rule, Formatter formatter, string input, string expected)
+    {
         rule.Build(profile, formatter);
         rule.Apply(new DataState(input, true, profile)).ShouldBe(expected);
     }
@@ -26,11 +31,11 @@ public abstract class RuleTestBase
 
     private protected static DataState CreateDummyDataState()
     {
-        return new DataState(new Profile(new ProfileState()));
+        return new DataState(new Profile());
     }
 
     private protected static DataState CreateDummyDataState(string data, bool stdout)
     {
-        return new DataState(data, stdout, new Profile(new ProfileState()));
+        return new DataState(data, stdout, new Profile());
     }
 }

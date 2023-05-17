@@ -8,7 +8,7 @@ public class ProfileTest
     [Fact]
     public void FilterLine()
     {
-        var profile = new Profile(new ProfileState())
+        using var profile = new Profile
         {
             Rules = new List<Rule>
             {
@@ -25,7 +25,7 @@ public class ProfileTest
     [Fact]
     public void Terminal()
     {
-        var profile = new Profile(new ProfileState())
+        using var profile = new Profile
         {
             Rules = new List<Rule>
             {
@@ -48,7 +48,7 @@ public class ProfileTest
     [Fact]
     public void CustomColors()
     {
-        var profile = new Profile(new ProfileState())
+        using var profile = new Profile
         {
             CustomColors = new Dictionary<string, string>
             {

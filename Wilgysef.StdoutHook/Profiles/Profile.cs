@@ -1,59 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Profiles
 {
-    public class Profile
+    public class Profile : IDisposable
     {
         public string? ProfileName { get; set; }
-
-        public string? Command { get; set; }
-
-        public Regex? CommandExpression { get; set; }
-
-        public string? FullCommandPath { get; set; }
-
-        public Regex? FullCommandPathExpression { get; set; }
-
-        public bool CommandIgnoreCase { get; set; }
-
-        public bool Enabled { get; set; }
 
         public bool PseudoTty { get; set; }
 
         public bool Flush { get; set; }
 
-        public IList<object> ArgumentPatterns { get; }
-
-        public int MinArguments { get; set; }
-
-        public int MaxArguments { get; set; }
-
         public IList<Rule> Rules { get; set; } = new List<Rule>();
 
         public IDictionary<string, string> CustomColors { get; set; } = new Dictionary<string, string>();
 
-        public IList<string> InheritProfileNames { get; set; } = new List<string>();
-
-        public ProfileState? State { get; set; }
-
-        public Profile() { }
-
-        public Profile(ProfileState state)
-        {
-            State = state;
-        }
+        public ProfileState State { get; set; } = new ProfileState();
 
         public void Build()
         {
-            if (State == null)
-            {
-                throw new Exception($"{nameof(State)} cannot be null.");
-            }
-
             var formatFunctionBuilder = FormatFunctionBuilder.Create();
 
             if (CustomColors.Count > 0)
@@ -70,6 +37,8 @@ namespace Wilgysef.StdoutHook.Profiles
 
             for (var i = 0; i < Rules.Count; i++)
             {
+                dataState.ResetContext();
+
                 var rule = Rules[i];
                 if (rule.IsActive(dataState))
                 {
@@ -96,6 +65,11 @@ namespace Wilgysef.StdoutHook.Profiles
             }
 
             return true;
+        }
+
+        public void Dispose()
+        {
+            State.Dispose();
         }
 
         internal void Build(Formatter formatter)

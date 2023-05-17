@@ -24,12 +24,15 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            state.Data!.TrimEndNewline(out var newline);
             var result = _compiledFormat.Compute(state);
 
-            return TrimNewline || result.EndsWith(newline)
-                ? result
-                : result + newline;
+            if (TrimNewline)
+            {
+                return result;
+            }
+
+            state.Data!.TrimEndNewline(out var newline);
+            return result + newline;
         }
     }
 }

@@ -9,8 +9,6 @@ namespace Wilgysef.StdoutHook.Rules
 {
     public abstract class Rule
     {
-        public bool Enabled { get; set; } = true;
-
         public Regex? EnableExpression { get; set; }
 
         public bool StdoutOnly { get; set; }
@@ -81,14 +79,13 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal virtual bool IsActive(DataState state)
         {
-            if (!Enabled
-                || StdoutOnly && !state.Stdout
+            if (StdoutOnly && !state.Stdout
                 || StderrOnly && state.Stdout)
             {
                 return false;
             }
 
-            var profileState = state.Profile.State!;
+            var profileState = state.Profile.State;
 
             // avoid potential race conditions
             var lineCount = profileState.LineCount;
@@ -144,11 +141,15 @@ namespace Wilgysef.StdoutHook.Rules
 
             static void MatchExpressions(ICollection<ActivationExpression> expressions, HashSet<long> set, long lineOffset, string data)
             {
-                foreach (var expression in expressions)
+                // optimized for empty collections
+                if (expressions.Count > 0)
                 {
-                    if (expression.Expression.Match(data).Success)
+                    foreach (var expression in expressions)
                     {
-                        set.Add(lineOffset + expression.ActivationOffset);
+                        if (expression.Expression.IsMatch(data))
+                        {
+                            set.Add(lineOffset + expression.ActivationOffset);
+                        }
                     }
                 }
             }
@@ -157,6 +158,7 @@ namespace Wilgysef.StdoutHook.Rules
         protected class SortedListIncrementMatch<T> where T : IEquatable<T>
         {
             private readonly List<T> _items;
+            private readonly int _itemCount;
 
             private int _index = 0;
 
@@ -164,13 +166,20 @@ namespace Wilgysef.StdoutHook.Rules
             {
                 _items = new List<T>(items);
                 _items.Sort();
+
+                _itemCount = _items.Count;
             }
 
             public bool MatchesCurrent(T item)
             {
+                if (_index == _itemCount)
+                {
+                    return false;
+                }
+
                 var originalIndex = _index;
 
-                for (; _index < _items.Count && item.Equals(_items[_index]); _index++) { }
+                for (; _index < _itemCount && item.Equals(_items[_index]); _index++) { }
 
                 return originalIndex != _index;
             }

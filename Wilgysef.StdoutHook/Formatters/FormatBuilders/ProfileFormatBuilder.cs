@@ -9,9 +9,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
         {
             new Property(new[] { "name", "profileName" }, profile => profile.ProfileName ?? "", true),
 
-            new Property(new[] { "stderrLines", "stderrLinecount" }, profile => profile.State!.StderrLineCount.ToString(), false),
-            new Property(new[] { "lines", "linecount", "stdoutLines", "stdoutLinecount" }, profile => profile.State!.StdoutLineCount.ToString(), false),
-            new Property(new[] { "totalLines", "totalLineCount" }, profile => profile.State!.LineCount.ToString(), false),
+            new Property(new[] { "stderrLines", "stderrLinecount" }, profile => profile.State.StderrLineCount.ToString(), false),
+            new Property(new[] { "lines", "linecount", "stdoutLines", "stdoutLinecount" }, profile => profile.State.StdoutLineCount.ToString(), false),
+            new Property(new[] { "totalLines", "totalLineCount" }, profile => profile.State.LineCount.ToString(), false),
         };
 
         public override string? Key => "profile";

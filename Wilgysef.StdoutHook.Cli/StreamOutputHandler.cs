@@ -2,23 +2,57 @@
 
 namespace Wilgysef.StdoutHook.Cli;
 
-public class StreamOutputHandler : IDisposable
+public class StreamOutputHandler
 {
     private const int BufferSize = 4096;
 
-    public bool FlushOutput { get; set; }
+    public bool FlushOutput
+    {
+        get => _flushOutput;
+        set
+        {
+            _flushOutput = value;
+            _writeOutput = _flushOutput ? WriteOutputFlush : WriteOutput;
+        }
+    }
 
-    public bool FlushError { get; set; }
+    public bool FlushError
+    {
+        get => _flushError;
+        set
+        {
+            _flushError = value;
+            _writeError = _flushError ? WriteErrorFlush : WriteError;
+        }
+    }
 
     private readonly Profile _profile;
     private readonly StreamReaderHandler _outputReaderHandler;
     private readonly StreamReaderHandler _errorReaderHandler;
+    private readonly TextWriter _stdout;
+    private readonly TextWriter _stderr;
 
-    public StreamOutputHandler(Profile profile, StreamReader stdout, StreamReader stderr)
+    private Action<string> _writeOutput;
+    private Action<string> _writeError;
+
+    private bool _flushOutput;
+    private bool _flushError;
+
+    public StreamOutputHandler(
+        Profile profile,
+        StreamReader stdoutInput,
+        StreamReader stderrInput,
+        TextWriter stdoutOutput,
+        TextWriter stderrOutput)
     {
         _profile = profile;
-        _outputReaderHandler = new StreamReaderHandler(stdout, HandleOutput);
-        _errorReaderHandler = new StreamReaderHandler(stderr, HandleError);
+        _outputReaderHandler = new StreamReaderHandler(stdoutInput, HandleOutput);
+        _errorReaderHandler = new StreamReaderHandler(stderrInput, HandleError);
+        _stdout = stdoutOutput;
+        _stderr = stderrOutput;
+
+        _writeOutput = WriteOutput;
+        _writeError = WriteError;
     }
 
     public async Task ReadLinesAsync(CancellationToken cancellationToken = default)
@@ -29,18 +63,13 @@ public class StreamOutputHandler : IDisposable
         await Task.WhenAll(readOutputTask, readErrorTask);
     }
 
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-    }
-
     private void HandleOutput(string line)
     {
         _profile.State.StdoutLineCount++;
 
         if (_profile.ApplyRules(ref line, true))
         {
-            WriteConsoleOutput(line);
+            _writeOutput(line);
         }
     }
 
@@ -50,27 +79,29 @@ public class StreamOutputHandler : IDisposable
 
         if (_profile.ApplyRules(ref line, false))
         {
-            WriteConsoleError(line);
+            _writeError(line);
         }
     }
 
-    private void WriteConsoleOutput(string line)
+    private void WriteOutput(string line)
     {
-        Console.Write(line);
-
-        if (FlushOutput)
-        {
-            Console.Out.Flush();
-        }
+        _stdout.Write(line);
     }
 
-    private void WriteConsoleError(string line)
+    private void WriteOutputFlush(string line)
     {
-        Console.Error.Write(line);
+        _stdout.Write(line);
+        _stdout.Flush();
+    }
 
-        if (FlushError)
-        {
-            Console.Error.Flush();
-        }
+    private void WriteError(string line)
+    {
+        _stderr.Write(line);
+    }
+
+    private void WriteErrorFlush(string line)
+    {
+        _stderr.Write(line);
+        _stderr.Flush();
     }
 }

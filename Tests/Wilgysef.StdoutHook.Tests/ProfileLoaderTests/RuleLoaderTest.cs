@@ -9,17 +9,6 @@ public class RuleLoaderTest
     #region Base Rule
 
     [Fact]
-    public void Enabled()
-    {
-        var rule = LoadBaseRule(new RuleDto
-        {
-            Enabled = false,
-        });
-
-        rule.Enabled.ShouldBeFalse();
-    }
-
-    [Fact]
     public void EnableExpression()
     {
         var rule = LoadBaseRule(new RuleDto
@@ -28,6 +17,17 @@ public class RuleLoaderTest
         });
 
         rule.EnableExpression!.ToString().ShouldBe("a");
+    }
+
+    [Fact]
+    public void EnableExpression_Split()
+    {
+        var rule = LoadBaseRule(new RuleDto
+        {
+            EnableExpression = new List<object?> { "a", "b" },
+        });
+
+        rule.EnableExpression!.ToString().ShouldBe("ab");
     }
 
     [Fact]
@@ -157,7 +157,10 @@ public class RuleLoaderTest
                 {
                     Expression = "a",
                     ActivationOffset = 2,
-                }
+                },
+                new ActivationExpressionDto
+                {
+                },
             },
         });
 
@@ -272,6 +275,16 @@ public class RuleLoaderTest
         expression.ActivationOffset.ShouldBe(2);
     }
 
+    [Fact]
+    public void MultipleMatchingTypes()
+    {
+        Should.Throw<UnknownRuleException>(() => LoadBaseRule(new RuleDto
+        {
+            SeparatorExpression = "a",
+            Regex = "b",
+        }));
+    }
+
     private static Rule LoadBaseRule(RuleDto dto)
     {
         var loader = new RuleLoader();
@@ -352,7 +365,7 @@ public class RuleLoaderTest
             SeparatorExpression = @"\s+",
             MinFields = 1,
             MaxFields = 4,
-            ReplaceAllFormat = "test"
+            ReplaceAllFormat = "test",
         });
 
         rule.SeparatorExpression.ToString().ShouldBe(@"\s+");
@@ -362,13 +375,42 @@ public class RuleLoaderTest
     }
 
     [Fact]
+    public void FieldSeparator_SeparatorExpression_Split()
+    {
+        var loader = new RuleLoader();
+        var rule = (FieldSeparatorRule)loader.LoadRule(new RuleDto
+        {
+            SeparatorExpression = new List<object?> { "a", "b" },
+            ReplaceAllFormat = "test",
+        });
+
+        rule.SeparatorExpression.ToString().ShouldBe("ab");
+    }
+
+    [Fact]
     public void FieldSeparator_Invalid()
     {
         var loader = new RuleLoader();
         
-        Should.Throw<Exception>(() => loader.LoadRule(new RuleDto
+        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
         {
             SeparatorExpression = @"\s+"
+        }));
+
+        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
+        {
+            SeparatorExpression = @"\s+",
+            ReplaceFields = new List<object?> { "a", 1 },
+        }));
+
+        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
+        {
+            SeparatorExpression = @"\s+",
+            ReplaceFields = new Dictionary<string, object?>
+            {
+                ["a"] = "1",
+                ["b"] = 2,
+            },
         }));
     }
 
@@ -442,6 +484,46 @@ public class RuleLoaderTest
         rule.Regex.ToString().ShouldBe("test");
 
         rule.ReplaceAllFormat.ShouldBe("a");
+    }
+
+    [Fact]
+    public void RegexGroup_Regex_Split()
+    {
+        var loader = new RuleLoader();
+        var rule = (RegexGroupRule)loader.LoadRule(new RuleDto
+        {
+            Regex = new List<object?> { "te", "st" },
+            ReplaceAllFormat = "a",
+        });
+
+        rule.Regex.ToString().ShouldBe("test");
+    }
+
+    [Fact]
+    public void RegexGroup_Invalid()
+    {
+        var loader = new RuleLoader();
+
+        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
+        {
+            Regex = "test"
+        }));
+
+        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
+        {
+            Regex = "test",
+            ReplaceGroups = new List<object?> { "a", 2 },
+        }));
+
+        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
+        {
+            Regex = "test",
+            ReplaceGroups = new Dictionary<object, object?>
+            {
+                ["a"] = "1",
+                ["b"] = 2,
+            },
+        }));
     }
 
     #endregion

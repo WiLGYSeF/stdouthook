@@ -30,9 +30,7 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            var stream = state.Profile.State!.GetOrCreateFileStream(
-                _absolutePath,
-                key => new FileStream(key, FileMode.Append));
+            var stream = state.Profile.State.GetOrCreateFileStream(_absolutePath);
 
             var data = Encoding.UTF8.GetBytes(ExtractColors
                 ? ColorExtractor.ExtractColor(state.Data!, null)

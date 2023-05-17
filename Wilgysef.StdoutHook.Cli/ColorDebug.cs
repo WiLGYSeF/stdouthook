@@ -2,9 +2,9 @@
 
 namespace Wilgysef.StdoutHook.Cli;
 
-internal static class ColorDebug
+public static class ColorDebug
 {
-    public static void GetColorDebug(TextWriter writer)
+    public static void WriteColorDebug(TextWriter writer)
     {
         var formatter = new ColorFormatter();
 

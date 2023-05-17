@@ -21,12 +21,12 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
         {
             return RuleBuilders.TryGetValue(GetRuleType(dto), out var builder)
                 ? builder(dto)
-                : throw new Exception();
+                : throw new UnknownRuleException();
         }
 
         private static Rule BuildFieldSeparatorRule(RuleDto dto)
         {
-            var rule = new FieldSeparatorRule(CreateRegex(dto.SeparatorExpression!));
+            var rule = new FieldSeparatorRule(CreateRegex(dto.GetSeparatorExpression()!));
             SetBaseRuleProperties(rule, dto);
 
             rule.MinFields = dto.MinFields;
@@ -38,12 +38,11 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             }
             else if (dto.ReplaceFields != null)
             {
-                rule.ReplaceFields = BuildReplaceFields(dto.ReplaceFields, null);
+                rule.ReplaceFields = BuildReplaceFields(rule, dto.ReplaceFields, null);
             }
             else
             {
-                // TODO: decide
-                throw new Exception();
+                throw new InvalidRuleException(rule, $"missing {nameof(dto.ReplaceAllFormat)} or {nameof(dto.ReplaceFields)}");
             }
 
             return rule;
@@ -58,7 +57,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         private static Rule BuildRegexGroupRule(RuleDto dto)
         {
-            var rule = new RegexGroupRule(CreateRegex(dto.Regex!));
+            var rule = new RegexGroupRule(CreateRegex(dto.GetRegex()!));
             SetBaseRuleProperties(rule, dto);
 
             if (dto.ReplaceAllFormat != null)
@@ -69,7 +68,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             {
                 var otherKeys = new List<KeyValuePair<string, string>>();
 
-                rule.ReplaceGroups = BuildReplaceFields(dto.ReplaceGroups, otherKeys);
+                rule.ReplaceGroups = BuildReplaceFields(rule, dto.ReplaceGroups, otherKeys);
 
                 if (otherKeys.Count > 0)
                 {
@@ -82,14 +81,14 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             }
             else
             {
-                // TODO: decide
-                throw new Exception();
+                throw new InvalidRuleException(rule, $"missing {nameof(dto.ReplaceAllFormat)} or {nameof(dto.ReplaceGroups)}");
             }
 
             return rule;
         }
 
         private static List<KeyValuePair<FieldRangeList, string>> BuildReplaceFields(
+            Rule rule,
             object replace,
             List<KeyValuePair<string, string>>? otherObjectKeys)
         {
@@ -101,7 +100,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 {
                     if (!(fieldsList[i] is string str))
                     {
-                        throw new Exception();
+                        throw new InvalidRuleException(rule, "expected string type");
                     }
 
                     replaceFields.Add(new KeyValuePair<FieldRangeList, string>(
@@ -119,7 +118,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 {
                     if (!(val is string str))
                     {
-                        throw new Exception();
+                        throw new InvalidRuleException(rule, "expected string type");
                     }
 
                     if (FieldRangeList.TryParse(key, out var rangeList))
@@ -137,7 +136,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 return replaceFields;
             }
 
-            throw new Exception();
+            throw new InvalidRuleException(rule, "expected list or object type");
         }
 
         private static Rule BuildTeeRule(RuleDto dto)
@@ -145,8 +144,8 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             var rule = new TeeRule(dto.Filename!);
             SetBaseRuleProperties(rule, dto);
 
-            rule.Flush = dto.Flush.GetValueOrDefault(false);
-            rule.ExtractColors = dto.ExtractColors.GetValueOrDefault(false);
+            rule.Flush = dto.Flush ?? false;
+            rule.ExtractColors = dto.ExtractColors ?? false;
 
             return rule;
         }
@@ -161,12 +160,11 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         private static void SetBaseRuleProperties(Rule rule, RuleDto dto)
         {
-            rule.Enabled = dto.Enabled.GetValueOrDefault(true);
-            rule.EnableExpression = GetRegex(dto.EnableExpression);
-            rule.StdoutOnly = dto.StdoutOnly.GetValueOrDefault(false);
-            rule.StderrOnly = dto.StderrOnly.GetValueOrDefault(false);
-            rule.Terminal = dto.Terminal.GetValueOrDefault(false);
-            rule.TrimNewline = dto.TrimNewline.GetValueOrDefault(false);
+            rule.EnableExpression = GetRegex(dto.GetEnableExpression());
+            rule.StdoutOnly = dto.StdoutOnly ?? false;
+            rule.StderrOnly = dto.StderrOnly ?? false;
+            rule.Terminal = dto.Terminal ?? false;
+            rule.TrimNewline = dto.TrimNewline ?? false;
             rule.ActivationLines = dto.ActivationLines ?? new List<long>();
             rule.ActivationLinesStdoutOnly = dto.ActivationLinesStdoutOnly ?? new List<long>();
             rule.ActivationLinesStderrOnly = dto.ActivationLinesStderrOnly ?? new List<long>();
@@ -192,22 +190,25 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
             for (var i = 0; i < dtos.Count; i++)
             {
-                expressions.Add(CreateActivationExpression(dtos[i]));
+                var expression = CreateActivationExpression(dtos[i]);
+                if (expression != null)
+                {
+                    expressions.Add(expression);
+                }
             }
 
             return expressions;
         }
 
-        private static ActivationExpression CreateActivationExpression(ActivationExpressionDto dto)
+        private static ActivationExpression? CreateActivationExpression(ActivationExpressionDto dto)
         {
-            if (dto.Expression == null)
+            var expression = dto.GetExpression();
+            if (expression == null)
             {
-                throw new Exception();
+                return null;
             }
 
-            return new ActivationExpression(
-                CreateRegex(dto.Expression),
-                dto.ActivationOffset.GetValueOrDefault());
+            return new ActivationExpression(CreateRegex(expression), dto.ActivationOffset ?? 0);
         }
 
         private static Type GetRuleType(RuleDto rule)
@@ -239,13 +240,13 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 SetType(ref type, typeof(UnconditionalReplaceRule));
             }
 
-            return type ?? throw new Exception();
+            return type ?? throw new UnknownRuleException();
 
             static void SetType(ref Type? type, Type value)
             {
                 if (type != null)
                 {
-                    throw new Exception();
+                    throw new UnknownRuleException();
                 }
 
                 type = value;

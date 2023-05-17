@@ -2,15 +2,59 @@
 
 using System.Diagnostics;
 using Wilgysef.StdoutHook.Cli;
-using Wilgysef.StdoutHook.Profiles;
+using Wilgysef.StdoutHook.CommandLocator;
+using Wilgysef.StdoutHook.Profiles.Dtos;
+using Wilgysef.StdoutHook.Profiles.Loaders;
 
-var processInfo = new ProcessStartInfo("python")
+var command = "python";
+var commandPaths = new CommandLocator().LocateCommand(command);
+
+var fullCommandPath = commandPaths.FirstOrDefault();
+var arguments = new[]
+{
+    "D:\\projects\\stdouthook\\Wilgysef.StdoutHook\\testproc.py",
+};
+
+var loader = new JsonProfileLoader();
+var profiles = new List<ProfileDto>();
+var files = Directory.GetFiles(".");
+
+for (var i = 0; i < files.Length; i++)
+{
+    try
+    {
+        using var stream = File.Open(files[i], FileMode.Open);
+        profiles.AddRange(await loader.LoadProfileDtosAsync(stream));
+    }
+    catch (Exception ex)
+    {
+
+    }
+}
+
+var picker = new ProfileDtoPicker();
+using var profile = loader.LoadProfile(
+    profiles,
+    profileDtos => picker.PickProfileDto(
+        profileDtos,
+        profileName: "test",
+        command: command,
+        fullCommandPath: fullCommandPath,
+        arguments: arguments));
+
+//ColorDebug.GetColorDebug(Console.Out);
+//return;
+
+var processInfo = new ProcessStartInfo(command)
 {
     RedirectStandardError = true,
     RedirectStandardOutput = true,
 };
 
-processInfo.ArgumentList.Add("D:\\projects\\stdouthook\\Wilgysef.StdoutHook\\testproc.py");
+for (var i = 0; i < arguments.Length; i++)
+{
+    processInfo.ArgumentList.Add(arguments[i]);
+}
 
 //var processInfo = new ProcessStartInfo("pip")
 //{
@@ -20,9 +64,6 @@ processInfo.ArgumentList.Add("D:\\projects\\stdouthook\\Wilgysef.StdoutHook\\tes
 
 //processInfo.ArgumentList.Add("install");
 //processInfo.ArgumentList.Add("yt-dlp");
-
-using var profileState = new ProfileState();
-var profile = new Profile(profileState);
 
 profile.Build();
 
@@ -34,9 +75,14 @@ if (process == null)
     throw new Exception("Process could not start.");
 }
 
-profileState.SetProcess(process);
+profile.State.SetProcess(process);
 
-using var streamOutputHandler = new StreamOutputHandler(profile, process.StandardOutput, process.StandardError);
+var streamOutputHandler = new StreamOutputHandler(
+    profile,
+    process.StandardOutput,
+    process.StandardError,
+    Console.Out,
+    Console.Error);
 streamOutputHandler.FlushOutput = profile.Flush;
 streamOutputHandler.FlushError = profile.Flush;
 

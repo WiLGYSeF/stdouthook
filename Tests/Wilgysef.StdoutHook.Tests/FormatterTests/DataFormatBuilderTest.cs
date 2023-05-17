@@ -19,4 +19,14 @@ public class DataFormatBuilderTest : RuleTestBase
 
         formatter.Format("%(data:notrim)", CreateDummyDataState("test\n", true)).ShouldBe("test\n");
     }
+
+    [Fact]
+    public void Newline()
+    {
+        var formatter = GetFormatter(new DataFormatBuilder());
+
+        formatter.Format("%(data:newline)", CreateDummyDataState("test\n", true)).ShouldBe("\n");
+        formatter.Format("%(data:newline)", CreateDummyDataState("test\r\n", true)).ShouldBe("\r\n");
+        formatter.Format("%(data:newline)", CreateDummyDataState("test\r", true)).ShouldBe("\r");
+    }
 }

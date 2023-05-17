@@ -31,11 +31,6 @@ namespace Wilgysef.StdoutHook.Formatters
             _formatBuilders = new List<FormatBuilder>(formatBuilders);
         }
 
-        public FormatFunctionBuilder(IEnumerable<FormatBuilder> formatBuilders)
-        {
-            _formatBuilders = new List<FormatBuilder>(formatBuilders);
-        }
-
         public void SetCustomColors(IDictionary<string, string> colors)
         {
             foreach (var formatBuilder in _formatBuilders)
