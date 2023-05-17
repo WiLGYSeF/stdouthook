@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Wilgysef.StdoutHook.Extensions;
+using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Profiles.Dtos;
 using Wilgysef.StdoutHook.Rules;
 
@@ -166,10 +167,14 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                     var name = profile.InheritProfiles[index];
                     if (!graph.Link(profile, name))
                     {
-                        // TODO: log
-                        if (throwIfInheritedProfileNotFound && !disabledProfileNames.Contains(name))
+                        if (!disabledProfileNames.Contains(name))
                         {
-                            throw new InheritedProfileNotFoundException();
+                            if (throwIfInheritedProfileNotFound)
+                            {
+                                throw new InheritedProfileNotFoundException();
+                            }
+
+                            GlobalLogger.Warn($"Inherit profile name not found: \"{name}\"");
                         }
                     }
                 }

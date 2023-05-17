@@ -60,7 +60,6 @@ namespace Wilgysef.StdoutHook.Profiles
                 }
 
                 // exception was thrown but the stream exists, continue
-                // TODO: log
             }
 
             return stream;

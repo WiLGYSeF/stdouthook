@@ -130,7 +130,7 @@ public static class ColorDebug
                 case 3: r = (int)(p * 255); g = (int)(q * 255); b = (int)(v * 255); break;
                 case 4: r = (int)(t * 255); g = (int)(p * 255); b = (int)(v * 255); break;
                 case 5: r = (int)(v * 255); g = (int)(p * 255); b = (int)(q * 255); break;
-                default: throw new Exception();
+                default: r = g = b = 0; break; // never reached
             }
         }
     }
