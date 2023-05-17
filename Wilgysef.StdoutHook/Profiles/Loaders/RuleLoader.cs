@@ -26,7 +26,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         private static Rule BuildFieldSeparatorRule(RuleDto dto)
         {
-            var rule = new FieldSeparatorRule(CreateRegex(dto.SeparatorExpression!));
+            var rule = new FieldSeparatorRule(CreateRegex(dto.GetSeparatorExpression()!));
             SetBaseRuleProperties(rule, dto);
 
             rule.MinFields = dto.MinFields;
@@ -57,7 +57,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         private static Rule BuildRegexGroupRule(RuleDto dto)
         {
-            var rule = new RegexGroupRule(CreateRegex(dto.Regex!));
+            var rule = new RegexGroupRule(CreateRegex(dto.GetRegex()!));
             SetBaseRuleProperties(rule, dto);
 
             if (dto.ReplaceAllFormat != null)
@@ -160,7 +160,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         private static void SetBaseRuleProperties(Rule rule, RuleDto dto)
         {
-            rule.EnableExpression = GetRegex(dto.EnableExpression);
+            rule.EnableExpression = GetRegex(dto.GetEnableExpression());
             rule.StdoutOnly = dto.StdoutOnly ?? false;
             rule.StderrOnly = dto.StderrOnly ?? false;
             rule.Terminal = dto.Terminal ?? false;

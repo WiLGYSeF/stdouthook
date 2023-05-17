@@ -20,6 +20,17 @@ public class RuleLoaderTest
     }
 
     [Fact]
+    public void EnableExpression_Split()
+    {
+        var rule = LoadBaseRule(new RuleDto
+        {
+            EnableExpression = new List<object?> { "a", "b" },
+        });
+
+        rule.EnableExpression!.ToString().ShouldBe("ab");
+    }
+
+    [Fact]
     public void StdoutOnly()
     {
         var rule = LoadBaseRule(new RuleDto
@@ -354,13 +365,26 @@ public class RuleLoaderTest
             SeparatorExpression = @"\s+",
             MinFields = 1,
             MaxFields = 4,
-            ReplaceAllFormat = "test"
+            ReplaceAllFormat = "test",
         });
 
         rule.SeparatorExpression.ToString().ShouldBe(@"\s+");
 
         rule.MinFields.ShouldBe(1);
         rule.MaxFields.ShouldBe(4);
+    }
+
+    [Fact]
+    public void FieldSeparator_SeparatorExpression_Split()
+    {
+        var loader = new RuleLoader();
+        var rule = (FieldSeparatorRule)loader.LoadRule(new RuleDto
+        {
+            SeparatorExpression = new List<object?> { "a", "b" },
+            ReplaceAllFormat = "test",
+        });
+
+        rule.SeparatorExpression.ToString().ShouldBe("ab");
     }
 
     [Fact]
@@ -460,6 +484,19 @@ public class RuleLoaderTest
         rule.Regex.ToString().ShouldBe("test");
 
         rule.ReplaceAllFormat.ShouldBe("a");
+    }
+
+    [Fact]
+    public void RegexGroup_Regex_Split()
+    {
+        var loader = new RuleLoader();
+        var rule = (RegexGroupRule)loader.LoadRule(new RuleDto
+        {
+            Regex = new List<object?> { "te", "st" },
+            ReplaceAllFormat = "a",
+        });
+
+        rule.Regex.ToString().ShouldBe("test");
     }
 
     [Fact]

@@ -115,6 +115,22 @@ public class ProfileDtoPickerTest
     }
 
     [Fact]
+    public void CommandExpression_Split()
+    {
+        var picker = new ProfileDtoPicker();
+        var dtos = new[]
+        {
+            new ProfileDto
+            {
+                CommandExpression = new List<object?> { "t[a-z]", "+t" },
+            },
+        };
+
+        var dto = picker.PickProfileDto(dtos, command: "test");
+        dto.ShouldBe(dtos[0]);
+    }
+
+    [Fact]
     public void FullCommandPath()
     {
         var picker = new ProfileDtoPicker();
@@ -177,6 +193,22 @@ public class ProfileDtoPickerTest
         };
 
         var dto = picker.PickProfileDto(dtos, fullCommandPath: "tEst");
+        dto.ShouldBe(dtos[0]);
+    }
+
+    [Fact]
+    public void FullCommandPathExpression_Split()
+    {
+        var picker = new ProfileDtoPicker();
+        var dtos = new[]
+        {
+            new ProfileDto
+            {
+                FullCommandPathExpression = new List<object?> { "t[a-z]", "+t" },
+            },
+        };
+
+        var dto = picker.PickProfileDto(dtos, fullCommandPath: "test");
         dto.ShouldBe(dtos[0]);
     }
 
@@ -270,6 +302,23 @@ public class ProfileDtoPickerTest
 
         dto = picker.PickProfileDto(dtos, profileName: "test");
         dto.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Subcommand_Expression_Split()
+    {
+        var picker = new ProfileDtoPicker();
+        var dtos = new[]
+        {
+            new ProfileDto
+            {
+                ProfileName = "test",
+                SubcommandExpression = new List<object?> { "abc", "def" },
+            },
+        };
+
+        var dto = picker.PickProfileDto(dtos, profileName: "test", arguments: new[] { "abcdef" });
+        dto.ShouldBe(dtos[0]);
     }
 
     [Fact]
@@ -419,6 +468,29 @@ public class ProfileDtoPickerTest
         };
 
         var dto = picker.PickProfileDto(dtos, profileName: "test", arguments: new[] { "def" });
+        dto.ShouldBe(dtos[0]);
+    }
+
+    [Fact]
+    public void ArgumentPattern_Expression_Split()
+    {
+        var picker = new ProfileDtoPicker();
+        var dtos = new[]
+        {
+            new ProfileDto
+            {
+                ProfileName = "test",
+                ArgumentPatterns = new[]
+                {
+                    new ArgumentPatternDto
+                    {
+                        ArgumentExpression = new List<object?> { "a[a-z]", "c" },
+                    },
+                },
+            },
+        };
+
+        var dto = picker.PickProfileDto(dtos, profileName: "test", arguments: new[] { "abc", "def" });
         dto.ShouldBe(dtos[0]);
     }
 

@@ -24,14 +24,14 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
                 if (!(dto.Enabled ?? true)
                     || !ArgumentsMatchPatterns(dto.ArgumentPatterns)
-                    || !ArgumentsMatchSubcommand(dto.Subcommand, dto.SubcommandExpression, stringComparison))
+                    || !ArgumentsMatchSubcommand(dto.Subcommand, dto.GetSubcommandExpression(), stringComparison))
                 {
                     continue;
                 }
 
                 if (profileName != null && profileName == dto.ProfileName
-                    || MatchesStringOrExpression(command, dto.Command, dto.CommandExpression, dto.CommandIgnoreCase ?? false)
-                    || MatchesStringOrExpression(fullCommandPath, dto.FullCommandPath, dto.FullCommandPathExpression, dto.CommandIgnoreCase ?? false))
+                    || MatchesStringOrExpression(command, dto.Command, dto.GetCommandExpression(), dto.CommandIgnoreCase ?? false)
+                    || MatchesStringOrExpression(fullCommandPath, dto.FullCommandPath, dto.GetFullCommandPathExpression(), dto.CommandIgnoreCase ?? false))
                 {
                     return dto;
                 }
@@ -104,7 +104,8 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                         continue;
                     }
 
-                    if (argPattern.ArgumentExpression != null)
+                    var argExpression = argPattern.GetArgumentExpression();
+                    if (argExpression != null)
                     {
                         var mustNotMatch = argPattern.MustNotMatch ?? false;
                         if (arguments == null)
@@ -117,7 +118,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                             return false;
                         }
 
-                        var expression = new Regex(argPattern.ArgumentExpression, RegexOptions.Compiled);
+                        var expression = new Regex(argExpression, RegexOptions.Compiled);
                         var limit = Math.Min(argPattern.MaxPosition ?? arguments.Count, arguments.Count);
 
                         for (var argIndex = argPattern.MinPosition.HasValue ? argPattern.MinPosition.Value - 1 : 0; argIndex < limit; argIndex++)
