@@ -146,7 +146,10 @@ public class RuleLoaderTest
                 {
                     Expression = "a",
                     ActivationOffset = 2,
-                }
+                },
+                new ActivationExpressionDto
+                {
+                },
             },
         });
 
@@ -355,9 +358,25 @@ public class RuleLoaderTest
     {
         var loader = new RuleLoader();
         
-        Should.Throw<Exception>(() => loader.LoadRule(new RuleDto
+        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
         {
             SeparatorExpression = @"\s+"
+        }));
+
+        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
+        {
+            SeparatorExpression = @"\s+",
+            ReplaceFields = new List<object?> { "a", 1 },
+        }));
+
+        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
+        {
+            SeparatorExpression = @"\s+",
+            ReplaceFields = new Dictionary<string, object?>
+            {
+                ["a"] = "1",
+                ["b"] = 2,
+            },
         }));
     }
 
@@ -431,6 +450,33 @@ public class RuleLoaderTest
         rule.Regex.ToString().ShouldBe("test");
 
         rule.ReplaceAllFormat.ShouldBe("a");
+    }
+
+    [Fact]
+    public void RegexGroup_Invalid()
+    {
+        var loader = new RuleLoader();
+
+        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
+        {
+            Regex = "test"
+        }));
+
+        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
+        {
+            Regex = "test",
+            ReplaceGroups = new List<object?> { "a", 2 },
+        }));
+
+        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
+        {
+            Regex = "test",
+            ReplaceGroups = new Dictionary<object, object?>
+            {
+                ["a"] = "1",
+                ["b"] = 2,
+            },
+        }));
     }
 
     #endregion

@@ -48,7 +48,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                         return false;
                     }
                 }
-                else if (subcommand is IList<object> subcommandList)
+                else if (subcommand is IList<object?> subcommandList)
                 {
                     if (arguments == null || arguments.Count < subcommandList.Count)
                     {
@@ -120,13 +120,19 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                         var expression = new Regex(argPattern.ArgumentExpression, RegexOptions.Compiled);
                         var limit = Math.Min(argPattern.MaxPosition ?? arguments.Count, arguments.Count);
 
-                        for (var argIndex = argPattern.MinPosition ?? 0; argIndex < limit; argIndex++)
+                        for (var argIndex = argPattern.MinPosition.HasValue ? argPattern.MinPosition.Value - 1 : 0; argIndex < limit; argIndex++)
                         {
-                            if (expression.IsMatch(arguments[argIndex]) == mustNotMatch)
+                            if (!mustNotMatch && expression.IsMatch(arguments[argIndex]))
+                            {
+                                return true;
+                            }
+                            if (mustNotMatch && expression.IsMatch(arguments[argIndex]))
                             {
                                 return false;
                             }
                         }
+
+                        return mustNotMatch;
                     }
                 }
 

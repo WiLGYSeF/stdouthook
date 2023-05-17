@@ -21,7 +21,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
             if (dto.Subcommand != null
                 && !(dto.Subcommand is string)
-                && !(dto.Subcommand is IList<object>))
+                && !(dto.Subcommand is IList<object?>))
             {
                 throw new InvalidPropertyTypeException(
                     nameof(dto.Subcommand),
@@ -35,8 +35,8 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 {
                     var rule = dto.Rules[ruleIndex];
                     if (rule.ReplaceFields != null
-                        && !(rule.ReplaceFields is IList<object>)
-                        && !(rule.ReplaceFields is IDictionary<string, object>))
+                        && !(rule.ReplaceFields is IList<object?>)
+                        && !(rule.ReplaceFields is IDictionary<string, object?>))
                     {
                         throw new InvalidPropertyTypeException(
                             nameof(rule.ReplaceFields),
@@ -45,8 +45,8 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                     }
 
                     if (rule.ReplaceGroups != null
-                        && !(rule.ReplaceGroups is IList<object>)
-                        && !(rule.ReplaceGroups is IDictionary<string, object>))
+                        && !(rule.ReplaceGroups is IList<object?>)
+                        && !(rule.ReplaceGroups is IDictionary<string, object?>))
                     {
                         throw new InvalidPropertyTypeException(
                             nameof(rule.ReplaceFields),
@@ -111,6 +111,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 var names = current.InheritProfileNames;
                 var currentCopy = new ProfileDto
                 {
+                    Enabled = current.Enabled,
                     ProfileName = current.ProfileName
                 };
 
@@ -302,7 +303,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
                 if (dtos.Count < _adjacencyLists.Count)
                 {
-                    var name = "";
+                    string? name = null;
                     foreach (var profile in _adjacencyLists.Keys)
                     {
                         if (!dtos.Contains(profile))
@@ -312,7 +313,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                         }
                     }
 
-                    throw new ProfileInheritanceRecursionException(name);
+                    throw new ProfileInheritanceRecursionException(name ?? "");
                 }
 
                 return dtos;
