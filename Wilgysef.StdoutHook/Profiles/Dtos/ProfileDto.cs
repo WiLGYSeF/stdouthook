@@ -36,7 +36,6 @@ namespace Wilgysef.StdoutHook.Profiles.Dtos
 
         public IDictionary<string, string>? CustomColors { get; set; }
 
-        // TODO: rename to InheritProfiles
-        public IList<string>? InheritProfileNames { get; set; }
+        public IList<string>? InheritProfiles { get; set; }
     }
 }

@@ -13,50 +13,55 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
     {
         protected RuleLoader _ruleLoader = new RuleLoader();
 
-        protected abstract Task<ProfileDto> LoadProfileDtoInternalAsync(Stream stream, CancellationToken cancellationToken);
+        protected abstract Task<List<ProfileDto>> LoadProfileDtosInternalAsync(Stream stream, CancellationToken cancellationToken);
 
-        public async Task<ProfileDto> LoadProfileDtoAsync(Stream stream, CancellationToken cancellationToken = default)
+        public async Task<List<ProfileDto>> LoadProfileDtosAsync(Stream stream, CancellationToken cancellationToken = default)
         {
-            var dto = await LoadProfileDtoInternalAsync(stream, cancellationToken);
+            var dtos = await LoadProfileDtosInternalAsync(stream, cancellationToken);
 
-            if (dto.Subcommand != null
-                && !(dto.Subcommand is string)
-                && !(dto.Subcommand is IList<object?>))
+            for (var i = 0; i < dtos.Count; i++)
             {
-                throw new InvalidPropertyTypeException(
-                    nameof(dto.Subcommand),
-                    dto.Subcommand.GetType().Name,
-                    new[] { "string", "list of strings" });
-            }
+                var dto = dtos[i];
 
-            if (dto.Rules != null)
-            {
-                for (var ruleIndex = 0; ruleIndex < dto.Rules.Count; ruleIndex++)
+                if (dto.Subcommand != null
+                    && !(dto.Subcommand is string)
+                    && !(dto.Subcommand is IList<object?>))
                 {
-                    var rule = dto.Rules[ruleIndex];
-                    if (rule.ReplaceFields != null
-                        && !(rule.ReplaceFields is IList<object?>)
-                        && !(rule.ReplaceFields is IDictionary<string, object?>))
-                    {
-                        throw new InvalidPropertyTypeException(
-                            nameof(rule.ReplaceFields),
-                            rule.ReplaceFields.GetType().Name,
-                            new[] { "list of strings", "object with string keys and string values" });
-                    }
+                    throw new InvalidPropertyTypeException(
+                        nameof(dto.Subcommand),
+                        dto.Subcommand.GetType().Name,
+                        new[] { "string", "list of strings" });
+                }
 
-                    if (rule.ReplaceGroups != null
-                        && !(rule.ReplaceGroups is IList<object?>)
-                        && !(rule.ReplaceGroups is IDictionary<string, object?>))
+                if (dto.Rules != null)
+                {
+                    for (var ruleIndex = 0; ruleIndex < dto.Rules.Count; ruleIndex++)
                     {
-                        throw new InvalidPropertyTypeException(
-                            nameof(rule.ReplaceFields),
-                            rule.ReplaceGroups.GetType().Name,
-                            new[] { "list of strings", "object with string keys and string values" });
+                        var rule = dto.Rules[ruleIndex];
+                        if (rule.ReplaceFields != null
+                            && !(rule.ReplaceFields is IList<object?>)
+                            && !(rule.ReplaceFields is IDictionary<string, object?>))
+                        {
+                            throw new InvalidPropertyTypeException(
+                                nameof(rule.ReplaceFields),
+                                rule.ReplaceFields.GetType().Name,
+                                new[] { "list of strings", "object with string keys and string values" });
+                        }
+
+                        if (rule.ReplaceGroups != null
+                            && !(rule.ReplaceGroups is IList<object?>)
+                            && !(rule.ReplaceGroups is IDictionary<string, object?>))
+                        {
+                            throw new InvalidPropertyTypeException(
+                                nameof(rule.ReplaceFields),
+                                rule.ReplaceGroups.GetType().Name,
+                                new[] { "list of strings", "object with string keys and string values" });
+                        }
                     }
                 }
             }
 
-            return dto;
+            return dtos;
         }
 
         public Profile? LoadProfile(
@@ -83,14 +88,14 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             for (var i = 0; i < profileDtos.Count; i++)
             {
                 var profile = profileDtos[i];
-                if (!(profile.Enabled ?? true) || profile.InheritProfileNames == null)
+                if (!(profile.Enabled ?? true) || profile.InheritProfiles == null)
                 {
                     continue;
                 }
 
-                for (var index = 0; index < profile.InheritProfileNames.Count; index++)
+                for (var index = 0; index < profile.InheritProfiles.Count; index++)
                 {
-                    var name = profile.InheritProfileNames[index];
+                    var name = profile.InheritProfiles[index];
                     if (!graph.Link(profile, name))
                     {
                         // TODO: log
@@ -108,7 +113,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             for (var i = order.Count - 1; i >= 0; i--)
             {
                 var current = order[i];
-                var names = current.InheritProfileNames;
+                var names = current.InheritProfiles;
                 var currentCopy = new ProfileDto
                 {
                     Enabled = current.Enabled,
@@ -151,7 +156,14 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
         public async Task<Profile> LoadProfileAsync(Stream stream, CancellationToken cancellationToken = default)
         {
             // TODO: load inherited
-            return CreateProfile(await LoadProfileDtoAsync(stream, cancellationToken));
+            var profiles = await LoadProfileDtosAsync(stream, cancellationToken);
+
+            if (profiles.Count > 1)
+            {
+                throw new Exception();
+            }
+
+            return CreateProfile(profiles[0]);
         }
 
         private List<Rule> LoadRules(IList<RuleDto>? ruleDtos)
@@ -313,7 +325,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                         }
                     }
 
-                    throw new ProfileInheritanceRecursionException(name ?? "");
+                    throw new ProfileCyclicalInheritanceException(name ?? "");
                 }
 
                 return dtos;

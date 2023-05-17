@@ -11,7 +11,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 {
     public class JsonProfileLoader : ProfileLoader
     {
-        protected override async Task<ProfileDto> LoadProfileDtoInternalAsync(Stream stream, CancellationToken cancellationToken)
+        protected override async Task<List<ProfileDto>> LoadProfileDtosInternalAsync(Stream stream, CancellationToken cancellationToken)
         {
             var options = new JsonSerializerOptions
             {
@@ -21,14 +21,35 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             };
             options.Converters.Add(new ObjectConverter());
 
-            var dto = await JsonSerializer.DeserializeAsync<ProfileDto>(stream, options, cancellationToken);
+            List<ProfileDto>? profiles;
+            var position = stream.Position;
 
-            if (dto == null)
+            try
             {
-                throw new Exception();
+                var profileListDto = await JsonSerializer.DeserializeAsync<ProfileListDto>(stream, options, cancellationToken);
+                profiles = (List<ProfileDto>)profileListDto!.Profiles;
+            }
+            catch
+            {
+                profiles = null;
             }
 
-            return dto;
+            if (profiles != null)
+            {
+                return profiles;
+            }
+
+            profiles = new List<ProfileDto>();
+
+            stream.Position = position;
+            var profile = await JsonSerializer.DeserializeAsync<ProfileDto>(stream, options, cancellationToken);
+
+            if (profile != null)
+            {
+                profiles.Add(profile);
+            }
+
+            return profiles;
         }
 
         private class ObjectConverter : JsonConverter<object>

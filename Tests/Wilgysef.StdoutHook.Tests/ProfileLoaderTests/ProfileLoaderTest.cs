@@ -80,7 +80,7 @@ public class ProfileLoaderTest
             new ProfileDto
             {
                 ProfileName = "testprofile",
-                InheritProfileNames = new List<string> { "inherited" },
+                InheritProfiles = new List<string> { "inherited" },
             },
             new ProfileDto
             {
@@ -113,7 +113,7 @@ public class ProfileLoaderTest
             new ProfileDto
             {
                 ProfileName = "testprofile",
-                InheritProfileNames = new List<string> { "inherited" },
+                InheritProfiles = new List<string> { "inherited" },
                 MinArguments = 3,
                 CustomColors = new Dictionary<string, string>
                 {
@@ -190,7 +190,7 @@ public class ProfileLoaderTest
             new ProfileDto
             {
                 ProfileName = "testprofile",
-                InheritProfileNames = new List<string> { "inherited" },
+                InheritProfiles = new List<string> { "inherited" },
             },
             new ProfileDto
             {
@@ -225,7 +225,7 @@ public class ProfileLoaderTest
             new ProfileDto
             {
                 ProfileName = "testprofile",
-                InheritProfileNames = new List<string> { "notfound" },
+                InheritProfiles = new List<string> { "notfound" },
             },
         };
 
@@ -256,17 +256,17 @@ public class ProfileLoaderTest
             new ProfileDto
             {
                 ProfileName = "testprofile",
-                InheritProfileNames = new List<string> { "inherited1", "inherited2" },
+                InheritProfiles = new List<string> { "inherited1", "inherited2" },
             },
             new ProfileDto
             {
                 ProfileName = "inherited1",
-                InheritProfileNames = new List<string> { "inherited_sub" },
+                InheritProfiles = new List<string> { "inherited_sub" },
             },
             new ProfileDto
             {
                 ProfileName = "inherited2",
-                InheritProfileNames = new List<string> { "inherited_sub" },
+                InheritProfiles = new List<string> { "inherited_sub" },
             },
             new ProfileDto
             {
@@ -291,7 +291,7 @@ public class ProfileLoaderTest
     }
 
     [Fact]
-    public void InheritedProfile_Recursive()
+    public void InheritedProfile_Cyclical()
     {
         var loader = new TestProfileLoader();
         var profileDtos = new[]
@@ -299,21 +299,21 @@ public class ProfileLoaderTest
             new ProfileDto
             {
                 ProfileName = "testprofile",
-                InheritProfileNames = new List<string> { "inherited" },
+                InheritProfiles = new List<string> { "inherited" },
             },
             new ProfileDto
             {
                 ProfileName = "inherited",
-                InheritProfileNames = new List<string> { "inherited_sub" },
+                InheritProfiles = new List<string> { "inherited_sub" },
             },
             new ProfileDto
             {
                 ProfileName = "inherited_sub",
-                InheritProfileNames = new List<string> { "inherited" },
+                InheritProfiles = new List<string> { "inherited" },
             },
         };
 
-        Should.Throw<ProfileInheritanceRecursionException>(
+        Should.Throw<ProfileCyclicalInheritanceException>(
             () => loader.LoadProfile(
                 profileDtos,
                 profiles => profiles.Single(p => p.ProfileName == "testprofile")));
@@ -335,7 +335,7 @@ public class ProfileLoaderTest
                         ReplaceAllFormat = "test1",
                     },
                 },
-                InheritProfileNames = new List<string> { "inherited" },
+                InheritProfiles = new List<string> { "inherited" },
             },
             new ProfileDto
             {
@@ -347,7 +347,7 @@ public class ProfileLoaderTest
                         ReplaceAllFormat = "test2",
                     },
                 },
-                InheritProfileNames = new List<string> { "inherited_sub" },
+                InheritProfiles = new List<string> { "inherited_sub" },
             },
             new ProfileDto
             {
@@ -393,7 +393,7 @@ public class ProfileLoaderTest
             new ProfileDto
             {
                 ProfileName = "testprofile",
-                InheritProfileNames = new List<string> { "inherited" },
+                InheritProfiles = new List<string> { "inherited" },
             },
         };
 
@@ -429,7 +429,7 @@ public class ProfileLoaderTest
         var loader = new TestProfileLoader();
         loader.Profile.Subcommand = false;
 
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtoAsync(null!));
+        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
     }
 
     [Fact]
@@ -444,7 +444,7 @@ public class ProfileLoaderTest
             },
         };
 
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtoAsync(null!));
+        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
     }
 
     [Fact]
@@ -459,16 +459,16 @@ public class ProfileLoaderTest
             },
         };
 
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtoAsync(null!));
+        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
     }
 
     private class TestProfileLoader : ProfileLoader
     {
         public ProfileDto Profile { get; set; } = new ProfileDto();
 
-        protected override Task<ProfileDto> LoadProfileDtoInternalAsync(Stream stream, CancellationToken cancellationToken)
+        protected override Task<List<ProfileDto>> LoadProfileDtosInternalAsync(Stream stream, CancellationToken cancellationToken)
         {
-            return Task.FromResult(Profile);
+            return Task.FromResult(new List<ProfileDto> { Profile });
         }
     }
 }

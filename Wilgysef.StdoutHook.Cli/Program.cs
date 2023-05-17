@@ -16,18 +16,25 @@ var arguments = new[]
 };
 
 var loader = new JsonProfileLoader();
-using var stream = File.Open("test.json", FileMode.Open);
-using var stream1 = File.Open("test1.json", FileMode.Open);
+var profiles = new List<ProfileDto>();
+var files = Directory.GetFiles(".");
 
-var dtos = new List<ProfileDto>
+for (var i = 0; i < files.Length; i++)
 {
-    await loader.LoadProfileDtoAsync(stream),
-    await loader.LoadProfileDtoAsync(stream1),
-};
+    try
+    {
+        using var stream = File.Open(files[i], FileMode.Open);
+        profiles.AddRange(await loader.LoadProfileDtosAsync(stream));
+    }
+    catch (Exception ex)
+    {
+
+    }
+}
 
 var picker = new ProfileDtoPicker();
 using var profile = loader.LoadProfile(
-    dtos,
+    profiles,
     profileDtos => picker.PickProfileDto(
         profileDtos,
         profileName: "test",
