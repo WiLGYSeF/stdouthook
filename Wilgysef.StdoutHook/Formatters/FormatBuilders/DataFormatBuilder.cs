@@ -1,5 +1,4 @@
 ﻿using System;
-using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
@@ -20,19 +19,15 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
             if (state.Contents.Equals(NoTrim, StringComparison.OrdinalIgnoreCase))
             {
-                return dataState => dataState.Data!;
+                return dataState => dataState.Data;
             }
             else if (state.Contents.Equals(Newline, StringComparison.OrdinalIgnoreCase))
             {
-                return dataState =>
-                {
-                    dataState.Data!.TrimEndNewline(out var newline);
-                    return newline;
-                };
+                return dataState => dataState.Newline;
             }
             else
             {
-                return dataState => dataState.Data!.TrimEndNewline(out _);
+                return dataState => dataState.DataTrimEndNewline;
             }
         }
     }

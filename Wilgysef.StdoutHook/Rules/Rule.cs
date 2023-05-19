@@ -92,7 +92,7 @@ namespace Wilgysef.StdoutHook.Rules
             var stdoutLineCount = profileState.StdoutLineCount;
             var stderrLineCount = profileState.StderrLineCount;
 
-            var data = state.Data?.TrimEndNewline(out _);
+            var data = state.DataTrimEndNewline;
 
             if (data != null)
             {

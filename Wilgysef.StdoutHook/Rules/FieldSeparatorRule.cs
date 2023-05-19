@@ -71,13 +71,13 @@ namespace Wilgysef.StdoutHook.Rules
         internal override string Apply(DataState state)
         {
             var splitData = SeparatorExpression.SplitWithSeparatorsExtractedColor(
-                state.Data!.TrimEndNewline(out var newline),
+                state.DataTrimEndNewline,
                 out var splitCount);
 
             if (MinFields.HasValue && MinFields.Value > splitCount
                 || MaxFields.HasValue && MaxFields.Value < splitCount)
             {
-                return state.Data!;
+                return state.Data;
             }
 
             state.Context.SetFieldContext(splitData);
@@ -145,7 +145,7 @@ namespace Wilgysef.StdoutHook.Rules
 
             if (!TrimNewline)
             {
-                builder.Append(newline);
+                builder.Append(state.Newline);
             }
 
             return builder.ToString();

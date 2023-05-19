@@ -71,12 +71,6 @@ public class StreamOutputHandlerTest
             stdoutWriter,
             stderrWriter);
 
-        handler.FlushOutput = profile.Flush;
-        handler.FlushError = profile.Flush;
-
-        handler.FlushOutput.ShouldBe(profile.Flush);
-        handler.FlushError.ShouldBe(profile.Flush);
-
         await handler.ReadLinesAsync();
 
         stdoutWriter.Flush();

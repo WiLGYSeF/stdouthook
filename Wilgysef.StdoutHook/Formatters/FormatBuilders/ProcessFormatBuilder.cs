@@ -22,7 +22,6 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
         private DateTime _startTime;
         private bool _cached;
 
-
         public ProcessFormatBuilder()
         {
             _durationStopwatch = new OffsetStopwatch();
