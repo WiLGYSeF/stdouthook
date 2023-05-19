@@ -10,6 +10,8 @@ namespace Wilgysef.StdoutHook.Formatters
 
         public Func<DataState, string>[] Funcs { get; }
 
+        public bool IsConstant => Parts.Length == 1;
+
         public CompiledFormat(string[] parts, Func<DataState, string>[] funcs)
         {
             Parts = parts;

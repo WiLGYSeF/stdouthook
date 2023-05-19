@@ -20,6 +20,8 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public ProfileState State { get; set; } = new ProfileState();
 
+        internal Formatter Formatter { get; set; } = null!;
+
         public void Build()
         {
             var formatFunctionBuilder = FormatFunctionBuilder.Create();
@@ -75,6 +77,8 @@ namespace Wilgysef.StdoutHook.Profiles
 
         internal void Build(Formatter formatter)
         {
+            Formatter = formatter;
+
             for (var i = 0; i < Rules.Count; i++)
             {
                 Rules[i].Build(this, formatter);
