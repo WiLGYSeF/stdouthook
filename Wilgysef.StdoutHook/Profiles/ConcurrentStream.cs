@@ -5,7 +5,7 @@ namespace Wilgysef.StdoutHook.Profiles
 {
     internal class ConcurrentStream : IDisposable
     {
-        public bool Flush { get; set; }
+        public bool AutoFlush { get; set; }
 
         private readonly Stream _stream;
 
@@ -13,7 +13,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public ConcurrentStream(Stream stream, bool flush = false)
         {
-            Flush = flush;
+            AutoFlush = flush;
             _stream = stream;
         }
 
@@ -23,10 +23,18 @@ namespace Wilgysef.StdoutHook.Profiles
             {
                 _stream.Write(data);
 
-                if (flush || Flush)
+                if (flush || AutoFlush)
                 {
                     _stream.Flush();
                 }
+            }
+        }
+
+        public void Flush()
+        {
+            lock (_lock)
+            {
+                _stream.Flush();
             }
         }
 

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using Wilgysef.StdoutHook.Loggers;
 
 namespace Wilgysef.StdoutHook.Profiles
@@ -16,7 +17,8 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public long LineCount => StdoutLineCount + StderrLineCount;
 
-        internal Func<string, Stream> StreamFactory { get; set; } = absolutePath => new FileStream(absolutePath, FileMode.Append);
+        internal Func<string, Stream> StreamFactory { get; set; } =
+            absolutePath => new FileStream(absolutePath, FileMode.Append, FileAccess.Write, FileShare.Read);
 
         private readonly ConcurrentDictionary<string, ConcurrentStream> _fileStreams = new ConcurrentDictionary<string, ConcurrentStream>();
 
@@ -55,6 +57,9 @@ namespace Wilgysef.StdoutHook.Profiles
             }
             catch (Exception ex)
             {
+                // wait a small amount in case the stream was created after another stream was created but before it was added to the dictionary
+                Thread.Sleep(100);
+
                 if (!_fileStreams.TryGetValue(absolutePath, out stream))
                 {
                     throw;

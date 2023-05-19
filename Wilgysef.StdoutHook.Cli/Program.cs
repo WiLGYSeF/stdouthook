@@ -11,8 +11,8 @@ using Wilgysef.StdoutHook.Profiles.Loaders;
 //ColorDebug.GetColorDebug(Console.Out);
 //return;
 
-using var logStream = GetLogStream("log.txt");
-GlobalLogger.Logger = new Logger(new StreamWriter(logStream));
+using var logStream = new StreamWriter(GetLogStream("log.txt"));
+GlobalLogger.Logger = new Logger(logStream);
 
 var profileName = "test";
 var command = "python";
@@ -68,40 +68,76 @@ catch (Exception ex)
     return 1;
 }
 
-using var _ = process;
+using var __process = process;
+Task? readStreamTask = null;
+var cancellationTokenSource = new CancellationTokenSource();
 
 if (profileLoaded)
 {
     profile!.State.SetProcess(process);
 
+    var bufferSize = profile.Flush ? 1 : 16384;
+    var outputStreamWriter = new CustomStreamWriter(Console.OpenStandardOutput(), Console.OutputEncoding, bufferSize);
+    var errorStreamWriter = new CustomStreamWriter(Console.OpenStandardError(), Console.OutputEncoding, bufferSize);
+
+    if (!profile.Flush)
+    {
+        _ = Task.Run(async () =>
+        {
+            //periodically flush the output
+
+            var cancellationToken = cancellationTokenSource.Token;
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(250, cancellationToken);
+
+                outputStreamWriter.Flush();
+                errorStreamWriter.Flush();
+            }
+        });
+    }
+
     var streamOutputHandler = new StreamOutputHandler(
         profile,
         process.StandardOutput,
         process.StandardError,
-        Console.Out,
-        Console.Error)
-    {
-        FlushOutput = profile.Flush,
-        FlushError = profile.Flush,
-    };
+        outputStreamWriter,
+        errorStreamWriter);
 
-    var cancellationTokenSource = new CancellationTokenSource();
-    var readStreamTask = streamOutputHandler.ReadLinesAsync(cancellationTokenSource.Token);
-
-    // TODO: remove test code
-    Console.ReadLine();
-    process.Kill();
-
-    cancellationTokenSource.Cancel();
+    readStreamTask = streamOutputHandler.ReadLinesAsync(cancellationToken: cancellationTokenSource.Token);
 }
-else
+
+_ = Task.Run(async () =>
 {
-    // TODO: remove test code
-    Console.ReadLine();
-    process.Kill();
-}
+    var cancellationToken = cancellationTokenSource.Token;
+    while (true)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        await Task.Delay(1000, cancellationToken);
+
+        process.Refresh();
+    }
+});
+
+// TODO: remove test code
+Console.ReadLine();
+process.Kill();
 
 process.WaitForExit();
+cancellationTokenSource.Cancel();
+
+if (readStreamTask != null)
+{
+    try
+    {
+        await readStreamTask;
+    }
+    catch (Exception ex)
+    {
+        GlobalLogger.Error(ex, "exception occurred");
+    }
+}
 
 return process.HasExited
     ? process.ExitCode
@@ -158,7 +194,7 @@ Stream GetLogStream(string filename)
 {
     try
     {
-        return new FileStream(filename, FileMode.Append);
+        return new FileStream(filename, FileMode.Append, FileAccess.Write, FileShare.Read);
     }
     catch
     {

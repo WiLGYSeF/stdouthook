@@ -5,7 +5,7 @@ namespace Wilgysef.StdoutHook.Loggers
 {
     public static class GlobalLogger
     {
-        public static Logger Logger { get; set; } = new Logger(new StreamWriter(new MemoryStream()));
+        public static Logger Logger { get; set; } = new Logger(StreamWriter.Null);
 
         public static void Log(LogLevel level, string message) => Logger.Log(level, message);
 
