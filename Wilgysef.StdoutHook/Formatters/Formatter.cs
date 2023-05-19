@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters
@@ -149,8 +150,10 @@ namespace Wilgysef.StdoutHook.Formatters
                         lastPart = "";
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    GlobalLogger.Error($"Invalid format: {ex.Message}");
+
                     var end = InvalidFormatBlank ? startIndex : endIndex;
                     lastPart += format[last..end];
                 }

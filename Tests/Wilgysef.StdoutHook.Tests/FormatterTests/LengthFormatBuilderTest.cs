@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Formatters.FormatBuilders;
 using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Rules;
@@ -11,9 +10,7 @@ public class LengthFormatBuilderTest : RuleTestBase
     [Fact]
     public void Constant()
     {
-        var formatter = GetFormatter(new LengthFormatBuilder());
-
-        formatter.Format("%(length:test)", CreateDataState(formatter)).ShouldBe("4");
+        ShouldFormatBe("%(length:test)", "4");
     }
 
     [Fact]
@@ -30,11 +27,13 @@ public class LengthFormatBuilderTest : RuleTestBase
         profile.ApplyRules("test asdf123", true).ShouldBe("4 test asdf123");
     }
 
-    private static DataState CreateDataState(Formatter formatter)
+    private static void ShouldFormatBe(string format, string expected)
     {
-        var profile = new Profile();
+        using var profile = new Profile();
+        var formatter = GetFormatter(new LengthFormatBuilder());
+
         profile.Build(formatter);
 
-        return new DataState(profile);
+        formatter.Format(format, new DataState(profile)).ShouldBe(expected);
     }
 }
