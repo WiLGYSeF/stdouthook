@@ -34,7 +34,7 @@ namespace Wilgysef.StdoutHook.Profiles
             Build(new Formatter(formatFunctionBuilder));
         }
 
-        public bool ApplyRules(ref string line, bool stdout)
+        public string? ApplyRules(string line, bool stdout)
         {
             var dataState = new DataState(line, stdout, this);
 
@@ -47,7 +47,7 @@ namespace Wilgysef.StdoutHook.Profiles
                 {
                     if (rule.Filter)
                     {
-                        return false;
+                        return null;
                     }
 
                     try
@@ -67,7 +67,7 @@ namespace Wilgysef.StdoutHook.Profiles
                 }
             }
 
-            return true;
+            return line;
         }
 
         public void Dispose()

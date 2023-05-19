@@ -80,6 +80,15 @@ if (profileLoaded)
     var outputStreamWriter = new CustomStreamWriter(Console.OpenStandardOutput(), Console.OutputEncoding, bufferSize);
     var errorStreamWriter = new CustomStreamWriter(Console.OpenStandardError(), Console.OutputEncoding, bufferSize);
 
+    var streamOutputHandler = new StreamOutputHandler(
+        profile,
+        process.StandardOutput,
+        process.StandardError,
+        outputStreamWriter,
+        errorStreamWriter);
+
+    readStreamTask = streamOutputHandler.ReadLinesAsync(cancellationToken: cancellationTokenSource.Token);
+
     if (!profile.Flush)
     {
         _ = Task.Run(async () =>
@@ -97,15 +106,6 @@ if (profileLoaded)
             }
         });
     }
-
-    var streamOutputHandler = new StreamOutputHandler(
-        profile,
-        process.StandardOutput,
-        process.StandardError,
-        outputStreamWriter,
-        errorStreamWriter);
-
-    readStreamTask = streamOutputHandler.ReadLinesAsync(cancellationToken: cancellationTokenSource.Token);
 }
 
 _ = Task.Run(async () =>

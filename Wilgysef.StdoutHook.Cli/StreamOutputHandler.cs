@@ -36,9 +36,10 @@ public class StreamOutputHandler
     {
         _profile.State.StdoutLineCount++;
 
-        if (_profile.ApplyRules(ref line, true))
+        var output = _profile.ApplyRules(line, true);
+        if (output != null)
         {
-            _stdout.Write(line);
+            _stdout.Write(output);
         }
     }
 
@@ -46,9 +47,10 @@ public class StreamOutputHandler
     {
         _profile.State.StderrLineCount++;
 
-        if (_profile.ApplyRules(ref line, false))
+        var output = _profile.ApplyRules(line, false);
+        if (output != null)
         {
-            _stderr.Write(line);
+            _stderr.Write(output);
         }
     }
 }

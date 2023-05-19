@@ -27,9 +27,7 @@ public class LengthFormatBuilderTest : RuleTestBase
 
         profile.Build();
 
-        var line = "test asdf123";
-        profile.ApplyRules(ref line, true);
-        line.ShouldBe("4 test asdf123");
+        profile.ApplyRules("test asdf123", true).ShouldBe("4 test asdf123");
     }
 
     private static DataState CreateDataState(Formatter formatter)
