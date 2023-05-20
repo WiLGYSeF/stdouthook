@@ -22,6 +22,9 @@ public class StreamOutputHandler
         _errorReaderHandler = new StreamReaderHandler(stderrInput, HandleError);
         _stdout = stdoutOutput;
         _stderr = stderrOutput;
+
+        _stdout = new StreamWriter(new FileStream("out.txt", FileMode.Append));
+        _stderr = new StreamWriter(new FileStream("err.txt", FileMode.Append));
     }
 
     public async Task ReadLinesAsync(int bufferSize = 4096, CancellationToken cancellationToken = default)

@@ -4,7 +4,7 @@ namespace Wilgysef.StdoutHook.Profiles
 {
     internal class RuleRegexGroupContext
     {
-        public IReadOnlyDictionary<string, string> Groups { get; }
+        public IReadOnlyDictionary<string, string> Groups { get; private set; }
 
         public int CurrentGroupNumber { get; set; } = 1;
 
@@ -12,7 +12,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public RuleRegexGroupContext(IReadOnlyDictionary<string, string> groups)
         {
-            Groups = new Dictionary<string, string>(groups);
+            Groups = groups;
         }
 
         public int GetCurrentGroupNumber()
@@ -20,6 +20,13 @@ namespace Wilgysef.StdoutHook.Profiles
             return IncrementGroupNumberOnGet
                 ? CurrentGroupNumber++
                 : CurrentGroupNumber;
+        }
+
+        public void Reset(IReadOnlyDictionary<string, string> groups)
+        {
+            Groups = groups;
+            CurrentGroupNumber = 1;
+            IncrementGroupNumberOnGet = false;
         }
     }
 }

@@ -15,7 +15,14 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public void SetRegexGroupContext(IReadOnlyDictionary<string, string> groups)
         {
-            RegexGroupContext = new RuleRegexGroupContext(groups);
+            if (RegexGroupContext != null)
+            {
+                RegexGroupContext.Reset(groups);
+            }
+            else
+            {
+                RegexGroupContext = new RuleRegexGroupContext(groups);
+            }
         }
 
         public void Reset()

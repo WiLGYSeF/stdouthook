@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
+using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Formatters
 {
     internal static class ColorExtractor
     {
-        public static string ExtractColor(string data, IList<KeyValuePair<int, string>>? colors)
+        public static string ExtractColor(string data, ColorList? colors)
         {
             var length = data.Length;
             var builder = new StringBuilder(length);
@@ -15,12 +15,11 @@ namespace Wilgysef.StdoutHook.Formatters
             var subtractOffset = 0;
             var last = 0;
 
-            for (var i = 0; i < length; i++)
+            for (var i = 0; i < length - 2; i++)
             {
-                if (data[i] == 0x1b && i < length - 2 && data[i + 1] == '[')
+                if (data[i] == 0x1b && data[i + 1] == '[')
                 {
-                    var colorIndex = i + 2;
-                    for (; colorIndex < length; colorIndex++)
+                    for (var colorIndex = i + 2; colorIndex < length; colorIndex++)
                     {
                         switch (data[colorIndex])
                         {
@@ -38,7 +37,7 @@ namespace Wilgysef.StdoutHook.Formatters
                                 break;
                             case 'm':
                                 colorIndex++;
-                                colors?.Add(new KeyValuePair<int, string>(i - subtractOffset, data[i..colorIndex]));
+                                colors?.AddColor(i - subtractOffset, data, i, colorIndex);
                                 subtractOffset += colorIndex - i;
 
                                 builder.Append(dataSpan[last..i]);
@@ -57,17 +56,15 @@ namespace Wilgysef.StdoutHook.Formatters
                 .ToString();
         }
 
-        public static void InsertExtractedColors(StringBuilder builder, ReadOnlySpan<char> input, int offset, IReadOnlyList<KeyValuePair<int, string>> colors)
+        public static void InsertExtractedColors(StringBuilder builder, ReadOnlySpan<char> input, int offset, ColorList colors)
         {
-            var colorIndex = 0;
-            for (; colorIndex < colors.Count && colors[colorIndex].Key < offset; colorIndex++) ;
-
+            var colorIndex = colors.GetColorIndex(offset);
             var last = 0;
 
             for (; colorIndex < colors.Count; colorIndex++)
             {
                 var color = colors[colorIndex];
-                var colorStart = color.Key - offset;
+                var colorStart = color.Position - offset;
 
                 if (colorStart > input.Length)
                 {
@@ -76,14 +73,14 @@ namespace Wilgysef.StdoutHook.Formatters
 
                 builder
                     .Append(input[last..colorStart])
-                    .Append(color.Value);
+                    .Append(color.Color);
                 last = colorStart;
             }
 
             builder.Append(input[last..]);
         }
 
-        public static void InsertExtractedColors(string[] splitData, IReadOnlyList<KeyValuePair<int, string>> colors)
+        public static void InsertExtractedColors(string[] splitData, ColorList colors)
         {
             var builder = new StringBuilder();
             var offset = 0;
@@ -95,8 +92,8 @@ namespace Wilgysef.StdoutHook.Formatters
                 var endOffset = offset + splitSpan.Length;
                 var isField = (i & 1) == 0;
 
-                if (offset <= colors[colorIndex].Key
-                    && IsColorPositionWithinMax(colors[colorIndex], endOffset, isField))
+                if (offset <= colors[colorIndex].Position
+                    && IsColorPositionWithinMax(colors[colorIndex].Position, endOffset, isField))
                 {
                     splitData[i] = InsertExtractedColors(splitSpan, colors, builder, offset, endOffset, ref colorIndex, isField);
                 }
@@ -105,31 +102,30 @@ namespace Wilgysef.StdoutHook.Formatters
             }
         }
 
-        public static void InsertExtractedColors(StringBuilder builder, MatchGroup[] matches, IReadOnlyList<KeyValuePair<int, string>> colors)
+        public static void InsertExtractedColors(StringBuilder builder, MatchGroup[] matches, ColorList colors)
         {
             var colorIndex = 0;
 
             for (var i = 0; i < matches.Length && colorIndex < colors.Count; i++)
             {
                 var match = matches[i];
-                var value = match.Value.AsSpan();
                 var offset = match.Index;
-                var endOffset = offset + value.Length;
+                var endOffset = offset + match.Value.Length;
 
-                for (; colorIndex < colors.Count && colors[colorIndex].Key < match.Index; colorIndex++) ;
+                for (; colorIndex < colors.Count && colors[colorIndex].Position < match.Index; colorIndex++) ;
 
-                if (offset <= colors[colorIndex].Key
-                    && IsColorPositionWithinMax(colors[colorIndex], endOffset, true))
+                if (offset <= colors[colorIndex].Position
+                    && IsColorPositionWithinMax(colors[colorIndex].Position, endOffset, true))
                 {
                     var colorIndexCopy = colorIndex;
-                    match.Value = InsertExtractedColors(value, colors, builder, offset, endOffset, ref colorIndexCopy, true);
+                    match.Value = InsertExtractedColors(match.Value.AsSpan(), colors, builder, offset, endOffset, ref colorIndexCopy, true);
                 }
             }
         }
 
         private static string InsertExtractedColors(
             ReadOnlySpan<char> data,
-            IReadOnlyList<KeyValuePair<int, string>> colors,
+            ColorList colors,
             StringBuilder builder,
             int offset,
             int endOffset,
@@ -142,26 +138,26 @@ namespace Wilgysef.StdoutHook.Formatters
 
             do
             {
-                var delta = colors[colorIndex].Key - offset;
+                var delta = colors[colorIndex].Position - offset;
                 builder
                     .Append(data[last..delta])
-                    .Append(colors[colorIndex].Value);
+                    .Append(colors[colorIndex].Color);
 
                 last = delta;
                 colorIndex++;
             }
             while (colorIndex < colors.Count
-                && IsColorPositionWithinMax(colors[colorIndex], endOffset, isField));
+                && IsColorPositionWithinMax(colors[colorIndex].Position, endOffset, isField));
 
             return builder.Append(data[last..])
                 .ToString();
         }
 
-        private static bool IsColorPositionWithinMax(KeyValuePair<int, string> color, int max, bool isField)
+        private static bool IsColorPositionWithinMax(int position, int max, bool isField)
         {
             return isField
-                ? color.Key <= max
-                : color.Key < max;
+                ? position <= max
+                : position < max;
         }
     }
 }
