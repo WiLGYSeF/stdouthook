@@ -3,57 +3,49 @@ using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
-    internal class AlignFormatBuilder : FormatBuilder
+    internal abstract class AlignFormatBuilder : FormatBuilder
     {
-        public override string? Key => "align";
-
-        public override char? KeyShort => null;
+        protected abstract string Align(string str, char c, int length);
 
         public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
         {
-            var contentsSpan = state.Contents.AsSpan();
-            var separatorIndex = contentsSpan.IndexOf(Formatter.Separator);
-            char alignChar;
-            int alignStartIndex;
-
-            if (separatorIndex > 0 && int.TryParse(contentsSpan[..separatorIndex], out var alignLength))
-            {
-                alignChar = ' ';
-                alignStartIndex = separatorIndex + 1;
-            }
-            else if ((separatorIndex == 1 || separatorIndex == 0 && contentsSpan[1] == Formatter.Separator)
-                && contentsSpan[2..].IndexOf(Formatter.Separator) is var specifiedCharIndex
-                && specifiedCharIndex > 0
-                && int.TryParse(contentsSpan[2..(specifiedCharIndex + 2)], out alignLength))
-            {
-                alignChar = contentsSpan[0];
-                alignStartIndex = specifiedCharIndex + 3;
-            }
-            else if (separatorIndex == 0
-                && contentsSpan[1..].IndexOf(Formatter.Separator) is var implicitCharIndex
-                && implicitCharIndex > 0
-                && int.TryParse(contentsSpan[1..(implicitCharIndex + 1)], out alignLength))
-            {
-                alignChar = Formatter.Separator;
-                alignStartIndex = implicitCharIndex + 2;
-            }
-            else
-            {
-                throw new ArgumentException($"Invalid align format: {state.Contents}");
-            }
-
-            var format = state.Profile.Formatter.CompileFormat(
-                contentsSpan[alignStartIndex..].ToString(),
-                state.Profile);
+            var format = state.Profile.CompileFormat(GetAlign(state.Contents, out var alignChar, out var alignLength));
 
             isConstant = format.IsConstant;
             return dataState =>
             {
                 var result = format.Compute(dataState);
                 return result.Length < alignLength
-                    ? new string(alignChar, alignLength - result.Length) + result
+                    ? Align(result, alignChar, alignLength - result.Length)
                     : result;
             };
+        }
+
+        protected static string GetAlign(string contents, out char alignChar, out int alignLength)
+        {
+            var contentsSpan = contents.AsSpan();
+            var separatorIndex = contentsSpan.IndexOf(Formatter.Separator);
+            int alignStartIndex;
+
+            if (separatorIndex > 0 && int.TryParse(contentsSpan[..separatorIndex], out alignLength))
+            {
+                alignChar = ' ';
+                alignStartIndex = separatorIndex + 1;
+            }
+            else if ((separatorIndex == 1 || separatorIndex == 0 && contentsSpan[1] == Formatter.Separator)
+                && contentsSpan[2..].IndexOf(Formatter.Separator) is var index
+                && index > 0
+                && int.TryParse(contentsSpan[2..(index + 2)], out alignLength))
+            {
+                alignChar = contentsSpan[0];
+                alignStartIndex = index + 3;
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid align format: {contents}");
+            }
+
+            return contents[alignStartIndex..];
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using Wilgysef.StdoutHook.Extensions;
-using Wilgysef.StdoutHook.Formatters;
+﻿using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Rules

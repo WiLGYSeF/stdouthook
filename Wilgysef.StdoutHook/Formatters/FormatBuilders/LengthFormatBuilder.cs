@@ -11,7 +11,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
         {
-            var format = state.Profile.Formatter.CompileFormat(state.Contents, state.Profile);
+            var format = state.Profile.CompileFormat(state.Contents);
 
             isConstant = format.IsConstant;
             return dataState => format.Compute(dataState).Length.ToString();

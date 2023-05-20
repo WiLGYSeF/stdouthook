@@ -1,5 +1,4 @@
-﻿using Wilgysef.StdoutHook.Formatters;
-using Wilgysef.StdoutHook.Formatters.FormatBuilders;
+﻿using Wilgysef.StdoutHook.Formatters.FormatBuilders;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Tests.FormatterTests;
@@ -9,54 +8,92 @@ public class AlignFormatBuilderTest : RuleTestBase
     [Fact]
     public void Align()
     {
-        ShouldFormatBe("%(align:6:test)", "  test");
+        ShouldFormatBe("6:test", "test  ", " test ", "  test");
+    }
+
+    [Fact]
+    public void OddLength()
+    {
+        ShouldFormatBe("7:test", "test   ", " test  ", "   test");
     }
 
     [Fact]
     public void Char()
     {
-        ShouldFormatBe("%(align:_:6:test)", "__test");
+        ShouldFormatBe("_:6:test", "test__", "_test_", "__test");
     }
 
     [Fact]
     public void Char_Separator()
     {
-        ShouldFormatBe("%(align:::6:test)", "::test");
-        ShouldFormatBe("%(align::6:test)", "::test");
+        ShouldFormatBe("::6:test", "test::", ":test:", "::test");
     }
 
     [Fact]
     public void Shorter()
     {
-        ShouldFormatBe("%(align:3:test)", "test");
+        ShouldFormatBe("3:test", "test");
     }
 
     [Fact]
     public void Empty()
     {
-        ShouldFormatBe("%(align:3:)", "   ");
+        ShouldFormatBe("3:", "   ");
     }
 
     [Fact]
     public void Negative()
     {
-        ShouldFormatBe("%(align:-5:test)", "test");
+        ShouldFormatBe("-5:test", "test");
     }
 
     [Fact]
     public void Invalid()
     {
-        ShouldFormatBe("%(align:test)", "%(align:test)");
-        ShouldFormatBe("%(align:5)", "%(align:5)");
+        ShouldFormatBeInvalid(":6:test");
+        ShouldFormatBeInvalid("::6a:test");
+        ShouldFormatBeInvalid("::6");
+        ShouldFormatBeInvalid("test");
+        ShouldFormatBeInvalid("5");
     }
 
-    private static void ShouldFormatBe(string format, string expected)
+    private static void ShouldFormatBe(string contents, string expected)
+    {
+        ShouldFormatBe(contents, expected, expected, expected);
+    }
+
+    private static void ShouldFormatBe(string contents, string expectedLeft, string expectedCenter, string expectedRight)
+    {
+        ShouldFormatBe(Alignment.Left, contents, expectedLeft);
+        ShouldFormatBe(Alignment.Center, contents, expectedCenter);
+        ShouldFormatBe(Alignment.Right, contents, expectedRight);
+    }
+
+    private static void ShouldFormatBeInvalid(string contents)
+    {
+        ShouldFormatBe(contents, $"%(alignLeft:{contents})", $"%(alignCenter:{contents})", $"%(alignRight:{contents})");
+    }
+
+    private static void ShouldFormatBe(Alignment alignment, string contents, string expected)
     {
         using var profile = new Profile();
-        var formatter = GetFormatter(new AlignFormatBuilder());
+        var formatter = GetFormatter(alignment switch
+        {
+            Alignment.Left => new AlignLeftFormatBuilder(),
+            Alignment.Center => new AlignCenterFormatBuilder(),
+            Alignment.Right => new AlignRightFormatBuilder(),
+            _ => throw new ArgumentOutOfRangeException(nameof(alignment)),
+        });
 
         profile.Build(formatter);
 
-        formatter.Format(format, new DataState(profile)).ShouldBe(expected);
+        formatter.Format($"%(align{alignment}:{contents})", new DataState(profile)).ShouldBe(expected);
+    }
+
+    private enum Alignment
+    {
+        Left,
+        Center,
+        Right
     }
 }
