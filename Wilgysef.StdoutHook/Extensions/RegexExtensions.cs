@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Wilgysef.StdoutHook.Formatters;
+using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Extensions
 {
@@ -28,120 +26,26 @@ namespace Wilgysef.StdoutHook.Extensions
             return results;
         }
 
-        public static string[] SplitWithSeparatorsExtractedColor(this Regex regex, string input, out int count)
+        public static List<MatchGroup[]> MatchAllGroups(this Regex regex, string input)
         {
-            var colors = new List<KeyValuePair<int, string>>();
-            var data = ColorExtractor.ExtractColor(input, colors);
+            var matches = regex.Matches(input);
+            var groupList = new List<MatchGroup[]>();
 
-            var splitData = regex.SplitWithSeparators(data, out count);
-            var builder = new StringBuilder();
-            var offset = 0;
-            var colorIndex = 0;
-
-            for (var i = 0; i < splitData.Length && colorIndex < colors.Count; i++)
+            for (var i = 0; i < matches.Count; i++)
             {
-                var splitSpan = splitData[i].AsSpan();
-                var endOffset = offset + splitSpan.Length;
-                var isField = (i & 1) == 0;
+                var match = matches[i];
+                var groups = new MatchGroup[match.Groups.Count];
 
-                if (offset <= colors[colorIndex].Key
-                    && IsColorPositionWithinMax(colors[colorIndex], endOffset, isField))
+                for (var groupIndex = 0; groupIndex < match.Groups.Count; groupIndex++)
                 {
-                    splitData[i] = InsertExtractedColors(splitSpan, colors, builder, offset, endOffset, ref colorIndex, isField);
+                    var curMatch = match.Groups[groupIndex];
+                    groups[groupIndex] = new MatchGroup(curMatch.Value, curMatch.Name, curMatch.Index);
                 }
 
-                offset += splitSpan.Length;
+                groupList.Add(groups);
             }
 
-            return splitData;
-        }
-
-        public static MatchEntry[]? MatchExtractedColor(this Regex regex, string input)
-        {
-            var colors = new List<KeyValuePair<int, string>>();
-            var data = ColorExtractor.ExtractColor(input, colors);
-
-            var match = regex.Match(data);
-            if (!match.Success)
-            {
-                return null;
-            }
-
-            var groups = new MatchEntry[match.Groups.Count];
-            var builder = new StringBuilder();
-
-            for (var i = 0; i < match.Groups.Count; i++)
-            {
-                var curMatch = match.Groups[i];
-                var colorIndex = 0;
-
-                var value = colorIndex < colors.Count
-                    ? InsertExtractedColors(
-                        curMatch.Value,
-                        colors,
-                        builder,
-                        curMatch.Index,
-                        curMatch.Value.Length,
-                        ref colorIndex,
-                        true)
-                    : curMatch.Value;
-                groups[i] = new MatchEntry(value, curMatch.Name, curMatch.Index);
-            }
-
-            return groups;
-        }
-
-        public class MatchEntry
-        {
-            public string Value { get; }
-
-            public string Name { get; }
-
-            public int Index { get; }
-
-            public MatchEntry(string value, string name, int index)
-            {
-                Value = value;
-                Name = name;
-                Index = index;
-            }
-        }
-
-        private static string InsertExtractedColors(
-            ReadOnlySpan<char> data,
-            List<KeyValuePair<int, string>> colors,
-            StringBuilder builder,
-            int offset,
-            int endOffset,
-            ref int colorIndex,
-            bool isField)
-        {
-            var last = 0;
-
-            builder.Clear();
-
-            do
-            {
-                var delta = colors[colorIndex].Key - offset;
-                builder
-                    .Append(data[last..delta])
-                    .Append(colors[colorIndex].Value);
-
-                last = delta;
-                colorIndex++;
-            }
-            while (colorIndex < colors.Count
-                && IsColorPositionWithinMax(colors[colorIndex], endOffset, isField));
-
-            return builder.Append(data[last..])
-                .ToString();
-        }
-
-        private static bool IsColorPositionWithinMax(KeyValuePair<int, string> color, int max, bool isField)
-        {
-            return isField
-                ? color.Key <= max
-                : color.Key < max;
+            return groupList;
         }
     }
 }

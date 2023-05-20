@@ -472,34 +472,6 @@ public class RuleLoaderTest
     }
 
     [Fact]
-    public void RegexGroup_ReplaceAllFormat()
-    {
-        var loader = new RuleLoader();
-        var rule = (RegexGroupRule)loader.LoadRule(new RuleDto
-        {
-            Regex = "test",
-            ReplaceAllFormat = "a",
-        });
-
-        rule.Regex.ToString().ShouldBe("test");
-
-        rule.ReplaceAllFormat.ShouldBe("a");
-    }
-
-    [Fact]
-    public void RegexGroup_Regex_Split()
-    {
-        var loader = new RuleLoader();
-        var rule = (RegexGroupRule)loader.LoadRule(new RuleDto
-        {
-            Regex = new List<object?> { "te", "st" },
-            ReplaceAllFormat = "a",
-        });
-
-        rule.Regex.ToString().ShouldBe("test");
-    }
-
-    [Fact]
     public void RegexGroup_Invalid()
     {
         var loader = new RuleLoader();

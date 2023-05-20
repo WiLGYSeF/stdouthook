@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Tests.ProfileTests;
@@ -45,95 +46,16 @@ public class ProfileStateTest
     [Fact]
     public async Task GetOrCreateFileStream_DuplicateStream()
     {
-        var factoryResults = new List<Stream>();
-        var factoryLock = new object();
-        using var factoryResetEvent = new ManualResetEventSlim(false);
-        using var setupResetEvent = new AutoResetEvent(false);
-
-        using var state = new ProfileState()
-        {
-            StreamFactory = _ =>
-            {
-                setupResetEvent.Set();
-                factoryResetEvent.Wait();
-
-                var stream = new MemoryStream();
-
-                lock (factoryLock)
-                {
-                    factoryResults.Add(stream);
-                }
-                return stream;
-            },
-        };
-
-        var streamTask1 = Task.Run(() => state.GetOrCreateFileStream("test"));
-        setupResetEvent.WaitOne();
-
-        var streamTask2 = Task.Run(() => state.GetOrCreateFileStream("test"));
-        setupResetEvent.WaitOne();
-
-        factoryResetEvent.Set();
-
-        var stream1 = await streamTask1;
-        var stream2 = await streamTask2;
-
-        stream1.IsStream(factoryResults[0]).ShouldBeTrue();
-        stream2.IsStream(factoryResults[0]).ShouldBeTrue();
-
-        factoryResults.Count.ShouldBe(2);
+        await ShouldDuplicateStreamsBeSame(3, _ => new MemoryStream(), 0);
     }
 
     [Fact]
     public async Task GetOrCreateFileStream_DuplicateStream_FactoryException()
     {
-        var factoryResults = new List<Stream>();
-        var factoryLock = new object();
-        var throwFactory = false;
-        using var factoryResetEvent = new AutoResetEvent(false);
-        using var setupResetEvent = new AutoResetEvent(false);
-
-        using var state = new ProfileState()
-        {
-            StreamFactory = _ =>
-            {
-                setupResetEvent.Set();
-                factoryResetEvent.WaitOne();
-
-                if (throwFactory)
-                {
-                    throw new IOException();
-                }
-
-                setupResetEvent.Set();
-
-                var stream = new MemoryStream();
-
-                lock (factoryLock)
-                {
-                    factoryResults.Add(stream);
-                }
-                return stream;
-            },
-        };
-
-        var streamTask1 = Task.Run(() => state.GetOrCreateFileStream("test"));
-        setupResetEvent.WaitOne();
-
-        var streamTask2 = Task.Run(() => state.GetOrCreateFileStream("test"));
-        setupResetEvent.WaitOne();
-
-        factoryResetEvent.Set();
-        setupResetEvent.WaitOne();
-
-        throwFactory = true;
-        factoryResetEvent.Set();
-
-        var stream1 = await streamTask1;
-        var stream2 = await streamTask2;
-
-        stream1.IsStream(factoryResults[0]).ShouldBeTrue();
-        stream2.IsStream(factoryResults[0]).ShouldBeTrue();
+        await ShouldDuplicateStreamsBeSame(
+            3,
+            number => number == 1 ? throw new IOException() : new MemoryStream(),
+            0);
     }
 
     [Fact]
@@ -161,5 +83,79 @@ public class ProfileStateTest
 
         throwFactory = true;
         Should.Throw<Exception>(() => state.GetOrCreateFileStream("asdf"));
+    }
+
+    private static async Task ShouldDuplicateStreamsBeSame(int streamCount, Func<int, Stream> streamFactory, int expectedExceptions)
+    {
+        var factoryResults = new ConcurrentDictionary<int, Stream>();
+        var factoryLock = new object();
+
+        using var factoryResetEvent = new ManualResetEventSlim(false);
+        var taskCounter = 0;
+        var tasksReady = 0;
+
+        using var state = new ProfileState()
+        {
+            StreamFactory = _ =>
+            {
+                var taskNumber = 0;
+                lock (factoryLock)
+                {
+                    taskNumber = ++taskCounter;
+                    tasksReady++;
+                }
+
+                factoryResetEvent.Wait();
+
+                var stream = streamFactory(taskNumber);
+                factoryResults[taskNumber] = stream;
+                return stream;
+            },
+        };
+
+        var tasks = new Task<ConcurrentStream>[streamCount];
+        for (var i = 0; i < streamCount; i++)
+        {
+            tasks[i] = Task.Run(() => state.GetOrCreateFileStream("test"));
+        }
+
+        while (tasksReady < streamCount)
+        {
+            await Task.Delay(10);
+        }
+
+        factoryResetEvent.Set();
+
+        var streams = new List<ConcurrentStream>(streamCount);
+        var exceptions = 0;
+
+        for (var i = 0; i < tasks.Length; i++)
+        {
+            try
+            {
+                streams.Add(await tasks[i]);
+            }
+            catch
+            {
+                exceptions++;
+            }
+        }
+
+        Stream? expectedStream = null;
+        foreach (var stream in factoryResults.Values)
+        {
+            if (streams[0].IsStream(stream))
+            {
+                expectedStream = stream;
+                break;
+            }
+        }
+
+        for (var i = 0; i < streams.Count; i++)
+        {
+            streams[i].IsStream(expectedStream!).ShouldBeTrue();
+        }
+
+        exceptions.ShouldBe(expectedExceptions);
     }
 }

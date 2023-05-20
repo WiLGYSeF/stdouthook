@@ -40,7 +40,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
             for (var i = 0; i < Rules.Count; i++)
             {
-                dataState.ResetContext();
+                dataState.Context.Reset();
 
                 var rule = Rules[i];
                 if (rule.IsActive(dataState))
@@ -52,8 +52,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
                     try
                     {
-                        line = rule.Apply(dataState);
-                        dataState.Data = line;
+                        dataState.Data = rule.Apply(dataState);
 
                         if (rule.Terminal)
                         {
@@ -67,7 +66,7 @@ namespace Wilgysef.StdoutHook.Profiles
                 }
             }
 
-            return line;
+            return dataState.Data;
         }
 
         public void Dispose()

@@ -6,16 +6,17 @@ namespace Wilgysef.StdoutHook.Formatters
 {
     internal class CompiledFormat
     {
-        public string[] Parts { get; }
+        public bool IsConstant { get; }
 
-        public Func<DataState, string>[] Funcs { get; }
+        internal string[] Parts { get; }
 
-        public bool IsConstant => Parts.Length == 1;
+        internal Func<DataState, string>[] Funcs { get; }
 
         public CompiledFormat(string[] parts, Func<DataState, string>[] funcs)
         {
             Parts = parts;
             Funcs = funcs;
+            IsConstant = Parts.Length == 1;
         }
 
         public string Compute(DataState state)

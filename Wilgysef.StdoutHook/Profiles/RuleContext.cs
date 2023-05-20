@@ -17,5 +17,11 @@ namespace Wilgysef.StdoutHook.Profiles
         {
             RegexGroupContext = new RuleRegexGroupContext(groups);
         }
+
+        public void Reset()
+        {
+            FieldContext = null;
+            RegexGroupContext = null;
+        }
     }
 }
