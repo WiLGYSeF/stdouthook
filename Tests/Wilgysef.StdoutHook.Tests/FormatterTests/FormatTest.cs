@@ -144,8 +144,10 @@ public class FormatTest : RuleTestBase
     [Fact]
     public void Unknown()
     {
-        var formatter = GetFormatter();
-        ShouldFormatBe(formatter, "this is a %test", "this is a %test");
+        var formatter = new Formatter(FormatFunctionBuilder.Create());
+        ShouldFormatBe(formatter, "this is a %notexist", "this is a %notexist");
+
+        ShouldFormatBe(formatter, "this is a %O()", "this is a %O()");
     }
 
     [Fact]
@@ -196,6 +198,13 @@ public class FormatTest : RuleTestBase
     {
         var formatter = GetFormatter(new TestFormatBuilder("test", null));
         ShouldFormatBe(formatter, "%(test:(a))", "(a)", "(a)");
+    }
+
+    [Fact]
+    public void Parentheses_Only()
+    {
+        var formatter = GetFormatter();
+        ShouldFormatBe(formatter, "%()", "%()");
     }
 
     private static void ShouldFormatBe(

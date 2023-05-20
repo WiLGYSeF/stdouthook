@@ -65,18 +65,15 @@ namespace Wilgysef.StdoutHook.Formatters
                             case ';':
                                 break;
                             case 'm':
-                                colorIndex++;
+                                builder.Append(dataSpan[last..i]);
+                                i = colorIndex + 1;
+                                last = i;
                                 goto end;
                             default:
-                                goto skip;
+                                goto end;
                         }
                     }
-
-                end:
-                    builder.Append(dataSpan[last..i]);
-                    i = colorIndex;
-                    last = i;
-                skip:;
+                end:;
                 }
             }
 

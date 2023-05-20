@@ -23,5 +23,6 @@ public class ColorExtractorTest
     {
         ColorExtractor.ExtractColor("\x1b[31mtest\x1b[1;46mabc").ShouldBe("testabc");
         ColorExtractor.ExtractColor("\x1b[zabc").ShouldBe("\x1b[zabc");
+        ColorExtractor.ExtractColor("\x1b[31").ShouldBe("\x1b[31");
     }
 }

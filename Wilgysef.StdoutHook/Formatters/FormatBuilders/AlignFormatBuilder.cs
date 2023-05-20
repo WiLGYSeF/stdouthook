@@ -1,4 +1,5 @@
 ﻿using System;
+using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
@@ -33,12 +34,12 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 alignStartIndex = separatorIndex + 1;
             }
             else if ((separatorIndex == 1 || separatorIndex == 0 && contentsSpan[1] == Formatter.Separator)
-                && contentsSpan[2..].IndexOf(Formatter.Separator) is var index
+                && contentsSpan.IndexOfAfter(2, Formatter.Separator) is var index
                 && index > 0
-                && int.TryParse(contentsSpan[2..(index + 2)], out alignLength))
+                && int.TryParse(contentsSpan[2..index], out alignLength))
             {
                 alignChar = contentsSpan[0];
-                alignStartIndex = index + 3;
+                alignStartIndex = index + 1;
             }
             else
             {
