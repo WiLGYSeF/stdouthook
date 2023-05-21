@@ -9,7 +9,7 @@ using Wilgysef.StdoutHook.Profiles.Dtos;
 
 namespace Wilgysef.StdoutHook.Profiles.Loaders
 {
-    public class JsonProfileLoader : ProfileLoader
+    public class JsonProfileDtoLoader : ProfileDtoLoader
     {
         protected override async Task<List<ProfileDto>> LoadProfileDtosInternalAsync(Stream stream, CancellationToken cancellationToken)
         {
