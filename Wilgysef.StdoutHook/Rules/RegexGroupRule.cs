@@ -108,27 +108,33 @@ namespace Wilgysef.StdoutHook.Rules
                 ColorExtractor.InsertExtractedColors(builder, data[last..groups[0].Index], last, state.ExtractedColors);
                 last = groups[0].Index;
 
-                var limit = Math.Min(groups.Length - 1, _groupReplacers?.Length ?? 0);
-
-                for (var i = 0; i < limit; i++)
+                if (groups.Length > 1)
                 {
-                    AppendGroup(data, groups, i + 1, _groupReplacers![i]);
-                }
-
-                for (var i = limit; i < groups.Length - 1; i++)
-                {
-                    CompiledFormat? foundReplace = null;
-
-                    foreach (var (rangeList, replace) in _outOfRangeReplaceGroups)
+                    var limit = Math.Min(groups.Length - 1, _groupReplacers?.Length ?? 0);
+                    for (var i = 0; i < limit; i++)
                     {
-                        if (rangeList.Contains(i + 1))
-                        {
-                            foundReplace = replace;
-                            break;
-                        }
+                        AppendGroup(data, groups, i + 1, _groupReplacers![i]);
                     }
 
-                    AppendGroup(data, groups, i + 1, foundReplace);
+                    for (var i = limit; i < groups.Length - 1; i++)
+                    {
+                        CompiledFormat? foundReplace = null;
+
+                        foreach (var (rangeList, replace) in _outOfRangeReplaceGroups)
+                        {
+                            if (rangeList.Contains(i + 1))
+                            {
+                                foundReplace = replace;
+                                break;
+                            }
+                        }
+
+                        AppendGroup(data, groups, i + 1, foundReplace);
+                    }
+                }
+                else
+                {
+                    AppendGroup(data, groups, 0, _groupReplacers![0]);
                 }
             }
 

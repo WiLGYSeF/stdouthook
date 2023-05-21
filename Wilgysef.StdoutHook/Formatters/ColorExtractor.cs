@@ -113,6 +113,10 @@ namespace Wilgysef.StdoutHook.Formatters
                 var endOffset = offset + match.Value.Length;
 
                 for (; colorIndex < colors.Count && colors[colorIndex].Position < match.Index; colorIndex++) ;
+                if (colorIndex == colors.Count)
+                {
+                    break;
+                }
 
                 if (offset <= colors[colorIndex].Position
                     && IsColorPositionWithinMax(colors[colorIndex].Position, endOffset, true))
