@@ -10,9 +10,9 @@ public class CustomStreamWriter : TextWriter
     private readonly Encoding _encoding;
     private readonly char[] _buffer;
     private readonly byte[] _byteBuffer;
+    private readonly object _lock = new();
 
     private int _bufferIndex;
-    private object _lock = new();
 
     public CustomStreamWriter(Stream stream, Encoding encoding, int bufferSize)
     {
@@ -22,11 +22,7 @@ public class CustomStreamWriter : TextWriter
         _byteBuffer = new byte[_encoding.GetMaxByteCount(bufferSize)];
     }
 
-    public void SetSharedLock(object lockObject)
-    {
-        _lock = lockObject;
-    }
-
+    // need to override the TextWriter Write(char)
     public override void Write(char value)
     {
         lock (_lock)
@@ -49,12 +45,14 @@ public class CustomStreamWriter : TextWriter
 
         lock (_lock)
         {
+            var forcedFlush = false;
+
             if (_bufferIndex + value.Length >= _buffer.Length)
             {
-                Flush();
+                forcedFlush = FlushInternal();
             }
 
-            if (value.Length >= _buffer.Length)
+            if (forcedFlush || value.Length >= _buffer.Length)
             {
                 _stream.Write(_encoding.GetBytes(value));
             }
@@ -68,8 +66,15 @@ public class CustomStreamWriter : TextWriter
 
     public override void Flush()
     {
+        FlushInternal();
+    }
+
+    private bool FlushInternal()
+    {
         lock (_lock)
         {
+            var forced = false;
+
             int endIndex;
             for (endIndex = _bufferIndex - 1; endIndex >= 0; endIndex--)
             {
@@ -84,6 +89,7 @@ public class CustomStreamWriter : TextWriter
             {
                 // no choice but to flush entire buffer
                 endIndex = _bufferIndex;
+                forced = true;
             }
 
             var bytesWritten = _encoding.GetBytes(_buffer, 0, endIndex, _byteBuffer, 0);
@@ -92,6 +98,8 @@ public class CustomStreamWriter : TextWriter
 
             Array.Copy(_buffer, endIndex, _buffer, 0, _bufferIndex - endIndex);
             _bufferIndex -= endIndex;
+
+            return forced;
         }
     }
 

@@ -22,7 +22,7 @@ internal class CliProfileDtoLoader
         return await LoadProfileDtosFromDirectoryAsync(loaders, profileDir);
     }
 
-    private async Task<List<ProfileDto>> LoadProfileDtosFromDirectoryAsync(
+    private static async Task<List<ProfileDto>> LoadProfileDtosFromDirectoryAsync(
         IReadOnlyDictionary<string, IReadOnlyList<ProfileDtoLoader>> loadersByExtension,
         string path)
     {
@@ -70,7 +70,7 @@ internal class CliProfileDtoLoader
             }
             catch (Exception ex)
             {
-                GlobalLogger.Error($"failed to load profiles from '{file}': {ex.Message}");
+                GlobalLogger.Error($"failed to load profiles: {ex.Message}: {file}");
             }
         }
 

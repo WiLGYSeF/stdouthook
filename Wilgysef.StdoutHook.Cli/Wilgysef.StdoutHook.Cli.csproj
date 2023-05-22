@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Wilgysef.StdoutHook.CommandLocator\Wilgysef.StdoutHook.CommandLocator.csproj" />
     <ProjectReference Include="..\Wilgysef.StdoutHook\Wilgysef.StdoutHook.csproj" />
   </ItemGroup>
 

@@ -13,10 +13,14 @@ internal static class Shared
         GlobalLogger.Error(message);
     }
 
-    public static void ErrorEx(Exception ex, string message, string? consoleMessage = null)
+    public static void ErrorEx(Exception? ex, string message, string? consoleMessage = null)
     {
         Console.Error.WriteLine("STDOUTHOOK: " + (consoleMessage ?? message));
-        GlobalLogger.Error(ex, message);
+
+        if (ex != null)
+        {
+            GlobalLogger.Error(ex, message);
+        }
     }
 
     public static void VerbosePrint(string message)

@@ -3,13 +3,15 @@
 using CommandLine;
 using System.Diagnostics;
 using Wilgysef.StdoutHook.Cli;
-using Wilgysef.StdoutHook.CommandLocator;
 using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Profiles.Dtos;
-using Wilgysef.StdoutHook.Profiles.Loaders;
 
 const string LogName = ".stdouthook.log";
+const int ProcessRefreshInterval = 1000;
+
+TextWriter? outputStreamWriter = null;
+TextWriter? errorStreamWriter = null;
 
 try
 {
@@ -27,28 +29,9 @@ try
     }
 
     Shared.Options = argParseResult.Value;
+    ValidateArgs();
 
-    var configDir = Shared.Options.ConfigDir;
-    if (configDir == null)
-    {
-        var home = Environment.GetEnvironmentVariable("HOME");
-        configDir = home != null
-            ? Path.Combine(home, ".stdouthook")
-            : null;
-    }
-
-    if (configDir != null)
-    {
-        try
-        {
-            Directory.CreateDirectory(configDir);
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"ERROR: could not create config directory: {configDir}: {ex.Message}");
-            return 1;
-        }
-    }
+    var configDir = GetConfigurationDirectory(Shared.Options.ConfigDir);
 
     if (Shared.Options.ColorDebug)
     {
@@ -68,39 +51,25 @@ try
             : null));
     GlobalLogger.Logger = new Logger(logStream);
 
-    var profileName = Shared.Options.ProfileName;
     var command = Shared.Options.Arguments[0];
-    var commandPaths = new CommandLocator().LocateCommand(command);
-    var fullCommandPath = commandPaths.FirstOrDefault();
-    var arguments = Shared.Options.Arguments.Skip(1).ToArray();
+    var commandArguments = Shared.Options.Arguments.Skip(1).ToArray();
 
-    var cliProfileLoader = new CliProfileDtoLoader();
+    var cliProfileDtoLoader = new CliProfileDtoLoader();
     var profileDtos = configDir != null
-        ? await cliProfileLoader.LoadProfileDtosAsync(configDir)
+        ? await cliProfileDtoLoader.LoadProfileDtosAsync(configDir)
         : new List<ProfileDto>();
 
-    var loader = new ProfileLoader();
-    var picker = new ProfileDtoPicker();
-    using var profile = loader.LoadProfile(
+    var cliProfileLoader = new CliProfileLoader();
+    using var profile = cliProfileLoader.LoadProfile(
         profileDtos,
-        profiles => picker.PickProfileDto(
-            profiles,
-            profileName: profileName,
-            command: command,
-            fullCommandPath: fullCommandPath,
-            arguments: arguments),
-        throwIfInheritedProfileNotFound: false);
+        Shared.Options.ProfileName,
+        command,
+        commandArguments);
     var profileLoaded = profile != null;
 
-    if (profileLoaded)
-    {
-        Shared.VerbosePrint($"using profile: {profile!.ProfileName ?? "<unnamed>"}");
-    }
-    else
-    {
-        // TODO: quote
-        Shared.VerbosePrint($"no profile selected");
-    }
+    Shared.VerbosePrint(profileLoaded
+        ? $"using profile: {profile!.ProfileName ?? "<unnamed>"}"
+        : "no profile selected");
 
     try
     {
@@ -108,76 +77,25 @@ try
     }
     catch (Exception ex)
     {
+        Shared.VerbosePrintError($"failed to build profile: {ex.Message}");
         GlobalLogger.Error(ex, "failed to build profile");
         profileLoaded = false;
     }
 
-    TextWriter? outputStreamWriter = null;
-    TextWriter? errorStreamWriter = null;
-
     if (Shared.Options.Stdout != null)
     {
-        try
-        {
-            outputStreamWriter = new StreamWriter(new FileStream(
-                Shared.Options.Stdout,
-                Shared.Options.StdoutAppend ? FileMode.Append : FileMode.Open,
-                FileAccess.Write));
-        }
-        catch (Exception ex)
-        {
-            Shared.ErrorEx(
-                ex,
-                $"could not open stdout file: {Shared.Options.Stdout}",
-                $"could not open stdout file: {ex.Message}: {Shared.Options.Stdout}");
-            return 1;
-        }
+        outputStreamWriter = CreateRedirectedStream(Shared.Options.Stdout, Shared.Options.StdoutAppend);
     }
 
     if (Shared.Options.Stderr != null)
     {
-        try
-        {
-            errorStreamWriter = new StreamWriter(new FileStream(
-                Shared.Options.Stderr,
-                Shared.Options.StderrAppend ? FileMode.Append : FileMode.Open,
-                FileAccess.Write));
-        }
-        catch (Exception ex)
-        {
-            Shared.ErrorEx(
-                ex,
-                $"could not open stderr file: {Shared.Options.Stderr}",
-                $"could not open stderr file: {ex.Message}: {Shared.Options.Stderr}");
-            return 1;
-        }
+        errorStreamWriter = CreateRedirectedStream(Shared.Options.Stderr, Shared.Options.StderrAppend);
     }
 
-    Process? process;
-
-    try
-    {
-        process = Process.Start(CreateProcessStartInfo(profile, command, arguments));
-        if (process == null)
-        {
-            Shared.Error($"process could not be started: {command}");
-            return 1;
-        }
-    }
-    catch (Exception ex)
-    {
-        Shared.ErrorEx(
-            ex,
-            $"process could not be started: {command}",
-            $"process could not be started: {ex.Message}: {command}");
-        return 1;
-    }
-
-    // TODO: cleanup
-    using var __process = process;
+    using var process = StartProcess(profile, command, commandArguments);
 
     Task? readStreamTask = null;
-    var cancellationTokenSource = new CancellationTokenSource();
+    using var cancellationTokenSource = new CancellationTokenSource();
 
     if (profileLoaded)
     {
@@ -207,7 +125,7 @@ try
                 while (true)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    await Task.Delay(250, cancellationToken);
+                    await Task.Delay(Shared.Options.OutputFlushInterval, cancellationToken);
 
                     outputStreamWriter.Flush();
                     errorStreamWriter.Flush();
@@ -221,7 +139,7 @@ try
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await Task.Delay(1000, cancellationToken);
+                await Task.Delay(ProcessRefreshInterval, cancellationToken);
 
                 process.Refresh();
             }
@@ -234,9 +152,6 @@ try
 
     process.WaitForExit();
     cancellationTokenSource.Cancel();
-
-    outputStreamWriter?.Dispose();
-    errorStreamWriter?.Dispose();
 
     if (readStreamTask != null)
     {
@@ -259,14 +174,40 @@ try
 }
 catch (ProgramSetupException setupException)
 {
+    Shared.ErrorEx(setupException.InnerException, setupException.Message);
     return setupException.ExitCode;
 }
 catch (Exception ex)
 {
+    Shared.VerbosePrintError("uncaught exception");
+    Shared.VerbosePrintError(ex.ToString());
     return 1;
 }
+finally
+{
+    outputStreamWriter?.Dispose();
+    errorStreamWriter?.Dispose();
+}
 
-ProcessStartInfo CreateProcessStartInfo(Profile? profile, string command, string[] arguments)
+Process StartProcess(Profile? profile, string command, IReadOnlyList<string> arguments)
+{
+    try
+    {
+        var process = Process.Start(CreateProcessStartInfo(profile, command, arguments));
+        if (process == null)
+        {
+            throw new ProgramSetupException($"process could not be started: {command}");
+        }
+
+        return process;
+    }
+    catch (Exception ex)
+    {
+        throw new ProgramSetupException($"process could not be started: {ex.Message}: {command}", ex);
+    }
+}
+
+ProcessStartInfo CreateProcessStartInfo(Profile? profile, string command, IReadOnlyList<string> arguments)
 {
     var redirect = profile != null;
     var processInfo = new ProcessStartInfo(command)
@@ -275,12 +216,33 @@ ProcessStartInfo CreateProcessStartInfo(Profile? profile, string command, string
         RedirectStandardOutput = redirect,
     };
 
-    for (var i = 0; i < arguments.Length; i++)
+    for (var i = 0; i < arguments.Count; i++)
     {
         processInfo.ArgumentList.Add(arguments[i]);
     }
 
     return processInfo;
+}
+
+TextWriter CreateRedirectedStream(string filename, bool append)
+{
+    try
+    {
+        var dirname = Path.GetDirectoryName(filename);
+        if (dirname != null)
+        {
+            Directory.CreateDirectory(dirname);
+        }
+
+        return new StreamWriter(new FileStream(
+            filename,
+            append ? FileMode.Append : FileMode.Open,
+            FileAccess.Write));
+    }
+    catch (Exception ex)
+    {
+        throw new ProgramSetupException($"could not open file: {ex.Message}: {filename}");
+    }
 }
 
 Stream GetLogStream(string? filename)
@@ -299,5 +261,44 @@ Stream GetLogStream(string? filename)
     {
         Shared.VerbosePrintError($"ERROR: failed to open log file: {ex.Message}");
         return new MemoryStream();
+    }
+}
+
+string? GetConfigurationDirectory(string? configDir)
+{
+    if (configDir == null)
+    {
+        var home = Environment.GetEnvironmentVariable("HOME");
+        configDir = home != null
+            ? Path.Combine(home, ".stdouthook")
+            : null;
+    }
+
+    if (configDir != null)
+    {
+        try
+        {
+            Directory.CreateDirectory(configDir);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"ERROR: could not create config directory: {configDir}: {ex.Message}");
+            return null;
+        }
+    }
+
+    return configDir;
+}
+
+void ValidateArgs()
+{
+    if (Shared.Options.BufferSize < 1)
+    {
+        Shared.Options.BufferSize = 16384;
+    }
+
+    if (Shared.Options.OutputFlushInterval < 0)
+    {
+        Shared.Options.OutputFlushInterval = 250;
     }
 }

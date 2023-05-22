@@ -57,16 +57,19 @@ namespace Wilgysef.StdoutHook.Profiles
             }
             catch (Exception ex)
             {
-                // wait a small amount in case the stream was created after another stream was created but before it was added to the dictionary
-                Thread.Sleep(100);
-
                 if (!_fileStreams.TryGetValue(absolutePath, out stream))
                 {
-                    throw;
+                    // wait a small amount in case the stream was created after another stream was created but before it was added to the dictionary
+                    Thread.Sleep(50);
+
+                    if (!_fileStreams.TryGetValue(absolutePath, out stream))
+                    {
+                        throw;
+                    }
                 }
 
                 // exception was thrown but the stream exists, continue
-                GlobalLogger.Warn($"an exception was thrown when opening the file stream, although the file stream exists: {ex.Message}: {absolutePath}");
+                // GlobalLogger.Warn($"an exception was thrown when opening the file stream, although the file stream exists: {ex.Message}: {absolutePath}");
             }
 
             return stream;

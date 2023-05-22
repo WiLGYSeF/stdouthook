@@ -167,6 +167,16 @@ public class RegexGroupRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void ReplaceZero()
+    {
+        var rule = new RegexGroupRule(new Regex(@"[0-9]+"), new List<KeyValuePair<FieldRangeList, string>>
+        {
+            new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1"), "b"),
+        });
+        ShouldRuleBe(rule, "abc123", "abcb");
+    }
+
+    [Fact]
     public void NoContext()
     {
         var rule = new UnconditionalReplaceRule("%Gc %G0");
