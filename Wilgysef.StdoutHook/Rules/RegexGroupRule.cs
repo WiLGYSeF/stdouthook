@@ -167,5 +167,36 @@ namespace Wilgysef.StdoutHook.Rules
                 }
             }
         }
+
+        protected override Rule CopyInternal()
+        {
+            var rule = new RegexGroupRule(Regex)
+            {
+                ReplaceGroups = ReplaceGroups,
+                ReplaceNamedGroups = ReplaceNamedGroups,
+            };
+
+            for (var i = 0; i < _outOfRangeReplaceGroups.Count; i++)
+            {
+                var (rangeList, replace) = _outOfRangeReplaceGroups[i];
+                rule._outOfRangeReplaceGroups.Add(new KeyValuePair<FieldRangeList, CompiledFormat>(rangeList, replace.Copy()));
+            }
+
+            foreach (var (name, replace) in _namedGroups)
+            {
+                rule._namedGroups[name] = replace.Copy();
+            }
+
+            if (_groupReplacers != null)
+            {
+                rule._groupReplacers = new CompiledFormat[_groupReplacers.Length];
+                for (var i = 0; i < _groupReplacers.Length; i++)
+                {
+                    rule._groupReplacers[i] = _groupReplacers[i]?.Copy();
+                }
+            }
+
+            return rule;
+        }
     }
 }

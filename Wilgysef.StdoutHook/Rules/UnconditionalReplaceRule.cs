@@ -29,5 +29,13 @@ namespace Wilgysef.StdoutHook.Rules
                 ? result
                 : result + state.Newline;
         }
+
+        protected override Rule CopyInternal()
+        {
+            return new UnconditionalReplaceRule(Format)
+            {
+                _compiledFormat = _compiledFormat?.Copy()!,
+            };
+        }
     }
 }

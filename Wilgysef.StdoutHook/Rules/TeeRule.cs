@@ -48,5 +48,15 @@ namespace Wilgysef.StdoutHook.Rules
 
             return state.Data;
         }
+
+        protected override Rule CopyInternal()
+        {
+            return new TeeRule(Filename)
+            {
+                Flush = Flush,
+                ExtractColors = ExtractColors,
+                _absolutePath = _absolutePath,
+            };
+        }
     }
 }

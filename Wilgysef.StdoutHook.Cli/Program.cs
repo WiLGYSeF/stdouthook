@@ -106,8 +106,11 @@ try
         outputStreamWriter ??= new CustomStreamWriter(Console.OpenStandardOutput(), Console.OutputEncoding, bufferSize);
         errorStreamWriter ??= new CustomStreamWriter(Console.OpenStandardError(), Console.OutputEncoding, bufferSize);
 
+        profile.Split(out var stdoutProfile, out var stderrProfile);
+
         var streamOutputHandler = new StreamOutputHandler(
-            profile,
+            stdoutProfile,
+            stderrProfile,
             process.StandardOutput,
             process.StandardError,
             outputStreamWriter,
