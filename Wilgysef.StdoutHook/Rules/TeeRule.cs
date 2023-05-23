@@ -16,6 +16,7 @@ namespace Wilgysef.StdoutHook.Rules
         public bool ExtractColors { get; set; }
 
         private string _absolutePath = null!;
+        private ConcurrentStream? _stream;
 
         public TeeRule(string filename)
         {
@@ -31,7 +32,8 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            var stream = state.Profile.State.GetOrCreateFileStream(_absolutePath);
+            // profile state remains the same
+            _stream ??= state.Profile.State.GetOrCreateFileStream(_absolutePath);
 
             var data = Encoding.UTF8.GetBytes(ExtractColors
                 ? state.DataExtractedColorTrimEndNewline + state.Newline
@@ -39,7 +41,7 @@ namespace Wilgysef.StdoutHook.Rules
 
             try
             {
-                stream.Write(data, Flush);
+                _stream.Write(data, Flush);
             }
             catch (Exception ex)
             {

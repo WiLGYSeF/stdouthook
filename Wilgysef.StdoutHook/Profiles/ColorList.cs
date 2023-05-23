@@ -17,9 +17,9 @@ namespace Wilgysef.StdoutHook.Profiles
             Count++;
         }
 
-        public int GetColorIndex(int position)
+        public int GetColorIndex(int position, int start = 0)
         {
-            var colorIndex = 0;
+            var colorIndex = start;
             for (; colorIndex < Count && _colors[colorIndex].Position < position; colorIndex++) ;
 
             return colorIndex;
@@ -31,7 +31,7 @@ namespace Wilgysef.StdoutHook.Profiles
             Count = 0;
         }
 
-        public struct ColorEntry
+        public class ColorEntry
         {
             public int Position { get; }
 

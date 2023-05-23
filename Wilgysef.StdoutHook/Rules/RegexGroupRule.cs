@@ -87,6 +87,7 @@ namespace Wilgysef.StdoutHook.Rules
             var colorBuilder = new StringBuilder();
             var groupValues = new Dictionary<string, string>();
             var last = 0;
+            int? colorIndex = null;
 
             for (var matchIndex = 0; matchIndex < matches.Count; matchIndex++)
             {
@@ -105,7 +106,12 @@ namespace Wilgysef.StdoutHook.Rules
                 state.Context.SetRegexGroupContext(groupValues);
                 state.Context.RegexGroupContext!.IncrementGroupNumberOnGet = false;
 
-                ColorExtractor.InsertExtractedColors(builder, data[last..groups[0].Index], last, state.ExtractedColors);
+                colorIndex = ColorExtractor.InsertExtractedColors(
+                    builder,
+                    data[last..groups[0].Index],
+                    last,
+                    state.ExtractedColors,
+                    colorIndex);
                 last = groups[0].Index;
 
                 if (groups.Length > 1)
@@ -138,7 +144,7 @@ namespace Wilgysef.StdoutHook.Rules
                 }
             }
 
-            ColorExtractor.InsertExtractedColors(builder, data[last..], last, state.ExtractedColors);
+            ColorExtractor.InsertExtractedColors(builder, data[last..], last, state.ExtractedColors, colorIndex);
 
             if (!TrimNewline)
             {
@@ -159,7 +165,12 @@ namespace Wilgysef.StdoutHook.Rules
                         format = namedFormat;
                     }
 
-                    ColorExtractor.InsertExtractedColors(builder, span[last..group.Index], last, state.ExtractedColors);
+                    colorIndex = ColorExtractor.InsertExtractedColors(
+                        builder,
+                        span[last..group.Index],
+                        last,
+                        state.ExtractedColors,
+                        colorIndex);
                     builder.Append(format != null
                         ? format.Compute(state)
                         : group.Value);
