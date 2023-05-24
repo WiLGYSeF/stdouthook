@@ -41,8 +41,8 @@ namespace Wilgysef.StdoutHook.Formatters
                                 subtractOffset += colorIndex - i;
 
                                 builder.Append(dataSpan[last..i]);
-                                i = colorIndex;
-                                last = i;
+                                i = colorIndex - 1;
+                                last = colorIndex;
                                 goto end;
                             default:
                                 goto end;

@@ -319,6 +319,13 @@ public class FieldSeparatorRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void WithColors_Removed()
+    {
+        var rule = new FieldSeparatorRule(new Regex("---"), "%F1 %F3");
+        ShouldRuleBe(rule, "\x1b[31mtest---as\x1b[32mdf---abc\x1b[0m", "\x1b[31mtest abc\x1b[0m");
+    }
+
+    [Fact]
     public void TrimNewline()
     {
         var rule = new FieldSeparatorRule(new Regex(" "), "%F1 %F2 %F3")
