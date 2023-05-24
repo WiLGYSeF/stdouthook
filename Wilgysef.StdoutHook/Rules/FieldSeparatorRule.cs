@@ -159,14 +159,8 @@ namespace Wilgysef.StdoutHook.Rules
                 MinFields = MinFields,
                 MaxFields = MaxFields,
                 ReplaceFields = ReplaceFields,
-                ReplaceAllFormat = ReplaceAllFormat
+                ReplaceAllFormat = ReplaceAllFormat,
             };
-
-            for (var i = 0; i < _outOfRangeReplaceFields.Count; i++)
-            {
-                var (rangeList, replace) = _outOfRangeReplaceFields[i];
-                rule._outOfRangeReplaceFields.Add(new KeyValuePair<FieldRangeList, CompiledFormat>(rangeList, replace.Copy()));
-            }
 
             if (_fieldReplacers != null)
             {
@@ -175,6 +169,12 @@ namespace Wilgysef.StdoutHook.Rules
                 {
                     rule._fieldReplacers[i] = _fieldReplacers[i]?.Copy();
                 }
+            }
+
+            for (var i = 0; i < _outOfRangeReplaceFields.Count; i++)
+            {
+                var (rangeList, replace) = _outOfRangeReplaceFields[i];
+                rule._outOfRangeReplaceFields.Add(new KeyValuePair<FieldRangeList, CompiledFormat>(rangeList, replace.Copy()));
             }
 
             rule._replaceAll = _replaceAll?.Copy();

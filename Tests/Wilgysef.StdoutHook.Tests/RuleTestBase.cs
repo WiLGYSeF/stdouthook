@@ -12,21 +12,31 @@ public abstract class RuleTestBase
         ShouldRuleBe(rule, new Formatter(FormatFunctionBuilder.Create()), input, expected);
     }
 
-    protected private static void ShouldRuleBe(Rule rule, Formatter formatter, string input, string expected)
+    private protected static void ShouldRuleBe(Rule rule, Formatter formatter, string input, string expected)
     {
         using var profile = new Profile();
         ShouldRuleBe(profile, rule, formatter, input, expected);
     }
 
-    protected private static void ShouldRuleBe(Profile profile, Rule rule, Formatter formatter, string input, string expected)
+    private protected static void ShouldRuleBe(Profile profile, Rule rule, Formatter formatter, string input, string expected)
     {
         rule.Build(profile, formatter);
         rule.Apply(new DataState(input, true, profile)).ShouldBe(expected);
     }
 
+    private protected static Formatter GetFormatter()
+    {
+        return new Formatter(FormatFunctionBuilder.Create());
+    }
+
     private protected static Formatter GetFormatter(params FormatBuilder[] formatBuilders)
     {
         return new Formatter(new FormatFunctionBuilder(formatBuilders));
+    }
+
+    protected static Profile CreateDummyProfile()
+    {
+        return new Profile();
     }
 
     private protected static DataState CreateDummyDataState()

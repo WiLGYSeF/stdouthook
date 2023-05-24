@@ -78,10 +78,10 @@ namespace Wilgysef.StdoutHook.Profiles
             {
                 var profile = new Profile
                 {
-                    State = State,
                     ProfileName = ProfileName,
                     PseudoTty = PseudoTty,
                     Flush = Flush,
+                    State = State,
                     _formatter = _formatter
                 };
 
@@ -92,6 +92,11 @@ namespace Wilgysef.StdoutHook.Profiles
                     {
                         profile.Rules.Add(rule.Copy());
                     }
+                }
+
+                foreach (var (key, val) in CustomColors)
+                {
+                    profile.CustomColors[key] = val;
                 }
 
                 return profile;

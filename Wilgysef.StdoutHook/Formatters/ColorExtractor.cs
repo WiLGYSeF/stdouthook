@@ -52,6 +52,11 @@ namespace Wilgysef.StdoutHook.Formatters
                 }
             }
 
+            if (last == 0)
+            {
+                return data;
+            }
+
             return builder.Append(dataSpan[last..])
                 .ToString();
         }

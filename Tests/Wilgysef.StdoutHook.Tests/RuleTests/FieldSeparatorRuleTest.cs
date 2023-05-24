@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Tests.RuleTests;
@@ -344,5 +345,51 @@ public class FieldSeparatorRuleTest : RuleTestBase
 
         rule = new UnconditionalReplaceRule("%F(#)");
         ShouldRuleBe(rule, "test", "");
+    }
+
+    [Fact]
+    public void Copy_ReplaceFields()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
+        {
+            MinFields = 1,
+            MaxFields = 2,
+            ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>
+            {
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1"), "a"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2-*"), "b"),
+            },
+        };
+
+        using var profile = CreateDummyProfile();
+        rule.Build(profile, GetFormatter());
+
+        var copy = (FieldSeparatorRule)rule.Copy();
+
+        copy.MinFields.ShouldBe(rule.MinFields);
+        copy.MaxFields.ShouldBe(rule.MaxFields);
+
+        copy.ReplaceFields!.Count.ShouldBe(rule.ReplaceFields.Count);
+    }
+
+    [Fact]
+    public void Copy_ReplaceAllFormat()
+    {
+        var rule = new FieldSeparatorRule(new Regex(@"\s+"))
+        {
+            MinFields = 1,
+            MaxFields = 2,
+            ReplaceAllFormat = "a",
+        };
+
+        using var profile = CreateDummyProfile();
+        rule.Build(profile, GetFormatter());
+
+        var copy = (FieldSeparatorRule)rule.Copy();
+
+        copy.MinFields.ShouldBe(rule.MinFields);
+        copy.MaxFields.ShouldBe(rule.MaxFields);
+
+        copy.ReplaceAllFormat.ShouldBe(rule.ReplaceAllFormat);
     }
 }
