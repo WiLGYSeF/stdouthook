@@ -1,8 +1,7 @@
-﻿using System;
-
-namespace Wilgysef.StdoutHook.Profiles.Loaders
+﻿namespace Wilgysef.StdoutHook.Profiles.Loaders
 {
-    public class UnknownRuleException : Exception
+    public class UnknownRuleException : ProfileLoaderException
     {
+        public UnknownRuleException() : base("") { }
     }
 }

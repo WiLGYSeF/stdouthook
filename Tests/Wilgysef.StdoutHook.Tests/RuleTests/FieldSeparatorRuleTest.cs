@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Tests.RuleTests;

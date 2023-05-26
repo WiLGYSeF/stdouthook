@@ -47,6 +47,58 @@ public class ProfileLoaderTest
     }
 
     [Fact]
+    public void BufferSize()
+    {
+        var loader = new ProfileLoader();
+        var profileDto = new ProfileDto
+        {
+            BufferSize = 1024,
+        };
+
+        using var profile = LoadProfile(loader, profileDto);
+        profile.BufferSize.ShouldBe(profileDto.BufferSize);
+    }
+
+    [Fact]
+    public void OutputFlushInterval()
+    {
+        var loader = new ProfileLoader();
+        var profileDto = new ProfileDto
+        {
+            OutputFlushInterval = 100,
+        };
+
+        using var profile = LoadProfile(loader, profileDto);
+        profile.OutputFlushInterval.ShouldBe(profileDto.OutputFlushInterval);
+    }
+
+    [Fact]
+    public void Interactive()
+    {
+        var loader = new ProfileLoader();
+        var profileDto = new ProfileDto
+        {
+            Interactive = true,
+        };
+
+        using var profile = LoadProfile(loader, profileDto);
+        profile.Interactive.ShouldBe(profileDto.Interactive.Value);
+    }
+
+    [Fact]
+    public void InteractiveFlushInterval()
+    {
+        var loader = new ProfileLoader();
+        var profileDto = new ProfileDto
+        {
+            InteractiveFlushInterval = 100,
+        };
+
+        using var profile = LoadProfile(loader, profileDto);
+        profile.InteractiveFlushInterval.ShouldBe(profileDto.InteractiveFlushInterval);
+    }
+
+    [Fact]
     public void CustomColors()
     {
         var loader = new ProfileLoader();

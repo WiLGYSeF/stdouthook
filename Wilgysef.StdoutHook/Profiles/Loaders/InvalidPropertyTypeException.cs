@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Wilgysef.StdoutHook.Profiles.Loaders
 {
-    public class InvalidPropertyTypeException : Exception
+    public class InvalidPropertyTypeException : ProfileLoaderException
     {
         public string PropertyName { get; }
 

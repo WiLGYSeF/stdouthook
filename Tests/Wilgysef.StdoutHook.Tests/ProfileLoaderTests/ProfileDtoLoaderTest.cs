@@ -140,6 +140,42 @@ public class ProfileDtoLoaderTest
         await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
     }
 
+    [Fact]
+    public async Task BufferSize()
+    {
+        var loader = new TestProfileLoader();
+        loader.Profile.BufferSize = 1024;
+
+        await loader.LoadProfileDtosAsync(null!);
+    }
+
+    [Fact]
+    public async Task BufferSize_Invalid()
+    {
+        var loader = new TestProfileLoader();
+        loader.Profile.BufferSize = 0;
+
+        await Should.ThrowAsync<ProfileLoaderException>(() => loader.LoadProfileDtosAsync(null!));
+    }
+
+    [Fact]
+    public async Task OutputFlushInterval_Invalid()
+    {
+        var loader = new TestProfileLoader();
+        loader.Profile.OutputFlushInterval = -1;
+
+        await Should.ThrowAsync<ProfileLoaderException>(() => loader.LoadProfileDtosAsync(null!));
+    }
+
+    [Fact]
+    public async Task InteractiveFlushInterval_Invalid()
+    {
+        var loader = new TestProfileLoader();
+        loader.Profile.InteractiveFlushInterval = -1;
+
+        await Should.ThrowAsync<ProfileLoaderException>(() => loader.LoadProfileDtosAsync(null!));
+    }
+
     private class TestProfileLoader : ProfileDtoLoader
     {
         public ProfileDto Profile { get; set; } = new ProfileDto();

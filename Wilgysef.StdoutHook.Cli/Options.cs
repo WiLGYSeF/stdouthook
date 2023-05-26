@@ -12,11 +12,11 @@ internal class Options
     [Option("flush", HelpText = "Flush output")]
     public bool Flush { get; set; }
 
-    [Option("buffer-size", MetaValue = "BYTES", Default = 16384, HelpText = "Output buffer size (default 16384 bytes)")]
-    public int BufferSize { get; set; }
+    [Option("buffer-size", MetaValue = "BYTES", HelpText = "Output buffer size (default 16384 bytes)")]
+    public int? BufferSize { get; set; }
 
-    [Option("output-flush-interval", MetaValue = "MS", Default = 250, HelpText = "Output flush interval (default 250 ms)")]
-    public int OutputFlushInterval { get; set; }
+    [Option("output-flush-interval", MetaValue = "MS", HelpText = "Output flush interval (default 250 ms)")]
+    public int? OutputFlushInterval { get; set; }
 
     [Option("stdout", MetaValue = "FILE", HelpText = "Redirect stdout to file")]
     public string? Stdout { get; set; }
@@ -33,7 +33,13 @@ internal class Options
     #endregion
 
     [Option('t', "pseudotty", HelpText = "Use a pseudo TTY")]
-    public bool PseudoTty { get; set; }
+    public bool? PseudoTty { get; set; }
+
+    [Option('i', "interactive", HelpText = "Use for interactive programs, do not wait for newlines")]
+    public bool? Interactive { get; set; }
+
+    [Option("interactive-flush-interval", MetaValue = "MS", HelpText = "Flush interval for interactive programs (default 200 ms)")]
+    public int? InteractiveFlushInterval { get; set; }
 
     [Option('v', "verbose", FlagCounter = true, HelpText = "Verbose level")]
     public int Verbose { get; set; }

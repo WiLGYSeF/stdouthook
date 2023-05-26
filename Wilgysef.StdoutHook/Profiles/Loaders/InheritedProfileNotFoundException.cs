@@ -1,8 +1,7 @@
-﻿using System;
-
-namespace Wilgysef.StdoutHook.Profiles.Loaders
+﻿namespace Wilgysef.StdoutHook.Profiles.Loaders
 {
-    public class InheritedProfileNotFoundException : Exception
+    public class InheritedProfileNotFoundException : ProfileLoaderException
     {
+        public InheritedProfileNotFoundException(string message) : base(message) { }
     }
 }
