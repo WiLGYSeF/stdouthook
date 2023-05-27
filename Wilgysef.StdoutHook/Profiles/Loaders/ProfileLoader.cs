@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Profiles.Dtos;
@@ -9,7 +10,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 {
     public class ProfileLoader
     {
-        private readonly RuleLoader _ruleLoader = new RuleLoader();
+        private readonly RuleLoader _ruleLoader = new();
 
         public Profile? LoadProfile(
             IReadOnlyList<ProfileDto> profileDtos,
@@ -77,9 +78,9 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 {
                     for (var j = 0; j < names.Count; j++)
                     {
-                        if (graph.TryGetProfileDtoByName(names[j], out var other))
+                        if (graph.TryGetProfileDtoByName(names[j], out var other)
+                            && loadedProfileDtos.TryGetValue(other, out var loadedOther))
                         {
-                            loadedProfileDtos.TryGetValue(other, out var loadedOther);
                             CombineProfileDto(currentCopy, loadedOther);
                         }
                     }
@@ -208,7 +209,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 return false;
             }
 
-            public bool TryGetProfileDtoByName(string profileName, out ProfileDto profile)
+            public bool TryGetProfileDtoByName(string profileName, [MaybeNullWhen(false)] out ProfileDto profile)
             {
                 return _profileDtos.TryGetValue(profileName, out profile);
             }

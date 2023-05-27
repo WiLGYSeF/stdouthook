@@ -40,7 +40,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
         internal ConcurrentStream GetOrCreateFileStream(string absolutePath)
         {
-            ConcurrentStream stream;
+            ConcurrentStream? stream;
             Stream? createdStream = null;
 
             try

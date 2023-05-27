@@ -15,9 +15,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         private readonly Property[] _processProperties;
         private readonly OffsetStopwatch _durationStopwatch;
-        private readonly ConcurrentDictionary<string, string> _startTimeCache = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> _startTimeCache = new();
 
-        private string _filename = null!;
+        private string? _filename;
         private DateTime _startTime;
         private int _processId;
         private bool _cached;
@@ -31,7 +31,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 // all properties are not constant because formatters are built before the process starts
                 new Property(new[] { "basePriority", "priority" }, (process, format) => process.BasePriority.ToString(format), false),
                 new Property(new[] { "id", "pid", "processId" }, (_, format) => _processId.ToString(format), false),
-                new Property(new[] { "fullpath" }, _ => _filename!, false),
+                new Property(new[] { "fullpath" }, _ => _filename ?? "", false),
                 new Property(new[] { "nonpagedSystemMemorySize" }, (process, format) => process.NonpagedSystemMemorySize64.ToString(format), false),
                 new Property(new[] { "pagedSystemMemorySize" }, (process, format) => process.PagedSystemMemorySize64.ToString(format), false),
                 new Property(new[] { "pagedMemorySize" }, (process, format) => process.PagedMemorySize64.ToString(format), false),
@@ -63,7 +63,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             if (!_cached)
             {
                 _processId = process.Id;
-                _filename = process.MainModule.FileName;
+                _filename = process.MainModule?.FileName;
                 _startTime = process.StartTime;
 
                 _durationStopwatch.Offset = DateTime.Now - _startTime;
