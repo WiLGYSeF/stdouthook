@@ -1,6 +1,5 @@
 ﻿using System;
 using Wilgysef.StdoutHook.Extensions;
-using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
@@ -10,7 +9,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         public override char? KeyShort => null;
 
-        public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
+        public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
         {
             var contentsSpan = state.Contents.AsSpan();
             var separatorIndex = contentsSpan.IndexOf(Formatter.Separator);
@@ -36,9 +35,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             var format = state.Profile.CompileFormat(contentsSpan[(secondSeparatorIndex + 1)..].ToString());
 
             isConstant = format.IsConstant;
-            return dataState =>
+            return computeState =>
             {
-                var result = format.Compute(dataState);
+                var result = format.Compute(computeState.DataState, computeState.Position);
                 var start = startIndex >= 0 ? startIndex : result.Length + startIndex;
                 var end = Math.Min(
                     endIndex.HasValue

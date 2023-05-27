@@ -223,7 +223,7 @@ public class FormatTest : RuleTestBase
 
         for (var i = 0; i < expectedFuncs.Length; i++)
         {
-            compiledFormat.Funcs[i](dataState).ShouldBe(expectedFuncs[i]);
+            compiledFormat.Funcs[i](new FormatComputeState(dataState)).ShouldBe(expectedFuncs[i]);
         }
     }
 }

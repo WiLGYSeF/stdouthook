@@ -74,6 +74,8 @@ namespace Wilgysef.StdoutHook.Profiles
                 }
             }
 
+            State.ApplyColorState(dataState.ExtractedColors);
+
             return dataState.Data;
         }
 

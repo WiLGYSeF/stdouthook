@@ -51,7 +51,7 @@ namespace Wilgysef.StdoutHook.Formatters
             }
         }
 
-        public Func<DataState, string> Build(
+        public Func<FormatComputeState, string> Build(
             string key,
             string contents,
             Profile profile,
