@@ -48,8 +48,6 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         protected class Property
         {
-            private const char Separator = ':';
-
             public bool IsConstant { get; }
 
             private readonly string[] _names;
@@ -74,7 +72,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 string str,
                 [MaybeNullWhen(false)] out Func<T, string> func)
             {
-                var separatorIndex = str.IndexOf(Separator);
+                var separatorIndex = str.IndexOf(Formatter.Separator);
                 var format = "";
 
                 if (separatorIndex != -1)

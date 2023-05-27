@@ -33,17 +33,27 @@ public class RegexGroupRuleTest : RuleTestBase
     }
 
     [Fact]
-    public void Replace_Color()
+    public void Color()
     {
         var rule = new RegexGroupRule(new Regex(@"a([a-z]+)f"), new List<KeyValuePair<FieldRangeList, string>>
         {
             new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1"), "0%G1"),
         });
-        ShouldRuleBe(rule, "test as\x1b[31mdf abc", "test a0s\x1b[31mdf abc");
+        ShouldRuleBe(rule, "test\x1b[33m as\x1b[31mdf \x1b[34mabc", "test\x1b[33m a0s\x1b[31mdf \x1b[34mabc");
     }
 
     [Fact]
-    public void Replace_Current()
+    public void Color_Multiple()
+    {
+        var rule = new RegexGroupRule(new Regex(@"\d{2}:(\d{2}):\d{2}"), new List<KeyValuePair<FieldRangeList, string>>
+        {
+            new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1"), "%Cblue%Gc%Cz"),
+        });
+        ShouldRuleBe(rule, "2000-01-02 03:04:05 06:07:08.999 \x1b[31mtest\x1b[0m", "2000-01-02 03:\x1b[34m04\x1b[0m:05 06:\x1b[34m07\x1b[0m:08.999 \u001b[31mtest\u001b[0m");
+    }
+
+    [Fact]
+    public void Current()
     {
         var rule = new RegexGroupRule(new Regex(@"([0-9]+)\.([0-9]+)"), new List<KeyValuePair<FieldRangeList, string>>
         {
@@ -53,7 +63,7 @@ public class RegexGroupRuleTest : RuleTestBase
     }
 
     [Fact]
-    public void Replace_Current_Multiple()
+    public void Current_Multiple()
     {
         var rule = new RegexGroupRule(new Regex(@"([0-9]+)\.([0-9]+)"), new List<KeyValuePair<FieldRangeList, string>>
         {
@@ -63,23 +73,24 @@ public class RegexGroupRuleTest : RuleTestBase
     }
 
     [Fact]
-    public void Replace_Named()
+    public void Named()
     {
         var rule = new RegexGroupRule(new Regex(@"(?<test>[0-9]+)"), new Dictionary<string, string>
         {
-            { "test", "abc" },
+            ["test"] = "abc",
         });
         ShouldRuleBe(rule, "abc123", "abcabc");
 
         rule = new RegexGroupRule(new Regex(@"(?<test>[0-9]+)"), null!, new Dictionary<string, string>
         {
-            { "test", "abc" },
+            ["test"] = "abc",
+            ["notexist"] = "a",
         });
         ShouldRuleBe(rule, "abc123", "abcabc");
     }
 
     [Fact]
-    public void Replace_Nested()
+    public void Nested()
     {
         var rule = new RegexGroupRule(new Regex(@"a(b(c))d"), new List<KeyValuePair<FieldRangeList, string>>
         {
@@ -90,7 +101,7 @@ public class RegexGroupRuleTest : RuleTestBase
     }
 
     [Fact]
-    public void Replace_OutOfRange()
+    public void OutOfRange()
     {
         var groups = 40;
         var groupNumber = 35;
@@ -116,86 +127,43 @@ public class RegexGroupRuleTest : RuleTestBase
     }
 
     [Fact]
-    public void Replace_Newline()
+    public void Newline()
     {
         var rule = new RegexGroupRule(new Regex(@"(?<test>[0-9]+)$"), new Dictionary<string, string>
         {
-            { "test", "abc" },
+            ["test"] = "abc",
         });
         ShouldRuleBe(rule, "abc123\n", "abcabc\n");
     }
 
     [Fact]
-    public void ReplaceAll()
+    public void Group_NotExist()
     {
-        var rule = new RegexGroupRule(new Regex(@"a([a-z]+)f"), "aaa %G1");
-        ShouldRuleBe(rule, "test asdf abc", "aaa sd");
-    }
-
-    [Fact]
-    public void ReplaceAll_NoMatch()
-    {
-        var rule = new RegexGroupRule(new Regex(@"zxcv"), "aaa");
+        var rule = new RegexGroupRule(new Regex(@"a([a-z]+)f"), new List<KeyValuePair<FieldRangeList, string>>
+        {
+            new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("4"), "123"),
+        });
         ShouldRuleBe(rule, "test asdf abc", "test asdf abc");
     }
 
     [Fact]
-    public void ReplaceAll_Group_NotExist()
+    public void NoGroup()
     {
-        var rule = new RegexGroupRule(new Regex(@"([0-9]+)\.([0-9]+)"), "%G4");
-        ShouldRuleBe(rule, "123.456", "");
-    }
-
-    [Fact]
-    public void ReplaceAll_Replace_Color()
-    {
-        var rule = new RegexGroupRule(new Regex(@"a([a-z]+)f"), "%G1");
-        ShouldRuleBe(rule, "test as\x1b[31mdf abc", "s\x1b[31md");
-    }
-
-    [Fact]
-    public void ReplaceAll_Current()
-    {
-        var rule = new RegexGroupRule(new Regex(@"([0-9]+)\.([0-9]+)"), "=%Gc=.=%Gc=");
-        ShouldRuleBe(rule, "123.456", "=123=.=456=");
-    }
-
-    [Fact]
-    public void ReplaceAll_Current_MoreThanGroupCount()
-    {
-        var rule = new RegexGroupRule(new Regex(@"([0-9]+)\.([0-9]+)"), "%Gc%Gc%Gc");
-        ShouldRuleBe(rule, "123.456", "123456");
-    }
-
-    [Fact]
-    public void ReplaceAll_Named()
-    {
-        var rule = new RegexGroupRule(new Regex(@"(?<test>[0-9]+)"), "%G(test)");
-        ShouldRuleBe(rule, "abc123", "123");
-    }
-
-    [Fact]
-    public void ReplaceAll_Named_NotExist()
-    {
-        var rule = new RegexGroupRule(new Regex(@"(?<test>[0-9]+)"), "%G(aaaa)");
-        ShouldRuleBe(rule, "abc123", "");
-    }
-
-    [Fact]
-    public void ReplaceAll_NoGroup()
-    {
-        var rule = new RegexGroupRule(new Regex(@"(?<test>[0-9]+)"), "%G");
-        ShouldRuleBe(rule, "abc123", "%G");
+        var rule = new RegexGroupRule(new Regex(@"([0-9]+)"), new List<KeyValuePair<FieldRangeList, string>>
+        {
+            new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1"), "%G"),
+        });
+        ShouldRuleBe(rule, "abc123", "abc%G");
     }
 
     [Fact]
     public void TrimNewline()
     {
-        var rule = new RegexGroupRule(new Regex(@"."), "a")
+        var rule = new RegexGroupRule(new Regex(@"([0-9]+)"), new List<KeyValuePair<FieldRangeList, string>>())
         {
             TrimNewline = true,
         };
-        ShouldRuleBe(rule, "abc123\n", "a");
+        ShouldRuleBe(rule, "abc123\n", "abc123");
     }
 
     [Fact]

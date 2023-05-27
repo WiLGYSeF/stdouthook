@@ -7,15 +7,20 @@ namespace Wilgysef.StdoutHook.Formatters
 {
     internal class FormatFunctionBuilder
     {
-        public static FormatBuilder[] FormatBuilders = new FormatBuilder[]
+        private static readonly FormatBuilder[] FormatBuilders = new FormatBuilder[]
         {
+            new AlignCenterFormatBuilder(),
+            new AlignLeftFormatBuilder(),
+            new AlignRightFormatBuilder(),
             new ByteFormatBuilder(),
             new ColorFormatBuilder(),
             new DataFormatBuilder(),
             new FieldFormatBuilder(),
+            new LengthFormatBuilder(),
             new ProcessFormatBuilder(),
             new ProfileFormatBuilder(),
             new RegexGroupFormatBuilder(),
+            new SubstringFormatBuilder(),
             new TimeFormatBuilder(),
         };
 

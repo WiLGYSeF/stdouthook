@@ -6,7 +6,7 @@ namespace Wilgysef.StdoutHook.Formatters
 {
     public class ColorFormatter
     {
-        public IDictionary<string, string> CustomColors = new Dictionary<string, string>();
+        public IDictionary<string, string> CustomColors { get; set; } = new Dictionary<string, string>();
 
         public bool InvalidFormatBlank { get; set; }
 

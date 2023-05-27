@@ -60,11 +60,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             var rule = new RegexGroupRule(CreateRegex(dto.GetRegex()!));
             SetBaseRuleProperties(rule, dto);
 
-            if (dto.ReplaceAllFormat != null)
-            {
-                rule.ReplaceAllFormat = dto.ReplaceAllFormat;
-            }
-            else if (dto.ReplaceGroups != null)
+            if (dto.ReplaceGroups != null)
             {
                 var otherKeys = new List<KeyValuePair<string, string>>();
 
@@ -81,7 +77,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             }
             else
             {
-                throw new InvalidRuleException(rule, $"missing {nameof(dto.ReplaceAllFormat)} or {nameof(dto.ReplaceGroups)}");
+                throw new InvalidRuleException(rule, $"missing {nameof(dto.ReplaceGroups)}");
             }
 
             return rule;

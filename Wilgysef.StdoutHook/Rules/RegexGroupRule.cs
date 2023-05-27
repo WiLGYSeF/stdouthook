@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
-using static Wilgysef.StdoutHook.Extensions.RegexExtensions;
 
 namespace Wilgysef.StdoutHook.Rules
 {
@@ -19,13 +18,10 @@ namespace Wilgysef.StdoutHook.Rules
 
         public IDictionary<string, string>? ReplaceNamedGroups { get; set; }
 
-        public string? ReplaceAllFormat { get; set; }
-
         private readonly List<KeyValuePair<FieldRangeList, CompiledFormat>> _outOfRangeReplaceGroups = new List<KeyValuePair<FieldRangeList, CompiledFormat>>();
         private readonly Dictionary<string, CompiledFormat> _namedGroups = new Dictionary<string, CompiledFormat>();
 
         private CompiledFormat?[]? _groupReplacers;
-        private CompiledFormat _compiledFormat = null!;
 
         public RegexGroupRule(Regex regex)
         {
@@ -56,20 +52,9 @@ namespace Wilgysef.StdoutHook.Rules
             ReplaceNamedGroups = replaceNamedGroups;
         }
 
-        public RegexGroupRule(Regex regex, string replaceAllFormat)
-        {
-            Regex = regex;
-            ReplaceAllFormat = replaceAllFormat;
-        }
-
         internal override void Build(Profile profile, Formatter formatter)
         {
             base.Build(profile, formatter);
-
-            if (ReplaceAllFormat != null && ReplaceGroups != null && ReplaceGroups.Count > 0)
-            {
-                throw new Exception($"Cannot have {nameof(ReplaceAllFormat)} and {nameof(ReplaceGroups)} set.");
-            }
 
             if (ReplaceGroups != null)
             {
@@ -87,67 +72,73 @@ namespace Wilgysef.StdoutHook.Rules
                     _namedGroups[name] = Formatter.CompileFormat(format, profile);
                 }
             }
-
-            if (ReplaceAllFormat != null)
-            {
-                _compiledFormat = Formatter.CompileFormat(ReplaceAllFormat, profile);
-            }
         }
 
         internal override string Apply(DataState state)
         {
-            var data = state.DataTrimEndNewline;
-            var groups = Regex.MatchExtractedColor(data);
-            if (groups == null)
+            var data = state.DataExtractedColorTrimEndNewline.AsSpan();
+            var matches = Regex.MatchAllGroups(state.DataExtractedColorTrimEndNewline);
+            if (matches == null)
             {
                 return state.Data;
             }
 
-            var groupValues = new Dictionary<string, string>(groups.Length);
-
-            for (var i = 0; i < groups.Length; i++)
-            {
-                var group = groups[i];
-                groupValues[i.ToString()] = group.Value;
-                groupValues[group.Name] = group.Value;
-            }
-
-            state.Context.SetRegexGroupContext(groupValues);
-
-            if (_compiledFormat != null)
-            {
-                state.Context.RegexGroupContext!.IncrementGroupNumberOnGet = true;
-                return _compiledFormat.Compute(state);
-            }
-
-            state.Context.RegexGroupContext!.IncrementGroupNumberOnGet = false;
-
             var builder = new StringBuilder();
-            var limit = Math.Min(groups.Length - 1, _groupReplacers?.Length ?? 0);
+            var colorBuilder = new StringBuilder();
+            var groupValues = new Dictionary<string, string>();
             var last = 0;
 
-            for (var i = 0; i < limit; i++)
+            for (var matchIndex = 0; matchIndex < matches.Count; matchIndex++)
             {
-                AppendGroup(i + 1, _groupReplacers![i]);
-            }
+                var groups = matches[matchIndex];
+                ColorExtractor.InsertExtractedColors(colorBuilder, groups, state.ExtractedColors);
 
-            for (var i = limit; i < groups.Length - 1; i++)
-            {
-                CompiledFormat? foundReplace = null;
+                groupValues.Clear();
 
-                foreach (var (rangeList, replace) in _outOfRangeReplaceGroups)
+                for (var i = 0; i < groups.Length; i++)
                 {
-                    if (rangeList.Contains(i + 1))
-                    {
-                        foundReplace = replace;
-                        break;
-                    }
+                    var group = groups[i];
+                    groupValues[i.ToString()] = group.Value;
+                    groupValues[group.Name] = group.Value;
                 }
 
-                AppendGroup(i + 1, foundReplace);
+                state.Context.SetRegexGroupContext(groupValues);
+                state.Context.RegexGroupContext!.IncrementGroupNumberOnGet = false;
+
+                ColorExtractor.InsertExtractedColors(builder, data[last..groups[0].Index], last, state.ExtractedColors);
+                last = groups[0].Index;
+
+                if (groups.Length > 1)
+                {
+                    var limit = Math.Min(groups.Length - 1, _groupReplacers?.Length ?? 0);
+                    for (var i = 0; i < limit; i++)
+                    {
+                        AppendGroup(data, groups, i + 1, _groupReplacers![i]);
+                    }
+
+                    for (var i = limit; i < groups.Length - 1; i++)
+                    {
+                        CompiledFormat? foundReplace = null;
+
+                        foreach (var (rangeList, replace) in _outOfRangeReplaceGroups)
+                        {
+                            if (rangeList.Contains(i + 1))
+                            {
+                                foundReplace = replace;
+                                break;
+                            }
+                        }
+
+                        AppendGroup(data, groups, i + 1, foundReplace);
+                    }
+                }
+                else
+                {
+                    AppendGroup(data, groups, 0, _groupReplacers![0]);
+                }
             }
 
-            builder.Append(data[last..]);
+            ColorExtractor.InsertExtractedColors(builder, data[last..], last, state.ExtractedColors);
 
             if (!TrimNewline)
             {
@@ -156,7 +147,7 @@ namespace Wilgysef.StdoutHook.Rules
 
             return builder.ToString();
 
-            void AppendGroup(int groupNumber, CompiledFormat? format)
+            void AppendGroup(ReadOnlySpan<char> span, MatchGroup[] groups, int groupNumber, CompiledFormat? format)
             {
                 var group = groups[groupNumber];
                 state.Context.RegexGroupContext!.CurrentGroupNumber = groupNumber;
@@ -168,12 +159,11 @@ namespace Wilgysef.StdoutHook.Rules
                         format = namedFormat;
                     }
 
-                    builder
-                        .Append(data[last..group.Index])
-                        .Append(format != null
-                            ? format.Compute(state)
-                            : group.Value);
-                    last = group.Index + group.Value.Length;
+                    ColorExtractor.InsertExtractedColors(builder, span[last..group.Index], last, state.ExtractedColors);
+                    builder.Append(format != null
+                        ? format.Compute(state)
+                        : group.Value);
+                    last = group.EndIndex;
                 }
             }
         }

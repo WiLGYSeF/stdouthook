@@ -1,4 +1,5 @@
 ﻿using Wilgysef.StdoutHook.Extensions;
+using Wilgysef.StdoutHook.Formatters;
 
 namespace Wilgysef.StdoutHook.Profiles
 {
@@ -9,21 +10,32 @@ namespace Wilgysef.StdoutHook.Profiles
             get => _data;
             internal set
             {
-                _data = value!;
-                DataTrimEndNewline = _data.TrimEndNewline(out _newline);
+                if (_data != value)
+                {
+                    _data = value!;
+                    DataTrimEndNewline = _data.TrimEndNewline(out _newline);
+
+                    _extractedColors.Clear();
+                    DataExtractedColorTrimEndNewline = ColorExtractor.ExtractColor(DataTrimEndNewline, _extractedColors);
+                }
             }
         }
 
-        public string DataTrimEndNewline { get; internal set; } = null!;
+        public string DataTrimEndNewline { get; private set; } = null!;
+
+        public string DataExtractedColorTrimEndNewline { get; private set; } = null!;
 
         public string Newline => _newline;
+
+        public ColorList ExtractedColors => _extractedColors;
 
         public bool Stdout { get; }
 
         public Profile Profile { get; }
 
-        public RuleContext Context { get; private set; } = new RuleContext();
+        public RuleContext Context { get; } = new RuleContext();
 
+        private readonly ColorList _extractedColors = new ColorList();
         private string _data = null!;
         private string _newline = null!;
 
@@ -37,11 +49,6 @@ namespace Wilgysef.StdoutHook.Profiles
         public DataState(Profile profile)
         {
             Profile = profile;
-        }
-
-        public void ResetContext()
-        {
-            Context = new RuleContext();
         }
     }
 }

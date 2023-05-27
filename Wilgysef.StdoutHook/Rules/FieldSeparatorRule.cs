@@ -70,8 +70,8 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            var splitData = SeparatorExpression.SplitWithSeparatorsExtractedColor(
-                state.DataTrimEndNewline,
+            var splitData = SeparatorExpression.SplitWithSeparators(
+                state.DataExtractedColorTrimEndNewline,
                 out var splitCount);
 
             if (MinFields.HasValue && MinFields.Value > splitCount
@@ -80,6 +80,7 @@ namespace Wilgysef.StdoutHook.Rules
                 return state.Data;
             }
 
+            ColorExtractor.InsertExtractedColors(splitData, state.ExtractedColors);
             state.Context.SetFieldContext(splitData);
 
             if (_replaceAll != null)

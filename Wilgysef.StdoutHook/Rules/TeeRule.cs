@@ -34,7 +34,7 @@ namespace Wilgysef.StdoutHook.Rules
             var stream = state.Profile.State.GetOrCreateFileStream(_absolutePath);
 
             var data = Encoding.UTF8.GetBytes(ExtractColors
-                ? ColorExtractor.ExtractColor(state.Data)
+                ? state.DataExtractedColorTrimEndNewline + state.Newline
                 : state.Data);
 
             try

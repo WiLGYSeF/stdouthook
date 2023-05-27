@@ -20,6 +20,8 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public ProfileState State { get; set; } = new ProfileState();
 
+        private Formatter _formatter = null!;
+
         public void Build()
         {
             var formatFunctionBuilder = FormatFunctionBuilder.Create();
@@ -32,26 +34,25 @@ namespace Wilgysef.StdoutHook.Profiles
             Build(new Formatter(formatFunctionBuilder));
         }
 
-        public bool ApplyRules(ref string line, bool stdout)
+        public string? ApplyRules(string line, bool stdout)
         {
             var dataState = new DataState(line, stdout, this);
 
             for (var i = 0; i < Rules.Count; i++)
             {
-                dataState.ResetContext();
+                dataState.Context.Reset();
 
                 var rule = Rules[i];
                 if (rule.IsActive(dataState))
                 {
                     if (rule.Filter)
                     {
-                        return false;
+                        return null;
                     }
 
                     try
                     {
-                        line = rule.Apply(dataState);
-                        dataState.Data = line;
+                        dataState.Data = rule.Apply(dataState);
 
                         if (rule.Terminal)
                         {
@@ -65,7 +66,7 @@ namespace Wilgysef.StdoutHook.Profiles
                 }
             }
 
-            return true;
+            return dataState.Data;
         }
 
         public void Dispose()
@@ -75,10 +76,17 @@ namespace Wilgysef.StdoutHook.Profiles
 
         internal void Build(Formatter formatter)
         {
+            _formatter = formatter;
+
             for (var i = 0; i < Rules.Count; i++)
             {
                 Rules[i].Build(this, formatter);
             }
+        }
+
+        internal CompiledFormat CompileFormat(string format)
+        {
+            return _formatter.CompileFormat(format, this);
         }
     }
 }

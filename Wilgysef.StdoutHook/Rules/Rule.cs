@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
@@ -132,7 +131,7 @@ namespace Wilgysef.StdoutHook.Rules
                 return false;
             }
 
-            if (data != null && EnableExpression != null && EnableExpression.MatchExtractedColor(data) == null)
+            if (data != null && EnableExpression != null && !EnableExpression.IsMatch(state.DataExtractedColorTrimEndNewline))
             {
                 return false;
             }

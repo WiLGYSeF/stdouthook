@@ -18,8 +18,7 @@ public class ProfileTest
 
         profile.Build();
 
-        string line = "";
-        profile.ApplyRules(ref line, true).ShouldBeFalse();
+        profile.ApplyRules("", true).ShouldBeNull();
     }
 
     [Fact]
@@ -39,10 +38,7 @@ public class ProfileTest
 
         profile.Build();
 
-        string line = "";
-        profile.ApplyRules(ref line, true);
-
-        line.ShouldBe("asdf");
+        profile.ApplyRules("", true).ShouldBe("asdf");
     }
 
     [Fact]
@@ -62,9 +58,6 @@ public class ProfileTest
 
         profile.Build();
 
-        string line = "";
-        profile.ApplyRules(ref line, true);
-
-        line.ShouldBe("\x1b[31m123");
+        profile.ApplyRules("", true).ShouldBe("\x1b[31m123");
     }
 }

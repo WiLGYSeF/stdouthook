@@ -9,7 +9,7 @@ public abstract class RuleTestBase
 {
     protected static void ShouldRuleBe(Rule rule, string input, string expected)
     {
-        ShouldRuleBe(rule, GetFormatter(FormatFunctionBuilder.FormatBuilders), input, expected);
+        ShouldRuleBe(rule, new Formatter(FormatFunctionBuilder.Create()), input, expected);
     }
 
     protected private static void ShouldRuleBe(Rule rule, Formatter formatter, string input, string expected)
