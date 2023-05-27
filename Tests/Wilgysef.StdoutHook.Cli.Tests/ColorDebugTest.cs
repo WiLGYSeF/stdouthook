@@ -20,8 +20,7 @@ public class ColorDebugTest
 [0m nor [0m[1m bol [0m[2m dim [0m[3m ita [0m[4m und [0m[5m bli [0m[7m inv [0m[8m hid [0m[9m str [0m[53m ove [0m[0m
 
 bold on and off
-[1m on [21m off
-[0m
+[1m on [0m[21m off [0m
 
 3-bit color palette (normal and light):
 [30m bla [31m red [32m gre [33m yel [34m blu [35m mag [36m cya [37m gra [0m

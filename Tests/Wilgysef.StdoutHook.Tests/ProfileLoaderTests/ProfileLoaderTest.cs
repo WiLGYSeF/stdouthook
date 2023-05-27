@@ -10,43 +10,55 @@ public class ProfileLoaderTest
     [Fact]
     public async Task ProfileName()
     {
-        var loader = new TestProfileLoader();
-        loader.Profile.ProfileName = "test";
+        var loader = new ProfileLoader();
+        var profileDto = new ProfileDto
+        {
+            ProfileName = "test",
+        };
 
-        using var profile = await LoadProfileAsync(loader, new MemoryStream());
-        profile.ProfileName.ShouldBe(loader.Profile.ProfileName);
+        using var profile = LoadProfile(loader, profileDto);
+        profile.ProfileName.ShouldBe(profileDto.ProfileName);
     }
 
     [Fact]
     public async Task PseudoTty()
     {
-        var loader = new TestProfileLoader();
-        loader.Profile.PseudoTty = true;
+        var loader = new ProfileLoader();
+        var profileDto = new ProfileDto
+        {
+            PseudoTty = true,
+        };
 
-        using var profile = await LoadProfileAsync(loader, new MemoryStream());
-        profile.PseudoTty.ShouldBe(loader.Profile.PseudoTty.Value);
+        using var profile = LoadProfile(loader, profileDto);
+        profile.PseudoTty.ShouldBe(profileDto.PseudoTty.Value);
     }
 
     [Fact]
     public async Task Flush()
     {
-        var loader = new TestProfileLoader();
-        loader.Profile.Flush = true;
+        var loader = new ProfileLoader();
+        var profileDto = new ProfileDto
+        {
+            Flush = true,
+        };
 
-        using var profile = await LoadProfileAsync(loader, new MemoryStream());
-        profile.Flush.ShouldBe(loader.Profile.Flush.Value);
+        using var profile = LoadProfile(loader, profileDto);
+        profile.Flush.ShouldBe(profileDto.Flush.Value);
     }
 
     [Fact]
     public async Task CustomColors()
     {
-        var loader = new TestProfileLoader();
-        loader.Profile.CustomColors = new Dictionary<string, string>
+        var loader = new ProfileLoader();
+        var profileDto = new ProfileDto
         {
-            ["a"] = "b",
+            CustomColors = new Dictionary<string, string>
+            {
+                ["a"] = "b",
+            },
         };
 
-        using var profile = await LoadProfileAsync(loader, new MemoryStream());
+        using var profile = LoadProfile(loader, profileDto);
         profile.CustomColors.Count.ShouldBe(1);
         profile.CustomColors["a"].ShouldBe("b");
     }
@@ -54,65 +66,74 @@ public class ProfileLoaderTest
     [Fact]
     public async Task ArgumentPattern()
     {
-        var loader = new TestProfileLoader();
-        loader.Profile.ArgumentPatterns = new[]
+        var loader = new ProfileLoader();
+        var profileDto = new ProfileDto
         {
-            new ArgumentPatternDto
+            ArgumentPatterns = new[]
             {
-                ArgumentExpression = new List<object?> { "a[a-z]", "c" },
+                new ArgumentPatternDto
+                {
+                    ArgumentExpression = new List<object?> { "a[a-z]", "c" },
+                },
             },
         };
 
-        using var profile = await LoadProfileAsync(loader, new MemoryStream());
+        using var profile = LoadProfile(loader, profileDto);
     }
 
     [Fact]
     public async Task SkipDisabledRules()
     {
-        var loader = new TestProfileLoader();
-        loader.Profile.Rules = new List<RuleDto>
+        var loader = new ProfileLoader();
+        var profileDto = new ProfileDto
         {
-            new RuleDto
+            Rules = new List<RuleDto>
             {
-                Enabled = false,
-                ReplaceAllFormat = "a",
-            },
-            new RuleDto
-            {
-                ReplaceAllFormat = "a",
+                new RuleDto
+                {
+                    Enabled = false,
+                    ReplaceAllFormat = "a",
+                },
+                new RuleDto
+                {
+                    ReplaceAllFormat = "a",
+                },
             },
         };
 
-        using var profile = await LoadProfileAsync(loader, new MemoryStream());
+        using var profile = LoadProfile(loader, profileDto);
         profile.Rules.Count.ShouldBe(1);
     }
 
     [Fact]
-    public async Task ActivationExpressions()
+    public void ActivationExpressions()
     {
-        var loader = new TestProfileLoader();
-        loader.Profile.Rules = new List<RuleDto>
+        var loader = new ProfileLoader();
+        var profileDto = new ProfileDto
         {
-            new RuleDto
+            Rules = new List<RuleDto>
             {
-                ReplaceAllFormat = "",
-                ActivationExpressions = new[] { new ActivationExpressionDto { Expression = "a" } },
-                ActivationExpressionsStdoutOnly = new[] { new ActivationExpressionDto { Expression = "a" } },
-                ActivationExpressionsStderrOnly = new[] { new ActivationExpressionDto { Expression = "a" } },
-                DeactivationExpressions = new[] { new ActivationExpressionDto { Expression = "a" } },
-                DeactivationExpressionsStdoutOnly = new[] { new ActivationExpressionDto { Expression = "a" } },
-                DeactivationExpressionsStderrOnly = new[] { new ActivationExpressionDto { Expression = "a" } },
+                new RuleDto
+                {
+                    ReplaceAllFormat = "",
+                    ActivationExpressions = new[] { new ActivationExpressionDto { Expression = "a" } },
+                    ActivationExpressionsStdoutOnly = new[] { new ActivationExpressionDto { Expression = "a" } },
+                    ActivationExpressionsStderrOnly = new[] { new ActivationExpressionDto { Expression = "a" } },
+                    DeactivationExpressions = new[] { new ActivationExpressionDto { Expression = "a" } },
+                    DeactivationExpressionsStdoutOnly = new[] { new ActivationExpressionDto { Expression = "a" } },
+                    DeactivationExpressionsStderrOnly = new[] { new ActivationExpressionDto { Expression = "a" } },
+                },
             },
         };
 
-        using var profile = await LoadProfileAsync(loader, new MemoryStream());
-        profile.Rules.Count.ShouldBe(1);
+        using var profile = LoadProfile(loader, profileDto);
+        profile!.Rules.Count.ShouldBe(1);
     }
 
     [Fact]
     public void InheritedProfile()
     {
-        var loader = new TestProfileLoader();
+        var loader = new ProfileLoader();
         var profileDtos = new[]
         {
             new ProfileDto
@@ -145,7 +166,7 @@ public class ProfileLoaderTest
     [Fact]
     public void InheritedProfile_CopyProperties()
     {
-        var loader = new TestProfileLoader();
+        var loader = new ProfileLoader();
         var profileDtos = new[]
         {
             new ProfileDto
@@ -222,7 +243,7 @@ public class ProfileLoaderTest
     [Fact]
     public void InheritedProfile_NotEnabled()
     {
-        var loader = new TestProfileLoader();
+        var loader = new ProfileLoader();
         var profileDtos = new[]
         {
             new ProfileDto
@@ -257,7 +278,7 @@ public class ProfileLoaderTest
     [InlineData(true)]
     public void InheritedProfile_NotFound(bool throwException)
     {
-        var loader = new TestProfileLoader();
+        var loader = new ProfileLoader();
         var profileDtos = new[]
         {
             new ProfileDto
@@ -288,7 +309,7 @@ public class ProfileLoaderTest
     [Fact]
     public void InheritedProfile_Duplicate()
     {
-        var loader = new TestProfileLoader();
+        var loader = new ProfileLoader();
         var profileDtos = new[]
         {
             new ProfileDto
@@ -331,7 +352,7 @@ public class ProfileLoaderTest
     [Fact]
     public void InheritedProfile_Cyclical()
     {
-        var loader = new TestProfileLoader();
+        var loader = new ProfileLoader();
         var profileDtos = new[]
         {
             new ProfileDto
@@ -360,7 +381,7 @@ public class ProfileLoaderTest
     [Fact]
     public void InheritedProfile_MultipleRules()
     {
-        var loader = new TestProfileLoader();
+        var loader = new ProfileLoader();
         var profileDtos = new[]
         {
             new ProfileDto
@@ -414,7 +435,7 @@ public class ProfileLoaderTest
     [Fact]
     public void InheritedProfile_SelectedProfileMiddle()
     {
-        var loader = new TestProfileLoader();
+        var loader = new ProfileLoader();
         var profileDtos = new[]
         {
             new ProfileDto
@@ -447,7 +468,7 @@ public class ProfileLoaderTest
     [Fact]
     public void NoProfilePicked()
     {
-        var loader = new TestProfileLoader();
+        var loader = new ProfileLoader();
         var profileDtos = new[]
         {
             new ProfileDto
@@ -461,154 +482,8 @@ public class ProfileLoaderTest
         profile.ShouldBeNull();
     }
 
-    [Fact]
-    public async Task InvalidType_CommandExpression()
+    private static Profile LoadProfile(ProfileLoader loader, ProfileDto profileDto)
     {
-        var loader = new TestProfileLoader();
-
-        loader.Profile.CommandExpression = false;
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-
-        loader.Profile.CommandExpression = new List<object?> { "a", 1 };
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-    }
-
-    [Fact]
-    public async Task InvalidType_FullCommandPathExpression()
-    {
-        var loader = new TestProfileLoader();
-
-        loader.Profile.FullCommandPathExpression = false;
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-
-        loader.Profile.FullCommandPathExpression = new List<object?> { "a", 1 };
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-    }
-
-    [Fact]
-    public async Task InvalidType_Subcommand()
-    {
-        var loader = new TestProfileLoader();
-        loader.Profile.Subcommand = false;
-
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-    }
-
-    [Fact]
-    public async Task InvalidType_SubcommandExpression()
-    {
-        var loader = new TestProfileLoader();
-
-        loader.Profile.SubcommandExpression = false;
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-
-        loader.Profile.SubcommandExpression = new List<object?> { "a", 1 };
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-    }
-
-    [Fact]
-    public async Task InvalidType_ArgumentPatterns()
-    {
-        var loader = new TestProfileLoader();
-
-        loader.Profile.ArgumentPatterns = new[]
-        {
-            new ArgumentPatternDto
-            {
-                ArgumentExpression = false,
-            },
-        };
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-
-        loader.Profile.ArgumentPatterns = new[]
-        {
-            new ArgumentPatternDto
-            {
-                ArgumentExpression = new List<object?> { "a", 1 },
-            },
-        };
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-    }
-
-    [Fact]
-    public async Task InvalidType_EnableExpression()
-    {
-        var loader = new TestProfileLoader();
-        loader.Profile.Rules = new List<RuleDto>
-        {
-            new RuleDto
-            {
-                EnableExpression = false,
-            },
-        };
-
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-    }
-
-    [Fact]
-    public async Task InvalidType_ActivationExpression()
-    {
-        var loader = new TestProfileLoader();
-        loader.Profile.Rules = new List<RuleDto>
-        {
-            new RuleDto
-            {
-                ActivationExpressions = new[]
-                {
-                    new ActivationExpressionDto
-                    {
-                        Expression = false,
-                    },
-                }
-            },
-        };
-
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-    }
-
-    [Fact]
-    public async Task InvalidType_ReplaceFields()
-    {
-        var loader = new TestProfileLoader();
-        loader.Profile.Rules = new List<RuleDto>
-        {
-            new RuleDto
-            {
-                ReplaceFields = false,
-            },
-        };
-
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-    }
-
-    [Fact]
-    public async Task InvalidType_ReplaceGroups()
-    {
-        var loader = new TestProfileLoader();
-        loader.Profile.Rules = new List<RuleDto>
-        {
-            new RuleDto
-            {
-                ReplaceGroups = false,
-            },
-        };
-
-        await Should.ThrowAsync<InvalidPropertyTypeException>(() => loader.LoadProfileDtosAsync(null!));
-    }
-
-    private async Task<Profile> LoadProfileAsync(ProfileLoader loader, Stream stream)
-    {
-        var profiles = await loader.LoadProfileDtosAsync(stream);
-        return loader.LoadProfile(profiles, profileDtos => profileDtos[0])!;
-    }
-
-    private class TestProfileLoader : ProfileLoader
-    {
-        public ProfileDto Profile { get; set; } = new ProfileDto();
-
-        protected override Task<List<ProfileDto>> LoadProfileDtosInternalAsync(Stream stream, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(new List<ProfileDto> { Profile });
-        }
+        return loader.LoadProfile(new[] { profileDto }, profiles => profiles[0])!;
     }
 }

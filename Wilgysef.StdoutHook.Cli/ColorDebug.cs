@@ -25,8 +25,7 @@ public static class ColorDebug
 
         writer.WriteLine();
         writer.WriteLine("bold on and off");
-        writer.WriteLine(formatter.Format("%C(bol) on %C(^bol) off"));
-        writer.WriteLine(reset);
+        writer.WriteLine(formatter.Format("%C(bol) on %Cz%C(^bol) off %Cz"));
 
         writer.WriteLine();
         writer.WriteLine("3-bit color palette (normal and light):");

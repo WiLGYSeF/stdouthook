@@ -1,159 +1,222 @@
 ﻿// TODO: use https://github.com/microsoft/vs-pty.net
 
+using CommandLine;
 using System.Diagnostics;
 using Wilgysef.StdoutHook.Cli;
-using Wilgysef.StdoutHook.CommandLocator;
 using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Profiles.Dtos;
-using Wilgysef.StdoutHook.Profiles.Loaders;
 
-//ColorDebug.GetColorDebug(Console.Out);
-//return;
+const string LogName = ".stdouthook.log";
+const int ProcessRefreshInterval = 1000;
 
-using var logStream = new StreamWriter(GetLogStream("log.txt"));
-GlobalLogger.Logger = new Logger(logStream);
-
-var profileName = "test";
-var command = "python";
-var commandPaths = new CommandLocator().LocateCommand(command);
-var fullCommandPath = commandPaths.FirstOrDefault();
-var arguments = new[]
-{
-    "D:\\projects\\stdouthook\\Wilgysef.StdoutHook\\testproc.py",
-};
-
-var loader = new JsonProfileLoader();
-var extensions = new HashSet<string> { "", ".json", ".txt", ".yaml", ".yml" };
-var profileDtos = await LoadProfilesFromDirectoryAsync(loader, ".", extensions);
-
-var picker = new ProfileDtoPicker();
-using var profile = loader.LoadProfile(
-    profileDtos,
-    profiles => picker.PickProfileDto(
-        profiles,
-        profileName: profileName,
-        command: command,
-        fullCommandPath: fullCommandPath,
-        arguments: arguments),
-    throwIfInheritedProfileNotFound: false);
-var profileLoaded = profile != null;
+TextWriter? outputStreamWriter = null;
+TextWriter? errorStreamWriter = null;
 
 try
 {
-    profile?.Build();
-}
-catch (Exception ex)
-{
-    GlobalLogger.Error(ex, "failed to build profile");
-    profileLoaded = false;
-}
-
-Process? process;
-
-try
-{
-    process = Process.Start(CreateProcessStartInfo(profile, command, arguments));
-    if (process == null)
+    var argParseResult = new Parser(parser =>
     {
-        Console.Error.WriteLine($"process could not be started: {command}");
-        GlobalLogger.Error($"process could not be started: {command}");
+        parser.EnableDashDash = true;
+        parser.HelpWriter = Console.Error;
+    })
+    // TODO: replace test code
+        .ParseArguments<Options>(new[] { "-v", "--profile", "test", "python", "D:\\projects\\stdouthook\\Wilgysef.StdoutHook\\testproc.py" });
+
+    if (argParseResult.Tag == ParserResultType.NotParsed)
+    {
+        throw new ProgramSetupException();
+    }
+
+    Shared.Options = argParseResult.Value;
+    ValidateArgs();
+
+    var configDir = GetConfigurationDirectory(Shared.Options.ConfigDir);
+
+    if (Shared.Options.ColorDebug)
+    {
+        ColorDebug.WriteColorDebug(Console.Out);
+        return 0;
+    }
+
+    if (Shared.Options.Arguments.Count == 0)
+    {
+        Console.Error.WriteLine("ERROR: command is required");
         return 1;
     }
-}
-catch (Exception ex)
-{
-    Console.Error.WriteLine($"process could not be started: {ex.Message}: {command}");
-    GlobalLogger.Error(ex, $"process could not be started: {command}");
-    return 1;
-}
 
-using var __process = process;
-Task? readStreamTask = null;
-var cancellationTokenSource = new CancellationTokenSource();
+    using var logStream = new StreamWriter(GetLogStream(
+        configDir != null
+            ? Path.Combine(configDir, LogName)
+            : null));
+    GlobalLogger.Logger = new Logger(logStream);
 
-if (profileLoaded)
-{
-    profile!.State.SetProcess(process);
+    var command = Shared.Options.Arguments[0];
+    var commandArguments = Shared.Options.Arguments.Skip(1).ToArray();
 
-    var bufferSize = profile.Flush ? 1 : 16384;
-    var outputStreamWriter = new CustomStreamWriter(Console.OpenStandardOutput(), Console.OutputEncoding, bufferSize);
-    var errorStreamWriter = new CustomStreamWriter(Console.OpenStandardError(), Console.OutputEncoding, bufferSize);
+    var cliProfileDtoLoader = new CliProfileDtoLoader();
+    var profileDtos = configDir != null
+        ? await cliProfileDtoLoader.LoadProfileDtosAsync(configDir)
+        : new List<ProfileDto>();
 
-    var streamOutputHandler = new StreamOutputHandler(
-        profile,
-        process.StandardOutput,
-        process.StandardError,
-        outputStreamWriter,
-        errorStreamWriter);
+    var cliProfileLoader = new CliProfileLoader();
+    using var profile = cliProfileLoader.LoadProfile(
+        profileDtos,
+        Shared.Options.ProfileName,
+        command,
+        commandArguments);
+    var profileLoaded = profile != null;
 
-    readStreamTask = streamOutputHandler.ReadLinesAsync(cancellationToken: cancellationTokenSource.Token);
+    Shared.VerbosePrint(profileLoaded
+        ? $"using profile: {profile!.ProfileName ?? "<unnamed>"}"
+        : "no profile selected");
 
-    if (!profile.Flush)
+    try
     {
+        profile?.Build();
+    }
+    catch (Exception ex)
+    {
+        Shared.VerbosePrintError($"failed to build profile: {ex.Message}");
+        GlobalLogger.Error(ex, "failed to build profile");
+        profileLoaded = false;
+    }
+
+    if (Shared.Options.Stdout != null)
+    {
+        outputStreamWriter = CreateRedirectedStream(Shared.Options.Stdout, Shared.Options.StdoutAppend);
+    }
+
+    if (Shared.Options.Stderr != null)
+    {
+        errorStreamWriter = CreateRedirectedStream(Shared.Options.Stderr, Shared.Options.StderrAppend);
+    }
+
+    using var process = StartProcess(profile, command, commandArguments);
+
+    Task? readStreamTask = null;
+    using var cancellationTokenSource = new CancellationTokenSource();
+
+    if (profileLoaded)
+    {
+        profile!.State.SetProcess(process);
+
+        var flush = profile.Flush || Shared.Options.Flush;
+        var bufferSize = flush ? 1 : Shared.Options.BufferSize;
+        outputStreamWriter ??= new CustomStreamWriter(Console.OpenStandardOutput(), Console.OutputEncoding, bufferSize);
+        errorStreamWriter ??= new CustomStreamWriter(Console.OpenStandardError(), Console.OutputEncoding, bufferSize);
+
+        var streamOutputHandler = new StreamOutputHandler(
+            profile,
+            process.StandardOutput,
+            process.StandardError,
+            outputStreamWriter,
+            errorStreamWriter);
+
+        readStreamTask = streamOutputHandler.ReadLinesAsync(cancellationToken: cancellationTokenSource.Token);
+
+        if (!flush)
+        {
+            _ = Task.Run(async () =>
+            {
+                //periodically flush the output
+
+                var cancellationToken = cancellationTokenSource.Token;
+                while (true)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await Task.Delay(Shared.Options.OutputFlushInterval, cancellationToken);
+
+                    outputStreamWriter.Flush();
+                    errorStreamWriter.Flush();
+                }
+            });
+        }
+
         _ = Task.Run(async () =>
         {
-            //periodically flush the output
-
             var cancellationToken = cancellationTokenSource.Token;
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await Task.Delay(250, cancellationToken);
+                await Task.Delay(ProcessRefreshInterval, cancellationToken);
 
-                outputStreamWriter.Flush();
-                errorStreamWriter.Flush();
+                process.Refresh();
             }
         });
     }
+
+    // TODO: remove test code
+    Console.ReadLine();
+    process.Kill();
+
+    process.WaitForExit();
+    cancellationTokenSource.Cancel();
+
+    if (readStreamTask != null)
+    {
+        // log any exception that may have occurred
+
+        try
+        {
+            await readStreamTask;
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            GlobalLogger.Error(ex, "exception occurred");
+        }
+    }
+
+    return process.HasExited
+        ? process.ExitCode
+        : 0;
+}
+catch (ProgramSetupException setupException)
+{
+    Shared.ErrorEx(setupException.InnerException, setupException.Message);
+    return setupException.ExitCode;
+}
+catch (Exception ex)
+{
+    Shared.VerbosePrintError("uncaught exception");
+    Shared.VerbosePrintError(ex.ToString());
+    return 1;
+}
+finally
+{
+    outputStreamWriter?.Dispose();
+    errorStreamWriter?.Dispose();
 }
 
-_ = Task.Run(async () =>
-{
-    var cancellationToken = cancellationTokenSource.Token;
-    while (true)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        await Task.Delay(1000, cancellationToken);
-
-        process.Refresh();
-    }
-});
-
-// TODO: remove test code
-Console.ReadLine();
-process.Kill();
-
-process.WaitForExit();
-cancellationTokenSource.Cancel();
-
-if (readStreamTask != null)
+Process StartProcess(Profile? profile, string command, IReadOnlyList<string> arguments)
 {
     try
     {
-        await readStreamTask;
+        var process = Process.Start(CreateProcessStartInfo(profile, command, arguments));
+        if (process == null)
+        {
+            throw new ProgramSetupException($"process could not be started: {command}");
+        }
+
+        return process;
     }
     catch (Exception ex)
     {
-        GlobalLogger.Error(ex, "exception occurred");
+        throw new ProgramSetupException($"process could not be started: {ex.Message}: {command}", ex);
     }
 }
 
-return process.HasExited
-    ? process.ExitCode
-    : 0;
-
-ProcessStartInfo CreateProcessStartInfo(Profile? profile, string command, string[] arguments)
+ProcessStartInfo CreateProcessStartInfo(Profile? profile, string command, IReadOnlyList<string> arguments)
 {
     var redirect = profile != null;
-
     var processInfo = new ProcessStartInfo(command)
     {
         RedirectStandardError = redirect,
         RedirectStandardOutput = redirect,
     };
 
-    for (var i = 0; i < arguments.Length; i++)
+    for (var i = 0; i < arguments.Count; i++)
     {
         processInfo.ArgumentList.Add(arguments[i]);
     }
@@ -161,44 +224,81 @@ ProcessStartInfo CreateProcessStartInfo(Profile? profile, string command, string
     return processInfo;
 }
 
-async Task<List<ProfileDto>> LoadProfilesFromDirectoryAsync(ProfileLoader loader, string path, IReadOnlyCollection<string> extensions)
+TextWriter CreateRedirectedStream(string filename, bool append)
 {
-    var profiles = new List<ProfileDto>();
-    var files = Directory.GetFiles(path);
-
-    for (var i = 0; i < files.Length; i++)
+    try
     {
-        var file = files[i];
-        var extension = Path.GetExtension(file);
-
-        if (!extensions.Contains(extension))
+        var dirname = Path.GetDirectoryName(filename);
+        if (dirname != null)
         {
-            continue;
+            Directory.CreateDirectory(dirname);
         }
 
-        try
-        {
-            using var stream = File.Open(file, FileMode.Open, FileAccess.Read);
-            profiles.AddRange(await loader.LoadProfileDtosAsync(stream));
-        }
-        catch (Exception ex)
-        {
-            GlobalLogger.Error($"failed to load profiles from '{file}': {ex.Message}");
-        }
+        return new StreamWriter(new FileStream(
+            filename,
+            append ? FileMode.Append : FileMode.Open,
+            FileAccess.Write));
     }
-
-    return profiles;
+    catch (Exception ex)
+    {
+        throw new ProgramSetupException($"could not open file: {ex.Message}: {filename}");
+    }
 }
 
-Stream GetLogStream(string filename)
+Stream GetLogStream(string? filename)
 {
+    if (filename == null)
+    {
+        Shared.VerbosePrintError("ERROR: failed to open log file");
+        return new MemoryStream();
+    }
+
     try
     {
         return new FileStream(filename, FileMode.Append, FileAccess.Write, FileShare.Read);
     }
-    catch
+    catch (Exception ex)
     {
-        Debug.WriteLine("ERROR: failed to open log file");
+        Shared.VerbosePrintError($"ERROR: failed to open log file: {ex.Message}");
         return new MemoryStream();
+    }
+}
+
+string? GetConfigurationDirectory(string? configDir)
+{
+    if (configDir == null)
+    {
+        var home = Environment.GetEnvironmentVariable("HOME");
+        configDir = home != null
+            ? Path.Combine(home, ".stdouthook")
+            : null;
+    }
+
+    if (configDir != null)
+    {
+        try
+        {
+            Directory.CreateDirectory(configDir);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"ERROR: could not create config directory: {configDir}: {ex.Message}");
+            return null;
+        }
+    }
+
+    return configDir;
+}
+
+void ValidateArgs()
+{
+    if (Shared.Options.BufferSize < 1)
+    {
+        Shared.Options.BufferSize = 16384;
+    }
+
+    if (Shared.Options.OutputFlushInterval < 0)
+    {
+        Shared.Options.OutputFlushInterval = 250;
     }
 }

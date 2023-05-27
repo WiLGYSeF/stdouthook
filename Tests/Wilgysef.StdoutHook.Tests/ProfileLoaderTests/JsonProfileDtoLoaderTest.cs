@@ -5,12 +5,12 @@ using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Tests.ProfileLoaderTests;
 
-public class JsonProfileLoaderTest
+public class JsonProfileDtoLoaderTest
 {
     [Fact]
     public async Task ConvertReplaceFieldsObjectToList()
     {
-        var loader = new JsonProfileLoader();
+        var loader = new JsonProfileDtoLoader();
         var profile = await LoadProfileAsync(loader, GetStream(@"{
     ""Rules"": [
         {
@@ -31,7 +31,7 @@ public class JsonProfileLoaderTest
     [Fact]
     public async Task ConvertReplaceFieldsObjectToDictionary()
     {
-        var loader = new JsonProfileLoader();
+        var loader = new JsonProfileDtoLoader();
         var profile = await LoadProfileAsync(loader, GetStream(@"{
     ""Rules"": [
         {
@@ -56,14 +56,14 @@ public class JsonProfileLoaderTest
     [Fact]
     public async Task Invalid()
     {
-        var loader = new JsonProfileLoader();
+        var loader = new JsonProfileDtoLoader();
         await Should.ThrowAsync<Exception>(() => LoadProfileAsync(loader, GetStream("test")));
     }
 
-    private async Task<Profile> LoadProfileAsync(ProfileLoader loader, Stream stream)
+    private async Task<Profile> LoadProfileAsync(ProfileDtoLoader loader, Stream stream)
     {
         var profiles = await loader.LoadProfileDtosAsync(stream);
-        return loader.LoadProfile(profiles, profileDtos => profileDtos[0])!;
+        return new ProfileLoader().LoadProfile(profiles, profileDtos => profileDtos[0])!;
     }
 
     private static Stream GetStream(string data)
