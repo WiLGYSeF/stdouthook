@@ -23,34 +23,12 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
             if (contents.Equals("c", StringComparison.OrdinalIgnoreCase))
             {
-                return dataState =>
-                {
-                    var context = dataState.Context.FieldContext;
-                    if (context == null)
-                    {
-                        return "";
-                    }
-
-                    var fieldNumber = context.GetCurrentFieldNumber();
-
-                    return fieldNumber <= context.Fields.Count
-                        ? context.Fields[fieldNumber - 1]
-                        : "";
-                };
+                return GetCurrentField;
             }
 
             if (contents == "#")
             {
-                return dataState =>
-                {
-                    var context = dataState.Context.FieldContext;
-                    if (context == null)
-                    {
-                        return "";
-                    }
-
-                    return context.Fields.Count.ToString();
-                };
+                return GetFieldCount;
             }
 
             var separator = false;
@@ -73,6 +51,8 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
             if (fieldRange.SingleValue.HasValue)
             {
+                var singleValue = fieldRange.SingleValue.Value;
+
                 if (separator)
                 {
                     return dataState =>
@@ -83,10 +63,8 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                             return "";
                         }
 
-                        var singleVal = fieldRange.SingleValue.Value;
-
-                        return singleVal <= context.FieldSeparators.Count
-                            ? context.FieldSeparators[singleVal - 1]
+                        return singleValue <= context.FieldSeparators.Count
+                            ? context.FieldSeparators[singleValue - 1]
                             : "";
                     };
                 }
@@ -100,10 +78,8 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                             return "";
                         }
 
-                        var singleVal = fieldRange.SingleValue.Value;
-
-                        return singleVal <= context.Fields.Count
-                            ? context.Fields[singleVal - 1]
+                        return singleValue <= context.Fields.Count
+                            ? context.Fields[singleValue - 1]
                             : "";
                     };
                 }
@@ -130,6 +106,27 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
                 return builder.ToString();
             };
+
+            static string GetCurrentField(DataState dataState)
+            {
+                var context = dataState.Context.FieldContext;
+                if (context == null)
+                {
+                    return "";
+                }
+
+                var fieldNumber = context.GetCurrentFieldNumber();
+
+                return fieldNumber <= context.Fields.Count
+                    ? context.Fields[fieldNumber - 1]
+                    : "";
+            }
+
+            static string GetFieldCount(DataState dataState)
+            {
+                var context = dataState.Context.FieldContext;
+                return context?.Fields.Count.ToString() ?? "";
+            }
         }
     }
 }

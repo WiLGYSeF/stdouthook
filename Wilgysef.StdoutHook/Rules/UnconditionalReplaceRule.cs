@@ -26,13 +26,9 @@ namespace Wilgysef.StdoutHook.Rules
         {
             var result = _compiledFormat.Compute(state);
 
-            if (TrimNewline)
-            {
-                return result;
-            }
-
-            state.Data!.TrimEndNewline(out var newline);
-            return result + newline;
+            return TrimNewline
+                ? result
+                : result + state.Newline;
         }
     }
 }

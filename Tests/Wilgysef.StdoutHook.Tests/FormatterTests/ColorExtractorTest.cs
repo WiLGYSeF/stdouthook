@@ -17,4 +17,11 @@ public class ColorExtractorTest
         colors[1].Key.ShouldBe(4);
         colors[1].Value.ShouldBe("\x1b[1;46m");
     }
+
+    [Fact]
+    public void Extract_NoColorResults()
+    {
+        ColorExtractor.ExtractColor("\x1b[31mtest\x1b[1;46mabc").ShouldBe("testabc");
+        ColorExtractor.ExtractColor("\x1b[zabc").ShouldBe("\x1b[zabc");
+    }
 }

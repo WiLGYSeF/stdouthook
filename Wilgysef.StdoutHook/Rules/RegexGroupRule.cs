@@ -96,11 +96,11 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal override string Apply(DataState state)
         {
-            var data = state.Data!.TrimEndNewline(out var newline);
+            var data = state.DataTrimEndNewline;
             var groups = Regex.MatchExtractedColor(data);
             if (groups == null)
             {
-                return state.Data!;
+                return state.Data;
             }
 
             var groupValues = new Dictionary<string, string>(groups.Length);
@@ -151,7 +151,7 @@ namespace Wilgysef.StdoutHook.Rules
 
             if (!TrimNewline)
             {
-                builder.Append(newline);
+                builder.Append(state.Newline);
             }
 
             return builder.ToString();
