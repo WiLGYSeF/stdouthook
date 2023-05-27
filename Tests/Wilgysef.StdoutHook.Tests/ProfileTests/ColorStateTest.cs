@@ -19,6 +19,19 @@ public class ColorStateTest
     }
 
     [Fact]
+    public void Unknown()
+    {
+        var state = new ColorState();
+        var colors = new ColorList();
+        AddColor(colors, 0, "\x1b[255m");
+
+        state.UpdateState(colors, 1000);
+        state.ForegroundColor.ShouldBe("39");
+        state.BackgroundColor.ShouldBe("49");
+        state.Styles.Count.ShouldBe(0);
+    }
+
+    [Fact]
     public void String()
     {
         var state = new ColorState();
@@ -296,7 +309,7 @@ public class ColorStateTest
         AddColor(colors, 0, "\x1b[38;2m");
 
         state.UpdateState(colors, 1000);
-        state.ForegroundColor.ShouldBe("38;2;;;");
+        state.ForegroundColor.ShouldBe("38;2");
         state.BackgroundColor.ShouldBe("49");
         state.Styles.Count.ShouldBe(0);
     }
@@ -309,7 +322,7 @@ public class ColorStateTest
         AddColor(colors, 0, "\x1b[38;2;1m");
 
         state.UpdateState(colors, 1000);
-        state.ForegroundColor.ShouldBe("38;2;1;;");
+        state.ForegroundColor.ShouldBe("38;2;1");
         state.BackgroundColor.ShouldBe("49");
         state.Styles.Count.ShouldBe(0);
     }
@@ -322,7 +335,7 @@ public class ColorStateTest
         AddColor(colors, 0, "\x1b[38;2;1;2m");
 
         state.UpdateState(colors, 1000);
-        state.ForegroundColor.ShouldBe("38;2;1;2;");
+        state.ForegroundColor.ShouldBe("38;2;1;2");
         state.BackgroundColor.ShouldBe("49");
         state.Styles.Count.ShouldBe(0);
     }
@@ -341,16 +354,17 @@ public class ColorStateTest
     }
 
     [Fact]
-    public void Unknown()
+    public void Copy()
     {
         var state = new ColorState();
         var colors = new ColorList();
-        AddColor(colors, 0, "\x1b[255m");
+        AddColor(colors, 0, "\x1b[31;42;1;5m");
 
         state.UpdateState(colors, 1000);
-        state.ForegroundColor.ShouldBe("39");
-        state.BackgroundColor.ShouldBe("49");
-        state.Styles.Count.ShouldBe(0);
+        var copy = state.Copy();
+        copy.ForegroundColor.ShouldBe(state.ForegroundColor);
+        copy.BackgroundColor.ShouldBe(state.BackgroundColor);
+        copy.Styles.SequenceEqual(state.Styles).ShouldBeTrue();
     }
 
     private static void AddColor(ColorList colors, int position, string color)

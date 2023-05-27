@@ -9,9 +9,9 @@ namespace Wilgysef.StdoutHook.Profiles
         private const string ForegroundColorDefault = "39";
         private const string BackgroundColorDefault = "49";
 
-        internal string ForegroundColor { get; set; } = ForegroundColorDefault;
+        internal string ForegroundColor { get; private set; } = ForegroundColorDefault;
 
-        internal string BackgroundColor { get; set; } = BackgroundColorDefault;
+        internal string BackgroundColor { get; private set; } = BackgroundColorDefault;
 
         internal HashSet<int> Styles { get; } = new();
 
@@ -174,17 +174,14 @@ namespace Wilgysef.StdoutHook.Profiles
 
                 if (nextNum == 2)
                 {
-                    var red = GetNextEntry(span, next, end, out next);
-                    var green = GetNextEntry(span, next, end, out next);
-                    var blue = GetNextEntry(span, next, end, out next);
-                    return $"2;{red};{green};{blue}";
+                    GetNextEntryIndex(span, next, end, out next);
+                    GetNextEntryIndex(span, next, end, out next);
+                    var endBlue = GetNextEntryIndex(span, next, end, out next);
+                    return span[start..endBlue].ToString();
                 }
                 else if (nextNum == 5)
                 {
-                    var entry = GetNextEntry(span, next, end, out next);
-                    return entry.Length == 0
-                        ? "5"
-                        : $"5;{entry}";
+                    return span[start..GetNextEntryIndex(span, next, end, out next)].ToString();
                 }
 
                 return null;
@@ -204,6 +201,11 @@ namespace Wilgysef.StdoutHook.Profiles
 
             static ReadOnlySpan<char> GetNextEntry(ReadOnlySpan<char> span, int start, int end, out int next)
             {
+                return span[start..GetNextEntryIndex(span, start, end, out next)];
+            }
+
+            static int GetNextEntryIndex(ReadOnlySpan<char> span, int start, int end, out int next)
+            {
                 int index;
                 var curEnd = end;
 
@@ -218,8 +220,24 @@ namespace Wilgysef.StdoutHook.Profiles
                 }
 
                 next = index;
-                return span[start..curEnd];
+                return curEnd;
             }
+        }
+
+        public ColorState Copy()
+        {
+            var copy = new ColorState
+            {
+                ForegroundColor = ForegroundColor,
+                BackgroundColor = BackgroundColor,
+            };
+
+            foreach (var style in Styles)
+            {
+                copy.Styles.Add(style);
+            }
+
+            return copy;
         }
 
         public override string ToString()

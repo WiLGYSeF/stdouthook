@@ -6,6 +6,12 @@ using System.Threading;
 
 namespace Wilgysef.StdoutHook.Profiles
 {
+    /// <summary>
+    /// Profile state.
+    /// </summary>
+    /// <remarks>
+    /// Not thread safe, shared by the stdout and stderr stream reader handlers.
+    /// </remarks>
     public class ProfileState : IDisposable
     {
         public Process Process { get; private set; } = null!;
@@ -19,7 +25,7 @@ namespace Wilgysef.StdoutHook.Profiles
         internal Func<string, Stream> StreamFactory { get; set; } =
             absolutePath => new FileStream(absolutePath, FileMode.Append, FileAccess.Write, FileShare.Read);
 
-        private readonly ConcurrentDictionary<string, ConcurrentStream> _fileStreams = new ConcurrentDictionary<string, ConcurrentStream>();
+        private readonly ConcurrentDictionary<string, ConcurrentStream> _fileStreams = new();
 
         public void SetProcess(Process process)
         {
@@ -28,6 +34,8 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
+
             Process?.Dispose();
 
             foreach (var lockedStream in _fileStreams.Values)

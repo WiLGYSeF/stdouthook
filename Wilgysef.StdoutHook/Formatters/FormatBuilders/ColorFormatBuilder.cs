@@ -11,7 +11,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         public static char Toggle = '^';
 
-        private static readonly Dictionary<string, Color> Colors = new Dictionary<string, Color>();
+        private static readonly Dictionary<string, Color> Colors = new();
 
         static ColorFormatBuilder()
         {
