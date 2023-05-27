@@ -125,7 +125,7 @@ try
             errorStreamWriter);
 
         readStreamTask = streamOutputHandler.ReadLinesAsync(
-            forceProcessTimeout: (Shared.Options.Interactive ?? profile.Interactive)
+            forceProcessTimeout: (Shared.Options.Interactive || profile.Interactive)
                 ? TimeSpan.FromMilliseconds(Shared.Options.InteractiveFlushInterval
                     ?? profile.InteractiveFlushInterval
                     ?? InteractiveFlushIntervalDefault)

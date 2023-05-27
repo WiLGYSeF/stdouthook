@@ -33,10 +33,10 @@ internal class Options
     #endregion
 
     [Option('t', "pseudotty", HelpText = "Use a pseudo TTY")]
-    public bool? PseudoTty { get; set; }
+    public bool PseudoTty { get; set; }
 
     [Option('i', "interactive", HelpText = "Use for interactive programs, do not wait for newlines")]
-    public bool? Interactive { get; set; }
+    public bool Interactive { get; set; }
 
     [Option("interactive-flush-interval", MetaValue = "MS", HelpText = "Flush interval for interactive programs (default 200 ms)")]
     public int? InteractiveFlushInterval { get; set; }
