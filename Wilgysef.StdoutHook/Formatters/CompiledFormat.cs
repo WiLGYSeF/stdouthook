@@ -10,16 +10,21 @@ namespace Wilgysef.StdoutHook.Formatters
 
         internal string[] Parts { get; }
 
-        internal Func<DataState, string>[] Funcs { get; }
+        internal Func<FormatComputeState, string>[] Funcs { get; }
 
-        public CompiledFormat(string[] parts, Func<DataState, string>[] funcs)
+        public CompiledFormat(string[] parts, Func<FormatComputeState, string>[] funcs)
         {
             Parts = parts;
             Funcs = funcs;
             IsConstant = Parts.Length == 1;
         }
 
-        public string Compute(DataState state)
+        public string Compute(DataState dataState)
+        {
+            return Compute(dataState, 0);
+        }
+
+        public string Compute(DataState dataState, int startPosition)
         {
             if (IsConstant)
             {
@@ -27,16 +32,14 @@ namespace Wilgysef.StdoutHook.Formatters
             }
 
             var builder = new StringBuilder();
+            var computeState = new FormatComputeState(dataState, startPosition);
 
             for (var i = 0; i < Funcs.Length; i++)
             {
-                var part = Parts[i];
-                if (part.Length > 0)
-                {
-                    builder.Append(part);
-                }
+                builder.Append(Parts[i]);
 
-                builder.Append(Funcs[i](state));
+                computeState.SetPosition(builder.Length + startPosition);
+                builder.Append(Funcs[i](computeState));
             }
 
             return builder.Append(Parts[^1])

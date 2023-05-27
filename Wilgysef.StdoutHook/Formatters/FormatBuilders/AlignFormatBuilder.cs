@@ -1,6 +1,5 @@
 ﻿using System;
 using Wilgysef.StdoutHook.Extensions;
-using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
@@ -8,14 +7,14 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
     {
         protected abstract string Align(string str, char c, int length);
 
-        public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
+        public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
         {
             var format = state.Profile.CompileFormat(GetAlign(state.Contents, out var alignChar, out var alignLength));
 
             isConstant = format.IsConstant;
-            return dataState =>
+            return computeState =>
             {
-                var result = format.Compute(dataState);
+                var result = format.Compute(computeState.DataState, computeState.Position);
                 return result.Length < alignLength
                     ? Align(result, alignChar, alignLength - result.Length)
                     : result;

@@ -1,5 +1,4 @@
 ﻿using System;
-using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
@@ -13,21 +12,21 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         public override char? KeyShort => null;
 
-        public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
+        public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
         {
             isConstant = false;
 
             if (state.Contents.Equals(NoTrim, StringComparison.OrdinalIgnoreCase))
             {
-                return dataState => dataState.Data;
+                return computeState => computeState.DataState.Data;
             }
             else if (state.Contents.Equals(Newline, StringComparison.OrdinalIgnoreCase))
             {
-                return dataState => dataState.Newline;
+                return computeState => computeState.DataState.Newline;
             }
             else
             {
-                return dataState => dataState.DataTrimEndNewline;
+                return computeState => computeState.DataState.DataTrimEndNewline;
             }
         }
     }

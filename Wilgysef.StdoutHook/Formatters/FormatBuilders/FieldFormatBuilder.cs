@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
@@ -11,7 +10,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         public override char? KeyShort => 'F';
 
-        public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
+        public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
         {
             if (state.Contents.Length == 0)
             {
@@ -55,9 +54,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
                 if (separator)
                 {
-                    return dataState =>
+                    return computeState =>
                     {
-                        var context = dataState.Context.FieldContext;
+                        var context = computeState.DataState.Context.FieldContext;
                         if (context == null)
                         {
                             return "";
@@ -70,9 +69,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 }
                 else
                 {
-                    return dataState =>
+                    return computeState =>
                     {
-                        var context = dataState.Context.FieldContext;
+                        var context = computeState.DataState.Context.FieldContext;
                         if (context == null)
                         {
                             return "";
@@ -85,9 +84,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 }
             }
 
-            return dataState =>
+            return computeState =>
             {
-                var context = dataState.Context.FieldContext;
+                var context = computeState.DataState.Context.FieldContext;
                 if (context == null)
                 {
                     return "";
@@ -107,9 +106,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 return builder.ToString();
             };
 
-            static string GetCurrentField(DataState dataState)
+            static string GetCurrentField(FormatComputeState computeState)
             {
-                var context = dataState.Context.FieldContext;
+                var context = computeState.DataState.Context.FieldContext;
                 if (context == null)
                 {
                     return "";
@@ -122,9 +121,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                     : "";
             }
 
-            static string GetFieldCount(DataState dataState)
+            static string GetFieldCount(FormatComputeState computeState)
             {
-                var context = dataState.Context.FieldContext;
+                var context = computeState.DataState.Context.FieldContext;
                 return context?.Fields.Count.ToString() ?? "";
             }
         }

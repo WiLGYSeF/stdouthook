@@ -101,7 +101,7 @@ namespace Wilgysef.StdoutHook.Rules
                 if (replace != null)
                 {
                     state.Context.FieldContext.CurrentFieldNumber = i + 1;
-                    builder.Append(replace.Compute(state));
+                    builder.Append(replace.Compute(state, builder.Length));
                     index++;
                 }
                 else
@@ -130,7 +130,7 @@ namespace Wilgysef.StdoutHook.Rules
                 if (foundReplace != null)
                 {
                     state.Context.FieldContext.CurrentFieldNumber = i + 1;
-                    builder.Append(foundReplace.Compute(state));
+                    builder.Append(foundReplace.Compute(state, builder.Length));
                     index++;
                 }
                 else

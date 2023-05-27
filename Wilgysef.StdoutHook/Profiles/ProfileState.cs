@@ -26,6 +26,9 @@ namespace Wilgysef.StdoutHook.Profiles
             absolutePath => new FileStream(absolutePath, FileMode.Append, FileAccess.Write, FileShare.Read);
 
         private readonly ConcurrentDictionary<string, ConcurrentStream> _fileStreams = new();
+        private readonly ColorState _colorState = new();
+
+        private bool _trackColorState;
 
         public void SetProcess(Process process)
         {
@@ -86,6 +89,32 @@ namespace Wilgysef.StdoutHook.Profiles
                 createdStream = StreamFactory(key);
                 return new ConcurrentStream(createdStream);
             }
+        }
+
+        internal void TrackColorState()
+        {
+            _trackColorState = true;
+        }
+
+        internal void ApplyColorState(ColorList colors)
+        {
+            if (!_trackColorState)
+            {
+                return;
+            }
+
+            lock (_colorState)
+            {
+                _colorState.UpdateState(colors, int.MaxValue);
+            }
+        }
+
+        internal ColorState GetColorState(DataState dataState, int position)
+        {
+            var copy = _colorState.Copy();
+
+            copy.UpdateState(dataState.ExtractedColors, position);
+            return copy;
         }
     }
 }

@@ -172,7 +172,7 @@ namespace Wilgysef.StdoutHook.Rules
                         state.ExtractedColors,
                         colorIndex);
                     builder.Append(format != null
-                        ? format.Compute(state)
+                        ? format.Compute(state, builder.Length)
                         : group.Value);
                     last = group.EndIndex;
                 }

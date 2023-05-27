@@ -12,7 +12,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         protected abstract T GetValue(DataState state);
 
-        public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
+        public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
         {
             foreach (var prop in GetProperties())
             {
@@ -27,11 +27,11 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                     else
                     {
                         isConstant = false;
-                        return dataState =>
+                        return computeState =>
                         {
                             try
                             {
-                                return func(GetValue(dataState));
+                                return func(GetValue(computeState.DataState));
                             }
                             catch (Exception ex)
                             {

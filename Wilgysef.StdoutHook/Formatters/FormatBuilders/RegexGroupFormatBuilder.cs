@@ -1,5 +1,4 @@
 ﻿using System;
-using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
@@ -9,7 +8,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         public override char? KeyShort => 'G';
 
-        public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
+        public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
         {
             if (state.Contents.Length == 0)
             {
@@ -21,9 +20,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
             if (contents.Equals("c", StringComparison.OrdinalIgnoreCase))
             {
-                return dataState =>
+                return computeState =>
                 {
-                    var context = dataState.Context.RegexGroupContext;
+                    var context = computeState.DataState.Context.RegexGroupContext;
                     if (context == null)
                     {
                         return "";
@@ -37,9 +36,9 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 };
             }
 
-            return dataState =>
+            return computeState =>
             {
-                var context = dataState.Context.RegexGroupContext;
+                var context = computeState.DataState.Context.RegexGroupContext;
                 return context != null && context.Groups.TryGetValue(contents, out var value)
                     ? value
                     : "";

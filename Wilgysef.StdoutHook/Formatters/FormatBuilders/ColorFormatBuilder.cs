@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
@@ -223,14 +222,17 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         public IDictionary<string, string> CustomColors { get; set; } = new Dictionary<string, string>();
 
-        public override Func<DataState, string> Build(FormatBuildState state, out bool isConstant)
+        public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
         {
-            isConstant = true;
-
             if (state.Contents.StartsWith("raw"))
             {
-                var rawColor = state.Contents[3..];
-                return _ => $"\x1b[{rawColor}m";
+                var rawColor = $"\x1b[{state.Contents[3..]}m";
+                isConstant = false;
+                return computeState =>
+                {
+                    computeState.AddColor(rawColor);
+                    return rawColor;
+                };
             }
 
             var colors = new List<string>(state.Contents.Split(Separator));
@@ -261,6 +263,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             }
 
             var colorResults = new List<int>(colors.Count);
+            var softResetIndex = -1;
 
             for (var i = 0; i < colors.Count; i++)
             {
@@ -278,7 +281,14 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                     toggle = true;
                 }
 
-                if (Colors.TryGetValue(colorStr, out var color))
+                if (colorStr == "s"
+                    || colorStr.Equals("soft", StringComparison.OrdinalIgnoreCase)
+                    || colorStr.Equals("softReset", StringComparison.OrdinalIgnoreCase))
+                {
+                    softResetIndex = i;
+                    state.Profile.State.TrackColorState();
+                }
+                else if (Colors.TryGetValue(colorStr, out var color))
                 {
                     if (color.IsSimple)
                     {
@@ -301,14 +311,34 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 }
             }
 
+            if (softResetIndex != -1)
+            {
+                var colorsAfterSoftReset = string.Join(';', colorResults.Skip(softResetIndex));
+                var resultAfterSoftReset = colorsAfterSoftReset.Length > 0
+                    ? $"\x1b[{colorsAfterSoftReset}m"
+                    : "";
+                isConstant = false;
+                return computeState =>
+                {
+                    var colorState = computeState.DataState.GetColorState(computeState.StartPosition);
+                    colorState.UpdateState(computeState.Colors, int.MaxValue);
+                    return $"\x1b[0m{colorState}{resultAfterSoftReset}";
+                };
+            }
+
             if (colorResults.Count == 0)
             {
+                isConstant = true;
                 return _ => "";
             }
 
-            // only close over the result
             var result = $"\x1b[{string.Join(';', colorResults)}m";
-            return _ => result;
+            isConstant = false;
+            return computeState =>
+            {
+                computeState.AddColor(result);
+                return result;
+            };
 
             static void AddColor24Bit(List<int> colors, int value, bool toggle)
             {
