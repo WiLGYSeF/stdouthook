@@ -10,6 +10,7 @@ using Wilgysef.StdoutHook.Profiles.Dtos;
 const string LogName = ".stdouthook.log";
 const int ProcessRefreshInterval = 1000;
 
+Process? process = null;
 TextWriter? outputStreamWriter = null;
 TextWriter? errorStreamWriter = null;
 
@@ -20,8 +21,7 @@ try
         parser.EnableDashDash = true;
         parser.HelpWriter = Console.Error;
     })
-    // TODO: replace test code
-        .ParseArguments<Options>(new[] { "-v", "--profile", "test", "python", "D:\\projects\\stdouthook\\Wilgysef.StdoutHook\\testproc.py" });
+        .ParseArguments<Options>(args);
 
     if (argParseResult.Tag == ParserResultType.NotParsed)
     {
@@ -92,7 +92,7 @@ try
         errorStreamWriter = CreateRedirectedStream(Shared.Options.Stderr, Shared.Options.StderrAppend);
     }
 
-    using var process = StartProcess(profile, command, commandArguments);
+    process = StartProcess(profile, command, commandArguments);
 
     Task? readStreamTask = null;
     using var cancellationTokenSource = new CancellationTokenSource();
@@ -106,8 +106,11 @@ try
         outputStreamWriter ??= new CustomStreamWriter(Console.OpenStandardOutput(), Console.OutputEncoding, bufferSize);
         errorStreamWriter ??= new CustomStreamWriter(Console.OpenStandardError(), Console.OutputEncoding, bufferSize);
 
+        profile.Split(out var stdoutProfile, out var stderrProfile);
+
         var streamOutputHandler = new StreamOutputHandler(
-            profile,
+            stdoutProfile,
+            stderrProfile,
             process.StandardOutput,
             process.StandardError,
             outputStreamWriter,
@@ -146,10 +149,6 @@ try
         });
     }
 
-    // TODO: remove test code
-    Console.ReadLine();
-    process.Kill();
-
     process.WaitForExit();
     cancellationTokenSource.Cancel();
 
@@ -185,6 +184,16 @@ catch (Exception ex)
 }
 finally
 {
+    if (process != null)
+    {
+        if (!process.HasExited)
+        {
+            process.Kill();
+        }
+
+        process.Dispose();
+    }
+
     outputStreamWriter?.Dispose();
     errorStreamWriter?.Dispose();
 }

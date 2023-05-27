@@ -53,6 +53,16 @@ public class RegexGroupRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void Color_Removed()
+    {
+        var rule = new RegexGroupRule(new Regex(@" \d{2}:\d{2}:\d{2} "), new List<KeyValuePair<FieldRangeList, string>>
+        {
+            new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1"), " _ "),
+        });
+        ShouldRuleBe(rule, "\x1b[31m2000-01-02 \x1b[31m03:\x1b[34m04:05\x1b[0m 06:07:08.999 \x1b[33mtest", "\x1b[31m2000-01-02 _ 06:07:08.999 \x1b[33mtest");
+    }
+
+    [Fact]
     public void Current()
     {
         var rule = new RegexGroupRule(new Regex(@"([0-9]+)\.([0-9]+)"), new List<KeyValuePair<FieldRangeList, string>>
@@ -181,5 +191,30 @@ public class RegexGroupRuleTest : RuleTestBase
     {
         var rule = new UnconditionalReplaceRule("%Gc %G0");
         ShouldRuleBe(rule, "abc123", " ");
+    }
+
+    [Fact]
+    public void Copy()
+    {
+        var rule = new RegexGroupRule(new Regex("a"))
+        {
+            ReplaceGroups = new List<KeyValuePair<FieldRangeList, string>>
+            {
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1"), "asdf"),
+                new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("2-*"), "qweq"),
+            },
+            ReplaceNamedGroups = new Dictionary<string, string>
+            {
+                ["a"] = "b",
+            },
+        };
+
+        using var profile = CreateDummyProfile();
+        rule.Build(profile, GetFormatter());
+
+        var copy = (RegexGroupRule)rule.Copy();
+        copy.Regex.ToString().ShouldBe(rule.Regex.ToString());
+        copy.ReplaceGroups!.Count.ShouldBe(2);
+        copy.ReplaceNamedGroups!.Count.ShouldBe(1);
     }
 }

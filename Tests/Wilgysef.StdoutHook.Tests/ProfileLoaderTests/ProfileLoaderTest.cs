@@ -8,7 +8,7 @@ namespace Wilgysef.StdoutHook.Tests.ProfileLoaderTests;
 public class ProfileLoaderTest
 {
     [Fact]
-    public async Task ProfileName()
+    public void ProfileName()
     {
         var loader = new ProfileLoader();
         var profileDto = new ProfileDto
@@ -21,7 +21,7 @@ public class ProfileLoaderTest
     }
 
     [Fact]
-    public async Task PseudoTty()
+    public void PseudoTty()
     {
         var loader = new ProfileLoader();
         var profileDto = new ProfileDto
@@ -34,7 +34,7 @@ public class ProfileLoaderTest
     }
 
     [Fact]
-    public async Task Flush()
+    public void Flush()
     {
         var loader = new ProfileLoader();
         var profileDto = new ProfileDto
@@ -47,7 +47,7 @@ public class ProfileLoaderTest
     }
 
     [Fact]
-    public async Task CustomColors()
+    public void CustomColors()
     {
         var loader = new ProfileLoader();
         var profileDto = new ProfileDto
@@ -64,7 +64,7 @@ public class ProfileLoaderTest
     }
 
     [Fact]
-    public async Task ArgumentPattern()
+    public void ArgumentPattern()
     {
         var loader = new ProfileLoader();
         var profileDto = new ProfileDto
@@ -82,7 +82,7 @@ public class ProfileLoaderTest
     }
 
     [Fact]
-    public async Task SkipDisabledRules()
+    public void SkipDisabledRules()
     {
         var loader = new ProfileLoader();
         var profileDto = new ProfileDto

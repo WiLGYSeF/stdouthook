@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
@@ -62,8 +63,17 @@ namespace Wilgysef.StdoutHook.Rules
 
         protected bool _active = true;
 
+        internal abstract string Apply(DataState state);
+
+        protected abstract Rule CopyInternal();
+
         internal virtual void Build(Profile profile, Formatter formatter)
         {
+            if (StdoutOnly && StderrOnly)
+            {
+                throw new InvalidOperationException("Rule cannot be both stdout only and stderr only");
+            }
+
             Formatter = formatter;
 
             _activationLines = new SortedListIncrementMatch<long>(ActivationLines);
@@ -73,8 +83,6 @@ namespace Wilgysef.StdoutHook.Rules
             _deactivationLinesStdoutOnly = new SortedListIncrementMatch<long>(DeactivationLinesStdoutOnly);
             _deactivationLinesStderrOnly = new SortedListIncrementMatch<long>(DeactivationLinesStderrOnly);
         }
-
-        internal abstract string Apply(DataState state);
 
         internal virtual bool IsActive(DataState state)
         {
@@ -96,42 +104,52 @@ namespace Wilgysef.StdoutHook.Rules
             if (data != null)
             {
                 MatchExpressions(ActivationExpressions, _activationOffsetLines, lineCount, data);
-                MatchExpressions(ActivationExpressionsStdoutOnly, _activationOffsetStdoutOnlyLines, stdoutLineCount, data);
-                MatchExpressions(ActivationExpressionsStderrOnly, _activationOffsetStderrOnlyLines, stderrLineCount, data);
                 MatchExpressions(DeactivationExpressions, _deactivationOffsetLines, lineCount, data);
-                MatchExpressions(DeactivationExpressionsStdoutOnly, _deactivationOffsetStdoutOnlyLines, stdoutLineCount, data);
-                MatchExpressions(DeactivationExpressionsStderrOnly, _deactivationOffsetStderrOnlyLines, stderrLineCount, data);
+
+                if (!StderrOnly)
+                {
+                    MatchExpressions(ActivationExpressionsStdoutOnly, _activationOffsetStdoutOnlyLines, stdoutLineCount, data);
+                    MatchExpressions(DeactivationExpressionsStdoutOnly, _deactivationOffsetStdoutOnlyLines, stdoutLineCount, data);
+                }
+
+                if (!StdoutOnly)
+                {
+                    MatchExpressions(ActivationExpressionsStderrOnly, _activationOffsetStderrOnlyLines, stderrLineCount, data);
+                    MatchExpressions(DeactivationExpressionsStderrOnly, _deactivationOffsetStderrOnlyLines, stderrLineCount, data);
+                }
             }
 
-            // bitwise or boolean operations to prevent short-circuiting
-            if (_deactivationLines.MatchesCurrent(lineCount)
-                | _deactivationLinesStdoutOnly.MatchesCurrent(stdoutLineCount)
-                | _deactivationLinesStderrOnly.MatchesCurrent(stderrLineCount)
-                | _deactivationOffsetLines.Remove(lineCount)
-                | _deactivationOffsetStdoutOnlyLines.Remove(stdoutLineCount)
-                | _deactivationOffsetStderrOnlyLines.Remove(stderrLineCount))
+            // bitwise-or boolean operations to prevent short-circuiting
+            var active = _activationLines.MatchesCurrent(lineCount) | _activationOffsetLines.Remove(lineCount);
+            var deactivate = _deactivationLines.MatchesCurrent(lineCount) | _deactivationOffsetLines.Remove(lineCount);
+
+            if (!StderrOnly)
+            {
+                active |= _activationLinesStdoutOnly.MatchesCurrent(stdoutLineCount) | _activationOffsetStdoutOnlyLines.Remove(stdoutLineCount);
+                deactivate |= _deactivationLinesStdoutOnly.MatchesCurrent(stdoutLineCount) | _deactivationOffsetStdoutOnlyLines.Remove(stdoutLineCount);
+            }
+
+            if (!StdoutOnly)
+            {
+                active |= _activationLinesStderrOnly.MatchesCurrent(stderrLineCount) | _activationOffsetStderrOnlyLines.Remove(stderrLineCount);
+                deactivate |= _deactivationLinesStderrOnly.MatchesCurrent(stderrLineCount) | _deactivationOffsetStderrOnlyLines.Remove(stderrLineCount);
+            }
+
+            if (deactivate)
             {
                 _active = false;
             }
 
             // activation takes priority over deactivation
-            // bitwise or boolean operations to prevent short-circuiting
-            if (_activationLines.MatchesCurrent(lineCount)
-                | _activationLinesStdoutOnly.MatchesCurrent(stdoutLineCount)
-                | _activationLinesStderrOnly.MatchesCurrent(stderrLineCount)
-                | _activationOffsetLines.Remove(lineCount)
-                | _activationOffsetStdoutOnlyLines.Remove(stdoutLineCount)
-                | _activationOffsetStderrOnlyLines.Remove(stderrLineCount))
+            if (active)
             {
                 _active = true;
             }
 
-            if (!_active)
-            {
-                return false;
-            }
-
-            if (data != null && EnableExpression != null && !EnableExpression.IsMatch(state.DataExtractedColorTrimEndNewline))
+            if (!_active
+                || (data != null
+                    && EnableExpression != null
+                    && !EnableExpression.IsMatch(state.DataExtractedColorTrimEndNewline)))
             {
                 return false;
             }
@@ -152,6 +170,61 @@ namespace Wilgysef.StdoutHook.Rules
                     }
                 }
             }
+        }
+
+        internal Rule Copy()
+        {
+            var rule = CopyInternal();
+
+            rule.EnableExpression = EnableExpression;
+            rule.StdoutOnly = StdoutOnly;
+            rule.StderrOnly = StderrOnly;
+            rule.Terminal = Terminal;
+            rule.TrimNewline = TrimNewline;
+            rule.ActivationLines.AddRange(ActivationLines);
+            rule.DeactivationLines.AddRange(DeactivationLines);
+            rule.ActivationExpressions.AddRange(ActivationExpressions);
+            rule.DeactivationExpressions.AddRange(DeactivationExpressions);
+            rule.Filter = Filter;
+            rule.Formatter = Formatter;
+
+            rule._activationLines = new SortedListIncrementMatch<long>(ActivationLines);
+            rule._deactivationLines = new SortedListIncrementMatch<long>(DeactivationLines);
+            rule._activationOffsetLines = new HashSet<long>();
+            rule._deactivationOffsetLines = new HashSet<long>();
+            rule._active = _active;
+
+            if (!StderrOnly)
+            {
+                rule.ActivationLinesStdoutOnly.AddRange(ActivationLinesStdoutOnly);
+                rule.DeactivationLinesStdoutOnly.AddRange(DeactivationLinesStdoutOnly);
+
+                rule.ActivationExpressionsStdoutOnly.AddRange(ActivationExpressionsStdoutOnly);
+                rule.DeactivationExpressionsStdoutOnly.AddRange(DeactivationExpressionsStdoutOnly);
+
+                rule._activationLinesStdoutOnly = new SortedListIncrementMatch<long>(ActivationLinesStdoutOnly);
+                rule._deactivationLinesStdoutOnly = new SortedListIncrementMatch<long>(DeactivationLinesStdoutOnly);
+
+                rule._activationOffsetStdoutOnlyLines = new HashSet<long>();
+                rule._deactivationOffsetStdoutOnlyLines = new HashSet<long>();
+            }
+
+            if (!StdoutOnly)
+            {
+                rule.ActivationLinesStderrOnly.AddRange(ActivationLinesStderrOnly);
+                rule.DeactivationLinesStderrOnly.AddRange(DeactivationLinesStderrOnly);
+
+                rule.ActivationExpressionsStderrOnly.AddRange(ActivationExpressionsStderrOnly);
+                rule.DeactivationExpressionsStderrOnly.AddRange(DeactivationExpressionsStderrOnly);
+
+                rule._activationLinesStderrOnly = new SortedListIncrementMatch<long>(ActivationLinesStderrOnly);
+                rule._deactivationLinesStderrOnly = new SortedListIncrementMatch<long>(DeactivationLinesStderrOnly);
+
+                rule._activationOffsetStderrOnlyLines = new HashSet<long>();
+                rule._deactivationOffsetStderrOnlyLines = new HashSet<long>();
+            }
+
+            return rule;
         }
 
         protected class SortedListIncrementMatch<T> where T : IEquatable<T>

@@ -4,7 +4,8 @@ namespace Wilgysef.StdoutHook.Cli;
 
 public class StreamOutputHandler
 {
-    private readonly Profile _profile;
+    private readonly Profile _stdoutProfile;
+    private readonly Profile _stderrProfile;
     private readonly StreamReaderHandler _outputReaderHandler;
     private readonly StreamReaderHandler _errorReaderHandler;
     private readonly TextWriter _stdout;
@@ -16,8 +17,18 @@ public class StreamOutputHandler
         StreamReader stderrInput,
         TextWriter stdoutOutput,
         TextWriter stderrOutput)
+        : this(profile, profile, stdoutInput, stderrInput, stdoutOutput, stderrOutput) { }
+
+    public StreamOutputHandler(
+        Profile stdoutProfile,
+        Profile stderrProfile,
+        StreamReader stdoutInput,
+        StreamReader stderrInput,
+        TextWriter stdoutOutput,
+        TextWriter stderrOutput)
     {
-        _profile = profile;
+        _stdoutProfile = stdoutProfile;
+        _stderrProfile = stderrProfile;
         _outputReaderHandler = new StreamReaderHandler(stdoutInput, HandleOutput);
         _errorReaderHandler = new StreamReaderHandler(stderrInput, HandleError);
         _stdout = stdoutOutput;
@@ -34,9 +45,9 @@ public class StreamOutputHandler
 
     private void HandleOutput(string line)
     {
-        _profile.State.StdoutLineCount++;
+        _stdoutProfile.State.StdoutLineCount++;
 
-        var output = _profile.ApplyRules(line, true);
+        var output = _stdoutProfile.ApplyRules(line, true);
         if (output != null)
         {
             _stdout.Write(output);
@@ -45,9 +56,9 @@ public class StreamOutputHandler
 
     private void HandleError(string line)
     {
-        _profile.State.StderrLineCount++;
+        _stderrProfile.State.StderrLineCount++;
 
-        var output = _profile.ApplyRules(line, false);
+        var output = _stderrProfile.ApplyRules(line, false);
         if (output != null)
         {
             _stderr.Write(output);

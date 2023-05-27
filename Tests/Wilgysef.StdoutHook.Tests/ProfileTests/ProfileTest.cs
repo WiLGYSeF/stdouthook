@@ -60,4 +60,59 @@ public class ProfileTest
 
         profile.ApplyRules("", true).ShouldBe("\x1b[31m123");
     }
+
+    [Fact]
+    public void Split()
+    {
+        using var profile = new Profile
+        {
+            ProfileName = "test",
+            Flush = true,
+            Rules = new List<Rule>
+            {
+                new UnconditionalReplaceRule("a"),
+                new UnconditionalReplaceRule("b")
+                {
+                    StdoutOnly = true,
+                },
+                new UnconditionalReplaceRule("c")
+                {
+                    StderrOnly = true,
+                },
+            },
+            CustomColors = new Dictionary<string, string>
+            {
+                ["a"] = "b",
+            },
+        };
+
+        profile.Split(out var stdoutProfile, out var stderrProfile);
+
+        stdoutProfile.ProfileName.ShouldBe(profile.ProfileName);
+        stdoutProfile.Flush.ShouldBeTrue();
+
+        stdoutProfile.Rules.Count.ShouldBe(2);
+        ((UnconditionalReplaceRule)stdoutProfile.Rules[0]).Format.ShouldBe("a");
+        ((UnconditionalReplaceRule)stdoutProfile.Rules[1]).Format.ShouldBe("b");
+
+        stdoutProfile.CustomColors.Count.ShouldBe(1);
+        stdoutProfile.CustomColors["a"].ShouldBe("b");
+
+        stderrProfile.ProfileName.ShouldBe(profile.ProfileName);
+        stderrProfile.Flush.ShouldBeTrue();
+
+        stderrProfile.Rules.Count.ShouldBe(2);
+        ((UnconditionalReplaceRule)stderrProfile.Rules[0]).Format.ShouldBe("a");
+        ((UnconditionalReplaceRule)stderrProfile.Rules[1]).Format.ShouldBe("c");
+
+        stderrProfile.CustomColors.Count.ShouldBe(1);
+        stderrProfile.CustomColors["a"].ShouldBe("b");
+
+        profile.State.StdoutLineCount++;
+        stdoutProfile.State.StdoutLineCount.ShouldBe(1);
+        stderrProfile.State.StdoutLineCount.ShouldBe(1);
+
+        stdoutProfile.Dispose();
+        stderrProfile.Dispose();
+    }
 }

@@ -201,9 +201,8 @@ public class ActivationTest
 
     private class TestRule : Rule
     {
-        internal override string Apply(DataState state)
-        {
-            throw new NotImplementedException();
-        }
+        internal override string Apply(DataState state) => throw new NotImplementedException();
+
+        protected override Rule CopyInternal() => throw new NotImplementedException();
     }
 }

@@ -55,7 +55,7 @@ namespace Wilgysef.StdoutHook.Profiles
                     createdStream = null;
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 if (!_fileStreams.TryGetValue(absolutePath, out stream))
                 {

@@ -42,4 +42,13 @@ public class UnconditionalReplaceRuleTest : RuleTestBase
             "input\n",
             "a");
     }
+
+    [Fact]
+    public void Copy()
+    {
+        var rule = new UnconditionalReplaceRule("a");
+        var copy = (UnconditionalReplaceRule)rule.Copy();
+
+        copy.Format.ShouldBe(rule.Format);
+    }
 }

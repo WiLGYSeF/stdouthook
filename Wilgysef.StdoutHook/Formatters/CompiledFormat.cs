@@ -42,5 +42,10 @@ namespace Wilgysef.StdoutHook.Formatters
             return builder.Append(Parts[^1])
                 .ToString();
         }
+
+        public CompiledFormat Copy()
+        {
+            return new CompiledFormat(Parts, Funcs);
+        }
     }
 }

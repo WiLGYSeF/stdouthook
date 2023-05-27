@@ -151,5 +151,34 @@ namespace Wilgysef.StdoutHook.Rules
 
             return builder.ToString();
         }
+
+        protected override Rule CopyInternal()
+        {
+            var rule = new FieldSeparatorRule(SeparatorExpression)
+            {
+                MinFields = MinFields,
+                MaxFields = MaxFields,
+                ReplaceFields = ReplaceFields,
+                ReplaceAllFormat = ReplaceAllFormat,
+            };
+
+            if (_fieldReplacers != null)
+            {
+                rule._fieldReplacers = new CompiledFormat?[_fieldReplacers.Length];
+                for (var i = 0; i < _fieldReplacers.Length; i++)
+                {
+                    rule._fieldReplacers[i] = _fieldReplacers[i]?.Copy();
+                }
+            }
+
+            for (var i = 0; i < _outOfRangeReplaceFields.Count; i++)
+            {
+                var (rangeList, replace) = _outOfRangeReplaceFields[i];
+                rule._outOfRangeReplaceFields.Add(new KeyValuePair<FieldRangeList, CompiledFormat>(rangeList, replace.Copy()));
+            }
+
+            rule._replaceAll = _replaceAll?.Copy();
+            return rule;
+        }
     }
 }

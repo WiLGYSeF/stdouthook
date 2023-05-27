@@ -69,6 +69,40 @@ namespace Wilgysef.StdoutHook.Profiles
             return dataState.Data;
         }
 
+        public void Split(out Profile stdoutProfile, out Profile stderrProfile)
+        {
+            stdoutProfile = CopyProperties(true);
+            stderrProfile = CopyProperties(false);
+
+            Profile CopyProperties(bool stdout)
+            {
+                var profile = new Profile
+                {
+                    ProfileName = ProfileName,
+                    PseudoTty = PseudoTty,
+                    Flush = Flush,
+                    State = State,
+                    _formatter = _formatter
+                };
+
+                for (var i = 0; i < Rules.Count; i++)
+                {
+                    var rule = Rules[i];
+                    if (stdout ? !rule.StderrOnly : !rule.StdoutOnly)
+                    {
+                        profile.Rules.Add(rule.Copy());
+                    }
+                }
+
+                foreach (var (key, val) in CustomColors)
+                {
+                    profile.CustomColors[key] = val;
+                }
+
+                return profile;
+            }
+        }
+
         public void Dispose()
         {
             State.Dispose();

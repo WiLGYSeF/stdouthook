@@ -41,8 +41,8 @@ namespace Wilgysef.StdoutHook.Formatters
                                 subtractOffset += colorIndex - i;
 
                                 builder.Append(dataSpan[last..i]);
-                                i = colorIndex;
-                                last = i;
+                                i = colorIndex - 1;
+                                last = colorIndex;
                                 goto end;
                             default:
                                 goto end;
@@ -52,13 +52,23 @@ namespace Wilgysef.StdoutHook.Formatters
                 }
             }
 
+            if (last == 0)
+            {
+                return data;
+            }
+
             return builder.Append(dataSpan[last..])
                 .ToString();
         }
 
-        public static void InsertExtractedColors(StringBuilder builder, ReadOnlySpan<char> input, int offset, ColorList colors)
+        public static int InsertExtractedColors(
+            StringBuilder builder,
+            ReadOnlySpan<char> input,
+            int offset,
+            ColorList colors,
+            int? colorStartIndex = null)
         {
-            var colorIndex = colors.GetColorIndex(offset);
+            var colorIndex = colorStartIndex ?? colors.GetColorIndex(offset);
             var last = 0;
 
             for (; colorIndex < colors.Count; colorIndex++)
@@ -66,6 +76,10 @@ namespace Wilgysef.StdoutHook.Formatters
                 var color = colors[colorIndex];
                 var colorStart = color.Position - offset;
 
+                if (colorStart < 0)
+                {
+                    continue;
+                }
                 if (colorStart > input.Length)
                 {
                     break;
@@ -78,6 +92,7 @@ namespace Wilgysef.StdoutHook.Formatters
             }
 
             builder.Append(input[last..]);
+            return colorIndex;
         }
 
         public static void InsertExtractedColors(string[] splitData, ColorList colors)
@@ -105,15 +120,16 @@ namespace Wilgysef.StdoutHook.Formatters
         public static void InsertExtractedColors(StringBuilder builder, MatchGroup[] matches, ColorList colors)
         {
             var colorIndex = 0;
+            var colorCount = colors.Count;
 
-            for (var i = 0; i < matches.Length && colorIndex < colors.Count; i++)
+            for (var i = 0; i < matches.Length && colorIndex < colorCount; i++)
             {
                 var match = matches[i];
                 var offset = match.Index;
                 var endOffset = offset + match.Value.Length;
 
-                for (; colorIndex < colors.Count && colors[colorIndex].Position < match.Index; colorIndex++) ;
-                if (colorIndex == colors.Count)
+                colorIndex = colors.GetColorIndex(offset, colorIndex);
+                if (colorIndex == colorCount)
                 {
                     break;
                 }

@@ -36,6 +36,21 @@ public class TeeRuleTest : RuleTestBase
         ShouldRuleBe(rule, new[] { "test\n" }, "test\n");
     }
 
+    [Fact]
+    public void Copy()
+    {
+        var rule = new TeeRule("testfile")
+        {
+            Flush = true,
+            ExtractColors = true,
+        };
+        var copy = (TeeRule)rule.Copy();
+
+        copy.Filename.ShouldBe(rule.Filename);
+        copy.Flush.ShouldBe(rule.Flush);
+        copy.ExtractColors.ShouldBe(rule.ExtractColors);
+    }
+
     private static void ShouldRuleBe(TeeRule rule, IEnumerable<string> lines, string expected)
     {
         using var stream = new MemoryStream();

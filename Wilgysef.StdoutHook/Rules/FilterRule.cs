@@ -11,5 +11,10 @@ namespace Wilgysef.StdoutHook.Rules
             // should not be reached
             return state.Data;
         }
+
+        protected override Rule CopyInternal()
+        {
+            return new FilterRule();
+        }
     }
 }
