@@ -321,7 +321,10 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 return computeState =>
                 {
                     var colorState = computeState.DataState.GetColorState(computeState.StartPosition);
-                    colorState.UpdateState(computeState.Colors, int.MaxValue);
+                    if (computeState.Colors != null)
+                    {
+                        colorState.UpdateState(computeState.Colors, int.MaxValue);
+                    }
                     return $"\x1b[0m{colorState}{resultAfterSoftReset}";
                 };
             }

@@ -6,7 +6,7 @@ namespace Wilgysef.StdoutHook.Formatters
     {
         public DataState DataState { get; private set; }
 
-        public ColorList Colors { get; } = new();
+        public ColorList? Colors { get; private set; }
 
         public int StartPosition { get; }
 
@@ -26,6 +26,7 @@ namespace Wilgysef.StdoutHook.Formatters
 
         public void AddColor(string color, int offset = 0)
         {
+            Colors ??= new();
             Colors.AddColor(Position + offset, color, 0, color.Length);
         }
     }

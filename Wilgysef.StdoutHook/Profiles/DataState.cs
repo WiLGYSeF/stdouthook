@@ -13,21 +13,61 @@ namespace Wilgysef.StdoutHook.Profiles
                 if (_data != value)
                 {
                     _data = value!;
-                    DataTrimEndNewline = _data.TrimEndNewline(out _newline);
-
+                    _dataTrimEndNewline = null;
+                    _dataExtractedColorTrimEndNewline = null;
                     _extractedColors.Clear();
-                    DataExtractedColorTrimEndNewline = ColorExtractor.ExtractColor(DataTrimEndNewline, _extractedColors);
+                    _extractedColorsUpdated = false;
                 }
             }
         }
 
-        public string DataTrimEndNewline { get; private set; } = null!;
+        public string DataTrimEndNewline
+        {
+            get
+            {
+                _dataTrimEndNewline ??= _data.TrimEndNewline(out _newline);
+                return _dataTrimEndNewline;
+            }
+        }
 
-        public string DataExtractedColorTrimEndNewline { get; private set; } = null!;
+        public string DataExtractedColorTrimEndNewline
+        {
+            get
+            {
+                if (_dataExtractedColorTrimEndNewline == null)
+                {
+                    ExtractColors();
+                }
 
-        public string Newline => _newline;
+                return _dataExtractedColorTrimEndNewline!;
+            }
+        }
 
-        public ColorList ExtractedColors => _extractedColors;
+        public string Newline
+        {
+            get
+            {
+                if (_newline == null)
+                {
+                    _dataTrimEndNewline = _data.TrimEndNewline(out _newline);
+                }
+
+                return _newline;
+            }
+        }
+
+        public ColorList ExtractedColors
+        {
+            get
+            {
+                if (!_extractedColorsUpdated)
+                {
+                    ExtractColors();
+                }
+
+                return _extractedColors;
+            }
+        }
 
         public bool Stdout { get; }
 
@@ -40,7 +80,6 @@ namespace Wilgysef.StdoutHook.Profiles
         private readonly ColorList _extractedColors = new();
         private string _data = null!;
 
-        // TODO: use
         private string? _dataTrimEndNewline;
         private string? _dataExtractedColorTrimEndNewline;
         private string? _newline;
@@ -61,6 +100,12 @@ namespace Wilgysef.StdoutHook.Profiles
         public ColorState GetColorState(int position)
         {
             return Profile.State.GetColorState(this, position);
+        }
+
+        private void ExtractColors()
+        {
+            _dataExtractedColorTrimEndNewline = ColorExtractor.ExtractColor(DataTrimEndNewline, _extractedColors);
+            _extractedColorsUpdated = true;
         }
     }
 }
