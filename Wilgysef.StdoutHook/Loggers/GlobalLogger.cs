@@ -7,14 +7,23 @@ namespace Wilgysef.StdoutHook.Loggers
     {
         public static Logger Logger { get; set; } = new Logger(StreamWriter.Null);
 
-        public static void Log(LogLevel level, string message) => Logger.Log(level, message);
+        public static string? ProcessName { get; set; }
 
-        public static void Error(string message) => Logger.Error(message);
+        public static void Log(LogLevel level, string message) => Logger.Log(level, GetMessage(message));
 
-        public static void Error(Exception exception, string message) => Logger.Error(exception, message);
+        public static void Error(string message) => Logger.Error(GetMessage(message));
 
-        public static void Warn(string message) => Logger.Warn(message);
+        public static void Error(Exception exception, string message) => Logger.Error(exception, GetMessage(message));
 
-        public static void Info(string message) => Logger.Info(message);
+        public static void Warn(string message) => Logger.Warn(GetMessage(message));
+
+        public static void Info(string message) => Logger.Info(GetMessage(message));
+
+        private static string GetMessage(string message)
+        {
+            return ProcessName != null
+                ? $"{ProcessName}: {message}"
+                : message;
+        }
     }
 }

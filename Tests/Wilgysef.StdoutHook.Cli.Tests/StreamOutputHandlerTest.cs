@@ -64,7 +64,7 @@ public class StreamOutputHandlerTest
         var stdoutWriter = new StreamWriter(stdoutOutput);
         var stderrWriter = new StreamWriter(stderrOutput);
 
-        var handler = new StreamOutputHandler(
+        using var handler = new StreamOutputHandler(
             profile,
             new StreamReader(stdoutInput),
             new StreamReader(stderrInput),

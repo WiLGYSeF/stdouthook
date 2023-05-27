@@ -49,7 +49,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                         {
                             if (throwIfInheritedProfileNotFound)
                             {
-                                throw new InheritedProfileNotFoundException();
+                                throw new InheritedProfileNotFoundException($"Inherit profile name not found: {name}");
                             }
 
                             GlobalLogger.Warn($"Inherit profile name not found: \"{name}\"");
@@ -133,6 +133,10 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 ProfileName = dto.ProfileName,
                 PseudoTty = dto.PseudoTty ?? false,
                 Flush = dto.Flush ?? false,
+                BufferSize = dto.BufferSize,
+                OutputFlushInterval = dto.OutputFlushInterval,
+                Interactive = dto.Interactive ?? false,
+                InteractiveFlushInterval = dto.InteractiveFlushInterval,
                 Rules = LoadRules(dto.Rules),
                 CustomColors = dto.CustomColors ?? new Dictionary<string, string>(),
             };
@@ -150,6 +154,10 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
             target.MaxArguments ??= source.MaxArguments;
             target.PseudoTty ??= source.PseudoTty;
             target.Flush ??= source.Flush;
+            target.BufferSize ??= source.BufferSize;
+            target.OutputFlushInterval ??= source.OutputFlushInterval;
+            target.Interactive ??= source.Interactive;
+            target.InteractiveFlushInterval ??= source.InteractiveFlushInterval;
 
             if (source.Rules != null)
             {

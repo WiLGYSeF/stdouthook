@@ -68,6 +68,10 @@ public class ProfileTest
         {
             ProfileName = "test",
             Flush = true,
+            BufferSize = 1024,
+            OutputFlushInterval = 100,
+            Interactive = true,
+            InteractiveFlushInterval = 100,
             Rules = new List<Rule>
             {
                 new UnconditionalReplaceRule("a"),
@@ -90,6 +94,10 @@ public class ProfileTest
 
         stdoutProfile.ProfileName.ShouldBe(profile.ProfileName);
         stdoutProfile.Flush.ShouldBeTrue();
+        stdoutProfile.BufferSize.ShouldBe(profile.BufferSize);
+        stdoutProfile.OutputFlushInterval.ShouldBe(profile.OutputFlushInterval);
+        stdoutProfile.Interactive.ShouldBe(profile.Interactive);
+        stdoutProfile.InteractiveFlushInterval.ShouldBe(profile.InteractiveFlushInterval);
 
         stdoutProfile.Rules.Count.ShouldBe(2);
         ((UnconditionalReplaceRule)stdoutProfile.Rules[0]).Format.ShouldBe("a");
@@ -100,6 +108,10 @@ public class ProfileTest
 
         stderrProfile.ProfileName.ShouldBe(profile.ProfileName);
         stderrProfile.Flush.ShouldBeTrue();
+        stderrProfile.BufferSize.ShouldBe(profile.BufferSize);
+        stderrProfile.OutputFlushInterval.ShouldBe(profile.OutputFlushInterval);
+        stderrProfile.Interactive.ShouldBe(profile.Interactive);
+        stderrProfile.InteractiveFlushInterval.ShouldBe(profile.InteractiveFlushInterval);
 
         stderrProfile.Rules.Count.ShouldBe(2);
         ((UnconditionalReplaceRule)stderrProfile.Rules[0]).Format.ShouldBe("a");

@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace Wilgysef.StdoutHook.Profiles.Loaders
+﻿namespace Wilgysef.StdoutHook.Profiles.Loaders
 {
-    public class ProfileCyclicalInheritanceException : Exception
+    public class ProfileCyclicalInheritanceException : ProfileLoaderException
     {
         public string ProfileName { get; }
 

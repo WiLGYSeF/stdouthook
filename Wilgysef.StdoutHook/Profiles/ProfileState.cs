@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using Wilgysef.StdoutHook.Loggers;
 
 namespace Wilgysef.StdoutHook.Profiles
 {

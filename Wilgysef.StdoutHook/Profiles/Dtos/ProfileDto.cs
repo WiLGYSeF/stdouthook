@@ -7,6 +7,8 @@ namespace Wilgysef.StdoutHook.Profiles.Dtos
     {
         public bool? Enabled { get; set; }
 
+        #region Picker Properties
+
         public string? ProfileName { get; set; }
 
         public string? Command { get; set; }
@@ -29,9 +31,19 @@ namespace Wilgysef.StdoutHook.Profiles.Dtos
 
         public int? MaxArguments { get; set; }
 
+        #endregion
+
         public bool? PseudoTty { get; set; }
 
         public bool? Flush { get; set; }
+
+        public int? BufferSize { get; set; }
+
+        public int? OutputFlushInterval { get; set; }
+
+        public bool? Interactive { get; set; }
+
+        public int? InteractiveFlushInterval { get; set; }
 
         public IList<RuleDto>? Rules { get; set; }
 

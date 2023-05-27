@@ -2,10 +2,12 @@
 
 namespace Wilgysef.StdoutHook.Cli;
 
-public class StreamReaderHandler
+public class StreamReaderHandler : IDisposable
 {
     private readonly StreamReader _reader;
     private readonly Action<string> _action;
+
+    private readonly StringBuilder _builder = new();
 
     public StreamReaderHandler(StreamReader reader, Action<string> action)
     {
@@ -13,33 +15,49 @@ public class StreamReaderHandler
         _action = action;
     }
 
-    public async Task ReadLinesAsync(int bufferSize = 4096, CancellationToken cancellationToken = default)
+    public async Task ReadLinesAsync(
+        int bufferSize = 4096,
+        TimeSpan? forceProcessTimeout = null,
+        CancellationToken cancellationToken = default)
     {
         await Task.Yield();
 
-        var builder = new StringBuilder();
         var buffer = new char[bufferSize];
         var endedWithCr = false;
         int bytesRead;
+        int? waitMs = forceProcessTimeout.HasValue
+            ? (int)forceProcessTimeout.Value.TotalMilliseconds
+            : null;
+
+        _builder.Clear();
 
         do
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            // TODO: cancellation token?
-            bytesRead = await _reader.ReadAsync(buffer, 0, buffer.Length);
+            var readTask = _reader.ReadAsync(buffer, 0, buffer.Length);
+            if (waitMs.HasValue
+                && !readTask.Wait(waitMs.Value, cancellationToken)
+                && _builder.Length > 0)
+            {
+                _action(_builder.ToString());
+                _builder.Clear();
+            }
+
+            bytesRead = await readTask;
             var index = 0;
 
             if (endedWithCr)
             {
                 if (bytesRead > 0 && buffer[0] == '\n')
                 {
-                    builder.Append('\n');
+                    _builder.Append('\n');
                     index = 1;
                 }
 
-                _action(builder.ToString());
-                builder.Clear();
+                _action(_builder.ToString());
+                _builder.Clear();
+
                 endedWithCr = false;
             }
 
@@ -53,20 +71,20 @@ public class StreamReaderHandler
                         string data;
                         if (buffer[index + 1] == '\n')
                         {
-                            data = builder.Append(new Span<char>(buffer, last, index - last + 2))
+                            data = _builder.Append(new Span<char>(buffer, last, index - last + 2))
                                 .ToString();
                             last = index + 2;
                             index++;
                         }
                         else
                         {
-                            data = builder.Append(new Span<char>(buffer, last, index - last + 1))
+                            data = _builder.Append(new Span<char>(buffer, last, index - last + 1))
                                 .ToString();
                             last = index + 1;
                         }
 
                         _action(data);
-                        builder.Clear();
+                        _builder.Clear();
                     }
                     else
                     {
@@ -75,22 +93,33 @@ public class StreamReaderHandler
                 }
                 else if (buffer[index] == '\n')
                 {
-                    _action(builder.Append(new Span<char>(buffer, last, index - last + 1)).ToString());
-                    builder.Clear();
+                    _action(_builder.Append(new Span<char>(buffer, last, index - last + 1)).ToString());
+                    _builder.Clear();
                     last = index + 1;
                 }
             }
 
             if (bytesRead - last > 0)
             {
-                builder.Append(new Span<char>(buffer, last, bytesRead - last));
+                _builder.Append(new Span<char>(buffer, last, bytesRead - last));
             }
         }
         while (bytesRead != 0);
 
-        if (builder.Length > 0)
+        if (_builder.Length > 0)
         {
-            _action(builder.ToString());
+            _action(_builder.ToString());
+            _builder.Clear();
+        }
+    }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+
+        if (_builder.Length > 0)
+        {
+            _action(_builder.ToString());
         }
     }
 }

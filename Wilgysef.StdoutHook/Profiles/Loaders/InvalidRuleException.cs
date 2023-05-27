@@ -1,9 +1,8 @@
-﻿using System;
-using Wilgysef.StdoutHook.Rules;
+﻿using Wilgysef.StdoutHook.Rules;
 
 namespace Wilgysef.StdoutHook.Profiles.Loaders
 {
-    public class InvalidRuleException : Exception
+    public class InvalidRuleException : ProfileLoaderException
     {
         public Rule Rule { get; }
 

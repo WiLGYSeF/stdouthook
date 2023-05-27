@@ -44,6 +44,21 @@ public class UnconditionalReplaceRuleTest : RuleTestBase
     }
 
     [Fact]
+    public void TrimNewline_OnlyNewline()
+    {
+        var rule = new UnconditionalReplaceRule("a")
+        {
+            TrimNewline = true,
+        };
+
+        ShouldRuleBe(
+            rule,
+            GetFormatter(new TestFormatBuilder("test", null, _ => "123")),
+            "\r\n",
+            "a");
+    }
+
+    [Fact]
     public void Copy()
     {
         var rule = new UnconditionalReplaceRule("a");

@@ -27,6 +27,7 @@ public class ProfileFormatBuilderTest : RuleTestBase
         profile.State.StdoutLineCount = 123;
 
         formatter.Format("%(profile:stdoutLines)", new DataState(profile)).ShouldBe("123");
+        formatter.Format("%(profile:stdoutLines:D4)", new DataState(profile)).ShouldBe("0123");
     }
 
     [Fact]
@@ -38,6 +39,7 @@ public class ProfileFormatBuilderTest : RuleTestBase
         profile.State.StderrLineCount = 123;
 
         formatter.Format("%(profile:stderrLines)", new DataState(profile)).ShouldBe("123");
+        formatter.Format("%(profile:stderrLines:D4)", new DataState(profile)).ShouldBe("0123");
     }
 
     [Fact]
@@ -50,6 +52,7 @@ public class ProfileFormatBuilderTest : RuleTestBase
         profile.State.StderrLineCount = 23;
 
         formatter.Format("%(profile:totalLines)", new DataState(profile)).ShouldBe("123");
+        formatter.Format("%(profile:totalLines:D4)", new DataState(profile)).ShouldBe("0123");
     }
 
     [Fact]

@@ -2,7 +2,7 @@
 
 namespace Wilgysef.StdoutHook.Cli;
 
-public class StreamOutputHandler
+public class StreamOutputHandler : IDisposable
 {
     private readonly Profile _stdoutProfile;
     private readonly Profile _stderrProfile;
@@ -35,12 +35,23 @@ public class StreamOutputHandler
         _stderr = stderrOutput;
     }
 
-    public async Task ReadLinesAsync(int bufferSize = 4096, CancellationToken cancellationToken = default)
+    public async Task ReadLinesAsync(
+        int bufferSize = 4096,
+        TimeSpan? forceProcessTimeout = null,
+        CancellationToken cancellationToken = default)
     {
-        var readOutputTask = _outputReaderHandler.ReadLinesAsync(bufferSize, cancellationToken);
-        var readErrorTask = _errorReaderHandler.ReadLinesAsync(bufferSize, cancellationToken);
+        var readOutputTask = _outputReaderHandler.ReadLinesAsync(bufferSize, forceProcessTimeout, cancellationToken);
+        var readErrorTask = _errorReaderHandler.ReadLinesAsync(bufferSize, forceProcessTimeout, cancellationToken);
 
         await Task.WhenAll(readOutputTask, readErrorTask);
+    }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+
+        _outputReaderHandler.Dispose();
+        _errorReaderHandler.Dispose();
     }
 
     private void HandleOutput(string line)

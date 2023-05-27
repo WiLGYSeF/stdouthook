@@ -8,7 +8,7 @@ public class StreamReaderHandlerTest
     [Fact]
     public async Task Newlines()
     {
-        var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\ndef\nghi"));
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\ndef\nghi"));
         var expected = new[]
         {
             "abc\n",
@@ -22,7 +22,7 @@ public class StreamReaderHandlerTest
     [Fact]
     public async Task CarriageReturnNewlines()
     {
-        var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\r\ndef\r\nghi"));
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\r\ndef\r\nghi"));
         var expected = new[]
         {
             "abc\r\n",
@@ -36,7 +36,7 @@ public class StreamReaderHandlerTest
     [Fact]
     public async Task CarriageReturns()
     {
-        var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\rdef\rghi"));
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\rdef\rghi"));
         var expected = new[]
         {
             "abc\r",
@@ -50,7 +50,7 @@ public class StreamReaderHandlerTest
     [Fact]
     public async Task TrailingNewline()
     {
-        var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\ndef\nghi\n"));
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\ndef\nghi\n"));
         var expected = new[]
         {
             "abc\n",
@@ -64,7 +64,7 @@ public class StreamReaderHandlerTest
     [Fact]
     public async Task TrailingCarriageReturn()
     {
-        var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\ndef\r"));
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\ndef\r"));
         var expected = new[]
         {
             "abc\n",
@@ -77,7 +77,7 @@ public class StreamReaderHandlerTest
     [Fact]
     public async Task DoubleNewline()
     {
-        var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\n\ndef\n\n"));
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\n\ndef\n\n"));
         var expected = new[]
         {
             "abc\n",
@@ -92,7 +92,7 @@ public class StreamReaderHandlerTest
     [Fact]
     public async Task MultipleRead()
     {
-        var stream = new MemoryStream(Encoding.UTF8.GetBytes("abcdef\n\n"));
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("abcdef\n\n"));
         var expected = new[]
         {
             "abcdef\n",
@@ -105,7 +105,7 @@ public class StreamReaderHandlerTest
     [Fact]
     public async Task MultipleRead_CarriageReturn()
     {
-        var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\rdef\n"));
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\rdef\n"));
         var expected = new[]
         {
             "abc\r",
@@ -118,7 +118,7 @@ public class StreamReaderHandlerTest
     [Fact]
     public async Task MultipleRead_CarriageReturn_Newline()
     {
-        var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\r\ndef"));
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc\r\ndef"));
         var expected = new[]
         {
             "abc\r\n",
@@ -126,6 +126,25 @@ public class StreamReaderHandlerTest
         };
 
         await ShouldReadLinesAsync(stream, expected, bufferSize: 4);
+    }
+
+    [Fact]
+    public async Task ForceProcess()
+    {
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("abc"));
+        using var reader = new TestStreamReader(stream);
+
+        var invocations = 0;
+        using var readerHandler = new StreamReaderHandler(reader, data =>
+        {
+            invocations++;
+            data.ShouldBe("abc");
+        });
+
+        var task = readerHandler.ReadLinesAsync(forceProcessTimeout: TimeSpan.FromMilliseconds(20));
+        await Task.Delay(100);
+
+        invocations.ShouldBe(1);
     }
 
     private static async Task ShouldReadLinesAsync(
@@ -136,7 +155,7 @@ public class StreamReaderHandlerTest
         using var reader = new StreamReader(stream);
         using var enumerator = expected.GetEnumerator();
 
-        var readerHandler = new StreamReaderHandler(reader, data =>
+        using var readerHandler = new StreamReaderHandler(reader, data =>
         {
             enumerator.MoveNext().ShouldBeTrue();
             data.ShouldBe(enumerator.Current);
@@ -144,5 +163,21 @@ public class StreamReaderHandlerTest
 
         await readerHandler.ReadLinesAsync(bufferSize: bufferSize);
         enumerator.MoveNext().ShouldBeFalse();
+    }
+
+    private class TestStreamReader : StreamReader
+    {
+        public TestStreamReader(Stream stream) : base(stream) { }
+
+        public override async Task<int> ReadAsync(char[] buffer, int index, int count)
+        {
+            if (BaseStream.Position == BaseStream.Length)
+            {
+                // wait forever
+                await Task.Delay(-1);
+            }
+
+            return await base.ReadAsync(buffer, index, count);
+        }
     }
 }

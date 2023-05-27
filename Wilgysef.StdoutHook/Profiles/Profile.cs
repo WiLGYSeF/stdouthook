@@ -14,6 +14,14 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public bool Flush { get; set; }
 
+        public int? BufferSize { get; set; }
+
+        public int? OutputFlushInterval { get; set; }
+
+        public bool Interactive { get; set; }
+
+        public int? InteractiveFlushInterval { get; set; }
+
         public IList<Rule> Rules { get; set; } = new List<Rule>();
 
         public IDictionary<string, string> CustomColors { get; set; } = new Dictionary<string, string>();
@@ -81,8 +89,12 @@ namespace Wilgysef.StdoutHook.Profiles
                     ProfileName = ProfileName,
                     PseudoTty = PseudoTty,
                     Flush = Flush,
+                    BufferSize = BufferSize,
+                    OutputFlushInterval = OutputFlushInterval,
+                    Interactive = Interactive,
+                    InteractiveFlushInterval = InteractiveFlushInterval,
                     State = State,
-                    _formatter = _formatter
+                    _formatter = _formatter,
                 };
 
                 for (var i = 0; i < Rules.Count; i++)

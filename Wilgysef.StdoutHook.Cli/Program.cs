@@ -1,6 +1,4 @@
-﻿// TODO: use https://github.com/microsoft/vs-pty.net
-
-using CommandLine;
+﻿using CommandLine;
 using System.Diagnostics;
 using Wilgysef.StdoutHook.Cli;
 using Wilgysef.StdoutHook.Loggers;
@@ -9,10 +7,14 @@ using Wilgysef.StdoutHook.Profiles.Dtos;
 
 const string LogName = ".stdouthook.log";
 const int ProcessRefreshInterval = 1000;
+const int BufferSizeDefault = 16384;
+const int OutputFlushIntervalDefault = 250;
+const int InteractiveFlushIntervalDefault = 200;
 
 Process? process = null;
 TextWriter? outputStreamWriter = null;
 TextWriter? errorStreamWriter = null;
+StreamOutputHandler? streamOutputHandler = null;
 
 try
 {
@@ -94,6 +96,12 @@ try
 
     process = StartProcess(profile, command, commandArguments);
 
+    try
+    {
+        GlobalLogger.ProcessName = process.ProcessName;
+    }
+    catch { }
+
     Task? readStreamTask = null;
     using var cancellationTokenSource = new CancellationTokenSource();
 
@@ -102,13 +110,13 @@ try
         profile!.State.SetProcess(process);
 
         var flush = profile.Flush || Shared.Options.Flush;
-        var bufferSize = flush ? 1 : Shared.Options.BufferSize;
+        var bufferSize = flush ? 1 : (Shared.Options.BufferSize ?? profile.BufferSize ?? BufferSizeDefault);
         outputStreamWriter ??= new CustomStreamWriter(Console.OpenStandardOutput(), Console.OutputEncoding, bufferSize);
         errorStreamWriter ??= new CustomStreamWriter(Console.OpenStandardError(), Console.OutputEncoding, bufferSize);
 
         profile.Split(out var stdoutProfile, out var stderrProfile);
 
-        var streamOutputHandler = new StreamOutputHandler(
+        streamOutputHandler = new StreamOutputHandler(
             stdoutProfile,
             stderrProfile,
             process.StandardOutput,
@@ -116,7 +124,13 @@ try
             outputStreamWriter,
             errorStreamWriter);
 
-        readStreamTask = streamOutputHandler.ReadLinesAsync(cancellationToken: cancellationTokenSource.Token);
+        readStreamTask = streamOutputHandler.ReadLinesAsync(
+            forceProcessTimeout: (Shared.Options.Interactive || profile.Interactive)
+                ? TimeSpan.FromMilliseconds(Shared.Options.InteractiveFlushInterval
+                    ?? profile.InteractiveFlushInterval
+                    ?? InteractiveFlushIntervalDefault)
+                : null,
+            cancellationToken: cancellationTokenSource.Token);
 
         if (!flush)
         {
@@ -125,10 +139,12 @@ try
                 //periodically flush the output
 
                 var cancellationToken = cancellationTokenSource.Token;
+                var interval = Shared.Options.OutputFlushInterval ?? profile.OutputFlushInterval ?? OutputFlushIntervalDefault;
+
                 while (true)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    await Task.Delay(Shared.Options.OutputFlushInterval, cancellationToken);
+                    await Task.Delay(interval, cancellationToken);
 
                     outputStreamWriter.Flush();
                     errorStreamWriter.Flush();
@@ -149,7 +165,12 @@ try
         });
     }
 
-    process.WaitForExit();
+    try
+    {
+        process.WaitForExit();
+    }
+    catch { }
+
     cancellationTokenSource.Cancel();
 
     if (readStreamTask != null)
@@ -167,9 +188,16 @@ try
         }
     }
 
-    return process.HasExited
-        ? process.ExitCode
-        : 0;
+    try
+    {
+        return process.HasExited
+            ? process.ExitCode
+            : 0;
+    }
+    catch
+    {
+        return 0;
+    }
 }
 catch (ProgramSetupException setupException)
 {
@@ -186,13 +214,23 @@ finally
 {
     if (process != null)
     {
-        if (!process.HasExited)
+        try
         {
-            process.Kill();
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
         }
+        catch { }
 
         process.Dispose();
     }
+
+    try
+    {
+        streamOutputHandler?.Dispose();
+    }
+    catch { }
 
     outputStreamWriter?.Dispose();
     errorStreamWriter?.Dispose();
@@ -301,13 +339,18 @@ string? GetConfigurationDirectory(string? configDir)
 
 void ValidateArgs()
 {
-    if (Shared.Options.BufferSize < 1)
+    if (Shared.Options.BufferSize.HasValue && Shared.Options.BufferSize.Value < 1)
     {
-        Shared.Options.BufferSize = 16384;
+        Shared.Options.BufferSize = null;
     }
 
-    if (Shared.Options.OutputFlushInterval < 0)
+    if (Shared.Options.OutputFlushInterval.HasValue && Shared.Options.OutputFlushInterval.Value < 0)
     {
-        Shared.Options.OutputFlushInterval = 250;
+        Shared.Options.OutputFlushInterval = null;
+    }
+
+    if (Shared.Options.InteractiveFlushInterval.HasValue && Shared.Options.InteractiveFlushInterval.Value < 0)
+    {
+        Shared.Options.InteractiveFlushInterval = null;
     }
 }

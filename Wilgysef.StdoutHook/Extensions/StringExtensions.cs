@@ -26,6 +26,12 @@
                 return str;
             }
 
+            if (index == -1)
+            {
+                newline = str;
+                return "";
+            }
+
             newline = str[index..];
             return str[..index];
         }

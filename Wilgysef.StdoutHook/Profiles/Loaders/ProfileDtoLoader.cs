@@ -41,6 +41,21 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                     }
                 }
 
+                if (dto.BufferSize.HasValue && dto.BufferSize.Value < 1)
+                {
+                    throw new ProfileLoaderException("Buffer size must be at least 1");
+                }
+
+                if (dto.OutputFlushInterval.HasValue && dto.OutputFlushInterval.Value < 0)
+                {
+                    throw new ProfileLoaderException("Output flush interval must be at least 0");
+                }
+
+                if (dto.InteractiveFlushInterval.HasValue && dto.InteractiveFlushInterval.Value < 0)
+                {
+                    throw new ProfileLoaderException("Interval flush interval must be at least 0");
+                }
+
                 if (dto.Rules != null)
                 {
                     for (var ruleIndex = 0; ruleIndex < dto.Rules.Count; ruleIndex++)
