@@ -2,6 +2,6 @@
 {
     public class UnknownRuleException : ProfileLoaderException
     {
-        public UnknownRuleException() : base("") { }
+        public UnknownRuleException(string rule) : base(rule) { }
     }
 }

@@ -82,6 +82,32 @@ namespace Wilgysef.StdoutHook.Rules
             _deactivationLines = new SortedListIncrementMatch<long>(DeactivationLines);
             _deactivationLinesStdoutOnly = new SortedListIncrementMatch<long>(DeactivationLinesStdoutOnly);
             _deactivationLinesStderrOnly = new SortedListIncrementMatch<long>(DeactivationLinesStderrOnly);
+
+            if (ActivationLines.Count > 0
+                || ActivationLinesStdoutOnly.Count > 0
+                || ActivationLinesStderrOnly.Count > 0)
+            {
+                var activationLineMins = new long[]
+                {
+                    _activationLines.GetFirstOrDefault(long.MaxValue),
+                    _activationLinesStdoutOnly.GetFirstOrDefault(long.MaxValue),
+                    _activationLinesStderrOnly.GetFirstOrDefault(long.MaxValue),
+                };
+
+                var deactivationLineMins = new long[]
+                {
+                    _deactivationLines.GetFirstOrDefault(long.MaxValue),
+                    _deactivationLinesStdoutOnly.GetFirstOrDefault(long.MaxValue),
+                    _deactivationLinesStderrOnly.GetFirstOrDefault(long.MaxValue),
+                };
+
+                _active = !DoesFirstCollectionContainMin(activationLineMins, deactivationLineMins);
+            }
+            else if (ActivationExpressions.Count + ActivationExpressionsStdoutOnly.Count + ActivationExpressionsStderrOnly.Count > 0
+                && DeactivationExpressions.Count + DeactivationExpressionsStdoutOnly.Count + DeactivationExpressionsStderrOnly.Count == 0)
+            {
+                _active = false;
+            }
         }
 
         internal virtual bool IsActive(DataState state)
@@ -94,7 +120,7 @@ namespace Wilgysef.StdoutHook.Rules
 
             var profileState = state.Profile.State;
 
-            // avoid potential race conditions
+            // avoid potential race conditions by caching values
             var lineCount = profileState.LineCount;
             var stdoutLineCount = profileState.StdoutLineCount;
             var stderrLineCount = profileState.StderrLineCount;
@@ -251,10 +277,46 @@ namespace Wilgysef.StdoutHook.Rules
 
                 var originalIndex = _index;
 
-                for (; _index < _itemCount && item.Equals(_items[_index]); _index++) { }
+                for (; _index < _itemCount && item.Equals(_items[_index]); _index++) ;
 
                 return originalIndex != _index;
             }
+
+            public T GetFirstOrDefault(T defaultValue)
+            {
+                return _itemCount > 0
+                    ? _items[0]
+                    : defaultValue;
+            }
+        }
+
+        private static bool DoesFirstCollectionContainMin(long[] first, long[] second)
+        {
+            var min = long.MaxValue;
+
+            foreach (var val in first)
+            {
+                if (val < min)
+                {
+                    min = val;
+                }
+            }
+
+            var secondMatch = false;
+
+            foreach (var val in second)
+            {
+                if (val < min)
+                {
+                    return false;
+                }
+                else if (val == min)
+                {
+                    secondMatch = true;
+                }
+            }
+
+            return !secondMatch;
         }
     }
 }

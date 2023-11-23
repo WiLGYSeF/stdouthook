@@ -1,9 +1,12 @@
 ﻿using CommandLine;
 using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Wilgysef.StdoutHook.Cli;
 using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Profiles.Dtos;
+using Wilgysef.StdoutHook.Profiles.Loaders;
 
 const string LogName = ".stdouthook.log";
 const int ProcessRefreshInterval = 1000;
@@ -11,19 +14,32 @@ const int BufferSizeDefault = 16384;
 const int OutputFlushIntervalDefault = 250;
 const int InteractiveFlushIntervalDefault = 200;
 
+StreamWriter? logStream = null;
+Profile? profile = null;
 Process? process = null;
 TextWriter? outputStreamWriter = null;
 TextWriter? errorStreamWriter = null;
 StreamOutputHandler? streamOutputHandler = null;
 
+var argparseTimeElapsed = TimeSpan.Zero;
+var profileLoadingTimeElapsed = TimeSpan.Zero;
+var processRuntime = TimeSpan.Zero;
+
+var globalStopwatch = Stopwatch.StartNew();
+var processStopwatch = new Stopwatch();
+var stopwatch = new Stopwatch();
+
 try
 {
+    stopwatch.Restart();
     var argParseResult = new Parser(parser =>
     {
+        parser.AllowMultiInstance = true;
         parser.EnableDashDash = true;
         parser.HelpWriter = Console.Error;
     })
         .ParseArguments<Options>(args);
+    argparseTimeElapsed = stopwatch.Elapsed;
 
     if (argParseResult.Tag == ParserResultType.NotParsed)
     {
@@ -47,31 +63,55 @@ try
         return 1;
     }
 
-    using var logStream = new StreamWriter(GetLogStream(
+    logStream = new StreamWriter(GetLogStream(
         configDir != null
             ? Path.Combine(configDir, LogName)
             : null));
     GlobalLogger.Logger = new Logger(logStream);
 
+    stopwatch.Restart();
+
     var command = Shared.Options.Arguments[0];
     var commandArguments = Shared.Options.Arguments.Skip(1).ToArray();
+
+    var commandPaths = new CommandLocator().LocateCommand(command);
+    var fullCommandPath = commandPaths.FirstOrDefault() ?? command;
 
     var cliProfileDtoLoader = new CliProfileDtoLoader();
     var profileDtos = configDir != null
         ? await cliProfileDtoLoader.LoadProfileDtosAsync(configDir)
         : new List<ProfileDto>();
 
-    var cliProfileLoader = new CliProfileLoader();
-    using var profile = cliProfileLoader.LoadProfile(
-        profileDtos,
-        Shared.Options.ProfileName,
-        command,
-        commandArguments);
-    var profileLoaded = profile != null;
+    var profileLoaded = false;
+    try
+    {
+        (profile, var profileDtoPicked) = LoadProfile(
+            profileDtos,
+            Shared.Options.ProfileName,
+            command,
+            fullCommandPath,
+            commandArguments);
+        profileLoaded = profile != null;
 
-    Shared.VerbosePrint(profileLoaded
-        ? $"using profile: {profile!.ProfileName ?? "<unnamed>"}"
-        : "no profile selected");
+        Shared.VerbosePrint(profileLoaded
+            ? $"using profile: {profile!.ProfileName ?? "<unnamed>"}"
+            : "no profile selected");
+
+        if (profileLoaded && Shared.Options.Verbose >= 2)
+        {
+            var options = new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                WriteIndented = true,
+            };
+            Shared.VerbosePrint($"using profile: {JsonSerializer.Serialize(profileDtoPicked, options)}", 2);
+        }
+    }
+    catch (Exception ex)
+    {
+        Shared.VerbosePrintError($"failed to load profile: {ex.GetType().Name} {ex.Message}");
+        GlobalLogger.Error(ex, "failed to load profile");
+    }
 
     try
     {
@@ -84,6 +124,8 @@ try
         profileLoaded = false;
     }
 
+    profileLoadingTimeElapsed = stopwatch.Elapsed;
+
     if (Shared.Options.Stdout != null)
     {
         outputStreamWriter = CreateRedirectedStream(Shared.Options.Stdout, Shared.Options.StdoutAppend);
@@ -94,7 +136,8 @@ try
         errorStreamWriter = CreateRedirectedStream(Shared.Options.Stderr, Shared.Options.StderrAppend);
     }
 
-    process = StartProcess(profile, command, commandArguments);
+    processStopwatch.Start();
+    process = StartProcess(profile, fullCommandPath, commandArguments);
 
     try
     {
@@ -212,6 +255,9 @@ catch (Exception ex)
 }
 finally
 {
+    processStopwatch.Stop();
+    processRuntime = processStopwatch.Elapsed;
+
     if (process != null)
     {
         try
@@ -234,6 +280,45 @@ finally
 
     outputStreamWriter?.Dispose();
     errorStreamWriter?.Dispose();
+
+    // TODO: remove
+    if (Shared.Options.Verbose >= 3)
+    {
+        Shared.VerbosePrint("", 3);
+        Shared.VerbosePrint($"argument parsing: {argparseTimeElapsed}", 3);
+        Shared.VerbosePrint($"profile loading:  {profileLoadingTimeElapsed}", 3);
+        Shared.VerbosePrint($"process runtime:  {processRuntime}", 3);
+    }
+
+    logStream?.Dispose();
+}
+
+(Profile?, ProfileDto?) LoadProfile(
+    IReadOnlyList<ProfileDto> profileDtos,
+    string? profileName,
+    string command,
+    string? fullCommandPath,
+    IReadOnlyList<string> arguments)
+{
+    var loader = new ProfileLoader();
+    var picker = new ProfileDtoPicker();
+
+    ProfileDto? profileDtoPicked = null;
+    var profile = loader.LoadProfile(
+        profileDtos,
+        profiles =>
+        {
+            profileDtoPicked = picker.PickProfileDto(
+                profiles,
+                profileName: profileName,
+                command: Path.GetFileName(command),
+                fullCommandPath: fullCommandPath,
+                arguments: arguments);
+            return profileDtoPicked;
+        },
+        throwIfInheritedProfileNotFound: false);
+
+    return (profile, profileDtoPicked);
 }
 
 Process StartProcess(Profile? profile, string command, IReadOnlyList<string> arguments)
@@ -276,7 +361,7 @@ TextWriter CreateRedirectedStream(string filename, bool append)
     try
     {
         var dirname = Path.GetDirectoryName(filename);
-        if (dirname != null)
+        if (dirname != null && dirname.Length > 0)
         {
             Directory.CreateDirectory(dirname);
         }

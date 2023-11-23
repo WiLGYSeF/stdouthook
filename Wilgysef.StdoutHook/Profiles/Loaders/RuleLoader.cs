@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Wilgysef.StdoutHook.Profiles.Dtos;
 using Wilgysef.StdoutHook.Rules;
@@ -19,9 +22,12 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
         public Rule LoadRule(RuleDto dto)
         {
-            return RuleBuilders.TryGetValue(GetRuleType(dto), out var builder)
-                ? builder(dto)
-                : throw new UnknownRuleException();
+            if (RuleBuilders.TryGetValue(GetRuleType(dto), out var builder))
+            {
+                return builder(dto);
+            }
+
+            throw CreateUnknownRuleException(dto);
         }
 
         private static Rule BuildFieldSeparatorRule(RuleDto dto)
@@ -94,7 +100,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
                 for (var i = 0; i < fieldsList.Count; i++)
                 {
-                    if (!(fieldsList[i] is string str))
+                    if (fieldsList[i] is not string str)
                     {
                         throw new InvalidRuleException(rule, "expected string type");
                     }
@@ -112,7 +118,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
                 foreach (var (key, val) in fieldsObj)
                 {
-                    if (!(val is string str))
+                    if (val is not string str)
                     {
                         throw new InvalidRuleException(rule, "expected string type");
                     }
@@ -218,35 +224,44 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
             if (rule.SeparatorExpression != null)
             {
-                SetType(ref type, typeof(FieldSeparatorRule));
+                SetType(typeof(FieldSeparatorRule));
             }
 
             if (rule.Regex != null)
             {
-                SetType(ref type, typeof(RegexGroupRule));
+                SetType(typeof(RegexGroupRule));
             }
 
             if (rule.Filename != null)
             {
-                SetType(ref type, typeof(TeeRule));
+                SetType(typeof(TeeRule));
             }
 
             if (type == null && rule.ReplaceAllFormat != null)
             {
-                SetType(ref type, typeof(UnconditionalReplaceRule));
+                SetType(typeof(UnconditionalReplaceRule));
             }
 
-            return type ?? throw new UnknownRuleException();
+            return type ?? throw CreateUnknownRuleException(rule);
 
-            static void SetType(ref Type? type, Type value)
+            void SetType(Type value)
             {
                 if (type != null)
                 {
-                    throw new UnknownRuleException();
+                    throw CreateUnknownRuleException(rule);
                 }
 
                 type = value;
             }
+        }
+
+        private static UnknownRuleException CreateUnknownRuleException(RuleDto rule)
+        {
+            return new UnknownRuleException(JsonSerializer.Serialize(rule, new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                WriteIndented = true,
+            }));
         }
 
         private static Regex? GetRegex(string? expression)

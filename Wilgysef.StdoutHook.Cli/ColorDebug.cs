@@ -113,13 +113,11 @@ public static class ColorDebug
 
         static void HsvToRgb(float h, float s, float v, out int r, out int g, out int b)
         {
-            float i, f, p, q, t;
-
-            i = MathF.Floor(h * 6);
-            f = h * 6 - i;
-            p = v * (1 - s);
-            q = v * (1 - f * s);
-            t = v * (1 - (1 - f) * s);
+            float i = MathF.Floor(h * 6);
+            float f = h * 6 - i;
+            float p = v * (1 - s);
+            float q = v * (1 - f * s);
+            float t = v * (1 - (1 - f) * s);
 
             switch (i % 6)
             {

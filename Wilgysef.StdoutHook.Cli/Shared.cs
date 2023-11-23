@@ -23,23 +23,23 @@ internal static class Shared
         }
     }
 
-    public static void VerbosePrint(string message)
+    public static void VerbosePrint(string message, int level = 1)
     {
         var formattedMessage = "STDOUTHOOK: " + message;
         Debug.WriteLine(formattedMessage);
 
-        if (Options != null && Options.Verbose > 0)
+        if (Options != null && Options.Verbose >= level)
         {
             Console.WriteLine(formattedMessage);
         }
     }
 
-    public static void VerbosePrintError(string message)
+    public static void VerbosePrintError(string message, int level = 1)
     {
         var formattedMessage = "STDOUTHOOK: " + message;
         Debug.WriteLine(formattedMessage);
 
-        if (Options != null && Options.Verbose > 0)
+        if (Options != null && Options.Verbose >= level)
         {
             Console.Error.WriteLine(formattedMessage);
         }
