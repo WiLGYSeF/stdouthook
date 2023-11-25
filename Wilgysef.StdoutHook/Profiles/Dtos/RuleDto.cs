@@ -1,96 +1,95 @@
 ﻿using System.Collections.Generic;
 using Wilgysef.StdoutHook.Utilities;
 
-namespace Wilgysef.StdoutHook.Profiles.Dtos
+namespace Wilgysef.StdoutHook.Profiles.Dtos;
+
+public class RuleDto
 {
-    public class RuleDto
-    {
-        #region Base Rule
+    #region Base Rule
 
-        public bool? Enabled { get; set; }
+    public bool? Enabled { get; set; }
 
-        public object? EnableExpression { get; set; }
+    public object? EnableExpression { get; set; }
 
-        public bool? StdoutOnly { get; set; }
+    public bool? StdoutOnly { get; set; }
 
-        public bool? StderrOnly { get; set; }
+    public bool? StderrOnly { get; set; }
 
-        public bool? Terminal { get; set; }
+    public bool? Terminal { get; set; }
 
-        public bool? TrimNewline { get; set; }
+    public bool? TrimNewline { get; set; }
 
-        public IList<long>? ActivationLines { get; set; }
+    public IList<long>? ActivationLines { get; set; }
 
-        public IList<long>? ActivationLinesStdoutOnly { get; set; }
+    public IList<long>? ActivationLinesStdoutOnly { get; set; }
 
-        public IList<long>? ActivationLinesStderrOnly { get; set; }
+    public IList<long>? ActivationLinesStderrOnly { get; set; }
 
-        public IList<long>? DeactivationLines { get; set; }
+    public IList<long>? DeactivationLines { get; set; }
 
-        public IList<long>? DeactivationLinesStdoutOnly { get; set; }
+    public IList<long>? DeactivationLinesStdoutOnly { get; set; }
 
-        public IList<long>? DeactivationLinesStderrOnly { get; set; }
+    public IList<long>? DeactivationLinesStderrOnly { get; set; }
 
-        public IList<ActivationExpressionDto>? ActivationExpressions { get; set; }
+    public IList<ActivationExpressionDto>? ActivationExpressions { get; set; }
 
-        public IList<ActivationExpressionDto>? ActivationExpressionsStdoutOnly { get; set; }
+    public IList<ActivationExpressionDto>? ActivationExpressionsStdoutOnly { get; set; }
 
-        public IList<ActivationExpressionDto>? ActivationExpressionsStderrOnly { get; set; }
+    public IList<ActivationExpressionDto>? ActivationExpressionsStderrOnly { get; set; }
 
-        public IList<ActivationExpressionDto>? DeactivationExpressions { get; set; }
+    public IList<ActivationExpressionDto>? DeactivationExpressions { get; set; }
 
-        public IList<ActivationExpressionDto>? DeactivationExpressionsStdoutOnly { get; set; }
+    public IList<ActivationExpressionDto>? DeactivationExpressionsStdoutOnly { get; set; }
 
-        public IList<ActivationExpressionDto>? DeactivationExpressionsStderrOnly { get; set; }
+    public IList<ActivationExpressionDto>? DeactivationExpressionsStderrOnly { get; set; }
 
-        public string? GetEnableExpression() => StringExpressions.GetExpression(EnableExpression);
+    public string? GetEnableExpression() => StringExpressions.GetExpression(EnableExpression);
 
-        #endregion
+    #endregion
 
-        #region Field Separator Rule
+    #region Field Separator Rule
 
-        public object? SeparatorExpression { get; set; }
+    public object? SeparatorExpression { get; set; }
 
-        public int? MinFields { get; set; }
+    public int? MinFields { get; set; }
 
-        public int? MaxFields { get; set; }
+    public int? MaxFields { get; set; }
 
-        public object? ReplaceFields { get; set; }
+    public object? ReplaceFields { get; set; }
 
-        public string? GetSeparatorExpression() => StringExpressions.GetExpression(SeparatorExpression);
+    public string? GetSeparatorExpression() => StringExpressions.GetExpression(SeparatorExpression);
 
-        #endregion
+    #endregion
 
-        #region Filter Rule
+    #region Filter Rule
 
-        public bool? Filter { get; set; }
+    public bool? Filter { get; set; }
 
-        #endregion
+    #endregion
 
-        #region Regex Group Rule
+    #region Regex Group Rule
 
-        public object? Regex { get; set; }
+    public object? Regex { get; set; }
 
-        public object? ReplaceGroups { get; set; }
+    public object? ReplaceGroups { get; set; }
 
-        public string? GetRegex() => StringExpressions.GetExpression(Regex);
+    public string? GetRegex() => StringExpressions.GetExpression(Regex);
 
-        #endregion
+    #endregion
 
-        #region Tee Rule
+    #region Tee Rule
 
-        public string? Filename { get; set; }
+    public string? Filename { get; set; }
 
-        public bool? Flush { get; set; }
+    public bool? Flush { get; set; }
 
-        public bool? ExtractColors { get; set; }
+    public bool? ExtractColors { get; set; }
 
-        #endregion
+    #endregion
 
-        #region Field Separator, Regex Group, Unconditional Replace
+    #region Field Separator, Regex Group, Unconditional Replace
 
-        public string? ReplaceAllFormat { get; set; }
+    public string? ReplaceAllFormat { get; set; }
 
-        #endregion
-    }
+    #endregion
 }

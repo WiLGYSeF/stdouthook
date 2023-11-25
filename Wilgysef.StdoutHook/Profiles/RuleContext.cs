@@ -1,34 +1,33 @@
 ﻿using System.Collections.Generic;
 
-namespace Wilgysef.StdoutHook.Profiles
+namespace Wilgysef.StdoutHook.Profiles;
+
+internal class RuleContext
 {
-    internal class RuleContext
+    public RuleFieldContext? FieldContext { get; private set; }
+
+    public RuleRegexGroupContext? RegexGroupContext { get; private set; }
+
+    public void SetFieldContext(IReadOnlyList<string> fieldsWithSeparators)
     {
-        public RuleFieldContext? FieldContext { get; private set; }
+        FieldContext = new RuleFieldContext(fieldsWithSeparators);
+    }
 
-        public RuleRegexGroupContext? RegexGroupContext { get; private set; }
-
-        public void SetFieldContext(IReadOnlyList<string> fieldsWithSeparators)
+    public void SetRegexGroupContext(IReadOnlyDictionary<string, string> groups)
+    {
+        if (RegexGroupContext != null)
         {
-            FieldContext = new RuleFieldContext(fieldsWithSeparators);
+            RegexGroupContext.Reset(groups);
         }
-
-        public void SetRegexGroupContext(IReadOnlyDictionary<string, string> groups)
+        else
         {
-            if (RegexGroupContext != null)
-            {
-                RegexGroupContext.Reset(groups);
-            }
-            else
-            {
-                RegexGroupContext = new RuleRegexGroupContext(groups);
-            }
+            RegexGroupContext = new RuleRegexGroupContext(groups);
         }
+    }
 
-        public void Reset()
-        {
-            FieldContext = null;
-            RegexGroupContext = null;
-        }
+    public void Reset()
+    {
+        FieldContext = null;
+        RegexGroupContext = null;
     }
 }

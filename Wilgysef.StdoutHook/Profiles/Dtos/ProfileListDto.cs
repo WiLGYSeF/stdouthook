@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace Wilgysef.StdoutHook.Profiles.Dtos
+namespace Wilgysef.StdoutHook.Profiles.Dtos;
+
+public class ProfileListDto
 {
-    public class ProfileListDto
-    {
-        public IList<ProfileDto> Profiles { get; set; } = null!;
-    }
+    public IList<ProfileDto> Profiles { get; set; } = null!;
 }

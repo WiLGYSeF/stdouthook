@@ -1,10 +1,9 @@
-﻿namespace Wilgysef.StdoutHook.Profiles.Loaders
+﻿namespace Wilgysef.StdoutHook.Profiles.Loaders;
+
+public class InheritedProfileNotFoundException : ProfileLoaderException
 {
-    public class InheritedProfileNotFoundException : ProfileLoaderException
+    public InheritedProfileNotFoundException(string message)
+        : base(message)
     {
-        public InheritedProfileNotFoundException(string message)
-            : base(message)
-        {
-        }
     }
 }

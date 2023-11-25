@@ -1,62 +1,61 @@
 ﻿using System;
 using System.Text;
 
-namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
+namespace Wilgysef.StdoutHook.Formatters.FormatBuilders;
+
+internal class ByteFormatBuilder : FormatBuilder
 {
-    internal class ByteFormatBuilder : FormatBuilder
+    public override string? Key => null;
+
+    public override char? KeyShort => 'x';
+
+    public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
     {
-        public override string? Key => null;
+        isConstant = true;
 
-        public override char? KeyShort => 'x';
-
-        public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
+        if (!IsHex(state.Contents))
         {
-            isConstant = true;
-
-            if (!IsHex(state.Contents))
-            {
-                return _ => "";
-            }
-
-            var value = Convert.ToByte(state.Contents, 16);
-            var valueStr = Encoding.UTF8.GetString(new byte[] { value });
-            return _ => valueStr;
+            return _ => "";
         }
 
-        private static bool IsHex(string str)
-        {
-            return str.Length == 2 && IsHexChar(str[0]) && IsHexChar(str[1]);
-        }
+        var value = Convert.ToByte(state.Contents, 16);
+        var valueStr = Encoding.UTF8.GetString(new byte[] { value });
+        return _ => valueStr;
+    }
 
-        private static bool IsHexChar(char c)
+    private static bool IsHex(string str)
+    {
+        return str.Length == 2 && IsHexChar(str[0]) && IsHexChar(str[1]);
+    }
+
+    private static bool IsHexChar(char c)
+    {
+        switch (c)
         {
-            switch (c)
-            {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                case 'a':
-                case 'b':
-                case 'c':
-                case 'd':
-                case 'e':
-                case 'f':
-                case 'A':
-                case 'B':
-                case 'C':
-                case 'E':
-                case 'F':
-                    return true;
-                default:
-                    return false;
-            }
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            case 'a':
+            case 'b':
+            case 'c':
+            case 'd':
+            case 'e':
+            case 'f':
+            case 'A':
+            case 'B':
+            case 'C':
+            case 'E':
+            case 'F':
+                return true;
+            default:
+                return false;
         }
     }
 }

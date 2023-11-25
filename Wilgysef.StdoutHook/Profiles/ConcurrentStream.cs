@@ -1,51 +1,50 @@
 ﻿using System;
 using System.IO;
 
-namespace Wilgysef.StdoutHook.Profiles
+namespace Wilgysef.StdoutHook.Profiles;
+
+internal class ConcurrentStream : IDisposable
 {
-    internal class ConcurrentStream : IDisposable
+    public bool AutoFlush { get; set; }
+
+    private readonly Stream _stream;
+
+    private readonly object _lock = new object();
+
+    public ConcurrentStream(Stream stream, bool flush = false)
     {
-        public bool AutoFlush { get; set; }
+        AutoFlush = flush;
+        _stream = stream;
+    }
 
-        private readonly Stream _stream;
-
-        private readonly object _lock = new object();
-
-        public ConcurrentStream(Stream stream, bool flush = false)
+    public void Write(byte[] data, bool flush = false)
+    {
+        lock (_lock)
         {
-            AutoFlush = flush;
-            _stream = stream;
-        }
+            _stream.Write(data);
 
-        public void Write(byte[] data, bool flush = false)
-        {
-            lock (_lock)
-            {
-                _stream.Write(data);
-
-                if (flush || AutoFlush)
-                {
-                    _stream.Flush();
-                }
-            }
-        }
-
-        public void Flush()
-        {
-            lock (_lock)
+            if (flush || AutoFlush)
             {
                 _stream.Flush();
             }
         }
+    }
 
-        public bool IsStream(Stream stream)
+    public void Flush()
+    {
+        lock (_lock)
         {
-            return stream == _stream;
+            _stream.Flush();
         }
+    }
 
-        public void Dispose()
-        {
-            _stream.Dispose();
-        }
+    public bool IsStream(Stream stream)
+    {
+        return stream == _stream;
+    }
+
+    public void Dispose()
+    {
+        _stream.Dispose();
     }
 }

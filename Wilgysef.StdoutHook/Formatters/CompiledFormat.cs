@@ -2,53 +2,52 @@
 using System.Text;
 using Wilgysef.StdoutHook.Profiles;
 
-namespace Wilgysef.StdoutHook.Formatters
+namespace Wilgysef.StdoutHook.Formatters;
+
+internal class CompiledFormat
 {
-    internal class CompiledFormat
+    public CompiledFormat(string[] parts, Func<FormatComputeState, string>[] funcs)
     {
-        public CompiledFormat(string[] parts, Func<FormatComputeState, string>[] funcs)
+        Parts = parts;
+        Funcs = funcs;
+        IsConstant = Parts.Length == 1;
+    }
+
+    public bool IsConstant { get; }
+
+    internal string[] Parts { get; }
+
+    internal Func<FormatComputeState, string>[] Funcs { get; }
+
+    public string Compute(DataState dataState)
+    {
+        return Compute(dataState, 0);
+    }
+
+    public string Compute(DataState dataState, int startPosition)
+    {
+        if (IsConstant)
         {
-            Parts = parts;
-            Funcs = funcs;
-            IsConstant = Parts.Length == 1;
+            return Parts[0];
         }
 
-        public bool IsConstant { get; }
+        var builder = new StringBuilder();
+        var computeState = new FormatComputeState(dataState, startPosition);
 
-        internal string[] Parts { get; }
-
-        internal Func<FormatComputeState, string>[] Funcs { get; }
-
-        public string Compute(DataState dataState)
+        for (var i = 0; i < Funcs.Length; i++)
         {
-            return Compute(dataState, 0);
+            builder.Append(Parts[i]);
+
+            computeState.SetPosition(builder.Length + startPosition);
+            builder.Append(Funcs[i](computeState));
         }
 
-        public string Compute(DataState dataState, int startPosition)
-        {
-            if (IsConstant)
-            {
-                return Parts[0];
-            }
+        return builder.Append(Parts[^1])
+            .ToString();
+    }
 
-            var builder = new StringBuilder();
-            var computeState = new FormatComputeState(dataState, startPosition);
-
-            for (var i = 0; i < Funcs.Length; i++)
-            {
-                builder.Append(Parts[i]);
-
-                computeState.SetPosition(builder.Length + startPosition);
-                builder.Append(Funcs[i](computeState));
-            }
-
-            return builder.Append(Parts[^1])
-                .ToString();
-        }
-
-        public CompiledFormat Copy()
-        {
-            return new CompiledFormat(Parts, Funcs);
-        }
+    public CompiledFormat Copy()
+    {
+        return new CompiledFormat(Parts, Funcs);
     }
 }

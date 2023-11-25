@@ -1,111 +1,110 @@
 ﻿using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Formatters;
 
-namespace Wilgysef.StdoutHook.Profiles
+namespace Wilgysef.StdoutHook.Profiles;
+
+internal class DataState
 {
-    internal class DataState
+    private readonly ColorList _extractedColors = new();
+    private string _data = null!;
+
+    private string? _dataTrimEndNewline;
+    private string? _dataExtractedColorTrimEndNewline;
+    private string? _newline;
+    private bool _extractedColorsUpdated;
+
+    public DataState(string data, bool stdout, Profile profile)
     {
-        private readonly ColorList _extractedColors = new();
-        private string _data = null!;
+        Data = data;
+        Stdout = stdout;
+        Profile = profile;
+    }
 
-        private string? _dataTrimEndNewline;
-        private string? _dataExtractedColorTrimEndNewline;
-        private string? _newline;
-        private bool _extractedColorsUpdated;
+    public DataState(Profile profile)
+    {
+        Profile = profile;
+    }
 
-        public DataState(string data, bool stdout, Profile profile)
+    public string Data
+    {
+        get => _data;
+        internal set
         {
-            Data = data;
-            Stdout = stdout;
-            Profile = profile;
-        }
-
-        public DataState(Profile profile)
-        {
-            Profile = profile;
-        }
-
-        public string Data
-        {
-            get => _data;
-            internal set
+            if (_data != value)
             {
-                if (_data != value)
-                {
-                    _data = value!;
-                    _dataTrimEndNewline = null;
-                    _dataExtractedColorTrimEndNewline = null;
-                    _extractedColors.Clear();
-                    _extractedColorsUpdated = false;
-                }
+                _data = value!;
+                _dataTrimEndNewline = null;
+                _dataExtractedColorTrimEndNewline = null;
+                _extractedColors.Clear();
+                _extractedColorsUpdated = false;
             }
         }
+    }
 
-        public string DataTrimEndNewline
+    public string DataTrimEndNewline
+    {
+        get
         {
-            get
+            _dataTrimEndNewline ??= _data.TrimEndNewline(out _newline);
+            return _dataTrimEndNewline;
+        }
+    }
+
+    public string DataExtractedColorTrimEndNewline
+    {
+        get
+        {
+            if (_dataExtractedColorTrimEndNewline == null)
             {
-                _dataTrimEndNewline ??= _data.TrimEndNewline(out _newline);
-                return _dataTrimEndNewline;
+                ExtractColors();
             }
-        }
 
-        public string DataExtractedColorTrimEndNewline
+            return _dataExtractedColorTrimEndNewline!;
+        }
+    }
+
+    public string Newline
+    {
+        get
         {
-            get
+            if (_newline == null)
             {
-                if (_dataExtractedColorTrimEndNewline == null)
-                {
-                    ExtractColors();
-                }
-
-                return _dataExtractedColorTrimEndNewline!;
+                _dataTrimEndNewline = _data.TrimEndNewline(out _newline);
             }
-        }
 
-        public string Newline
+            return _newline;
+        }
+    }
+
+    public ColorList ExtractedColors
+    {
+        get
         {
-            get
+            if (!_extractedColorsUpdated)
             {
-                if (_newline == null)
-                {
-                    _dataTrimEndNewline = _data.TrimEndNewline(out _newline);
-                }
-
-                return _newline;
+                ExtractColors();
             }
+
+            return _extractedColors;
         }
+    }
 
-        public ColorList ExtractedColors
-        {
-            get
-            {
-                if (!_extractedColorsUpdated)
-                {
-                    ExtractColors();
-                }
+    public bool Stdout { get; }
 
-                return _extractedColors;
-            }
-        }
+    public Profile Profile { get; }
 
-        public bool Stdout { get; }
+    public RuleContext Context { get; } = new();
 
-        public Profile Profile { get; }
+    internal int LastColorFormatIndex { get; set; } = -1;
 
-        public RuleContext Context { get; } = new();
+    public ColorState GetColorState(int position)
+    {
+        return Profile.State.GetColorState(this, position);
+    }
 
-        internal int LastColorFormatIndex { get; set; } = -1;
-
-        public ColorState GetColorState(int position)
-        {
-            return Profile.State.GetColorState(this, position);
-        }
-
-        private void ExtractColors()
-        {
-            _dataExtractedColorTrimEndNewline = ColorExtractor.ExtractColor(DataTrimEndNewline, _extractedColors);
-            _extractedColorsUpdated = true;
-        }
+    private void ExtractColors()
+    {
+        _dataExtractedColorTrimEndNewline = ColorExtractor.ExtractColor(DataTrimEndNewline, _extractedColors);
+        _extractedColorsUpdated = true;
     }
 }

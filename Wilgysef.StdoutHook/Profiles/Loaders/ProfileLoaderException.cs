@@ -1,12 +1,11 @@
 ﻿using System;
 
-namespace Wilgysef.StdoutHook.Profiles.Loaders
+namespace Wilgysef.StdoutHook.Profiles.Loaders;
+
+public class ProfileLoaderException : Exception
 {
-    public class ProfileLoaderException : Exception
+    public ProfileLoaderException(string message)
+        : base(message)
     {
-        public ProfileLoaderException(string message)
-            : base(message)
-        {
-        }
     }
 }

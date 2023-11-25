@@ -1,34 +1,33 @@
 ﻿using System.Collections.Generic;
 
-namespace Wilgysef.StdoutHook.Profiles
+namespace Wilgysef.StdoutHook.Profiles;
+
+internal class RuleRegexGroupContext
 {
-    internal class RuleRegexGroupContext
+    public RuleRegexGroupContext(IReadOnlyDictionary<string, string> groups)
     {
-        public RuleRegexGroupContext(IReadOnlyDictionary<string, string> groups)
-        {
-            Groups = groups;
-        }
+        Groups = groups;
+    }
 
-        public IReadOnlyDictionary<string, string> Groups { get; private set; }
+    public IReadOnlyDictionary<string, string> Groups { get; private set; }
 
-        public int CurrentGroupNumber { get; set; } = 1;
+    public int CurrentGroupNumber { get; set; } = 1;
 
-        public bool IncrementGroupNumberOnGet { get; set; }
+    public bool IncrementGroupNumberOnGet { get; set; }
 
-        public int GetCurrentGroupNumber()
-        {
+    public int GetCurrentGroupNumber()
+    {
 #pragma warning disable SA1003 // Symbols should be spaced correctly
-            return IncrementGroupNumberOnGet
-                ? CurrentGroupNumber++
-                : CurrentGroupNumber;
+        return IncrementGroupNumberOnGet
+            ? CurrentGroupNumber++
+            : CurrentGroupNumber;
 #pragma warning restore SA1003 // Symbols should be spaced correctly
-        }
+    }
 
-        public void Reset(IReadOnlyDictionary<string, string> groups)
-        {
-            Groups = groups;
-            CurrentGroupNumber = 1;
-            IncrementGroupNumberOnGet = false;
-        }
+    public void Reset(IReadOnlyDictionary<string, string> groups)
+    {
+        Groups = groups;
+        CurrentGroupNumber = 1;
+        IncrementGroupNumberOnGet = false;
     }
 }

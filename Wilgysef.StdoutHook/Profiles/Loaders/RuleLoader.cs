@@ -6,270 +6,269 @@ using System.Text.RegularExpressions;
 using Wilgysef.StdoutHook.Profiles.Dtos;
 using Wilgysef.StdoutHook.Rules;
 
-namespace Wilgysef.StdoutHook.Profiles.Loaders
+namespace Wilgysef.StdoutHook.Profiles.Loaders;
+
+public class RuleLoader
 {
-    public class RuleLoader
+    private static readonly Dictionary<Type, Func<RuleDto, Rule>> RuleBuilders = new()
     {
-        private static readonly Dictionary<Type, Func<RuleDto, Rule>> RuleBuilders = new()
-        {
-            [typeof(FieldSeparatorRule)] = BuildFieldSeparatorRule,
-            [typeof(FilterRule)] = BuildFilterRule,
-            [typeof(RegexGroupRule)] = BuildRegexGroupRule,
-            [typeof(TeeRule)] = BuildTeeRule,
-            [typeof(UnconditionalReplaceRule)] = BuildUnconditionalReplaceRule,
-        };
+        [typeof(FieldSeparatorRule)] = BuildFieldSeparatorRule,
+        [typeof(FilterRule)] = BuildFilterRule,
+        [typeof(RegexGroupRule)] = BuildRegexGroupRule,
+        [typeof(TeeRule)] = BuildTeeRule,
+        [typeof(UnconditionalReplaceRule)] = BuildUnconditionalReplaceRule,
+    };
 
-        public Rule LoadRule(RuleDto dto)
+    public Rule LoadRule(RuleDto dto)
+    {
+        if (RuleBuilders.TryGetValue(GetRuleType(dto), out var builder))
         {
-            if (RuleBuilders.TryGetValue(GetRuleType(dto), out var builder))
-            {
-                return builder(dto);
-            }
-
-            throw CreateUnknownRuleException(dto);
+            return builder(dto);
         }
 
-        private static Rule BuildFieldSeparatorRule(RuleDto dto)
+        throw CreateUnknownRuleException(dto);
+    }
+
+    private static Rule BuildFieldSeparatorRule(RuleDto dto)
+    {
+        var rule = new FieldSeparatorRule(CreateRegex(dto.GetSeparatorExpression()!));
+        SetBaseRuleProperties(rule, dto);
+
+        rule.MinFields = dto.MinFields;
+        rule.MaxFields = dto.MaxFields;
+
+        if (dto.ReplaceAllFormat != null)
         {
-            var rule = new FieldSeparatorRule(CreateRegex(dto.GetSeparatorExpression()!));
-            SetBaseRuleProperties(rule, dto);
-
-            rule.MinFields = dto.MinFields;
-            rule.MaxFields = dto.MaxFields;
-
-            if (dto.ReplaceAllFormat != null)
-            {
-                rule.ReplaceAllFormat = dto.ReplaceAllFormat;
-            }
-            else if (dto.ReplaceFields != null)
-            {
-                rule.ReplaceFields = BuildReplaceFields(rule, dto.ReplaceFields, null);
-            }
-            else
-            {
-                throw new InvalidRuleException(rule, $"missing {nameof(dto.ReplaceAllFormat)} or {nameof(dto.ReplaceFields)}");
-            }
-
-            return rule;
+            rule.ReplaceAllFormat = dto.ReplaceAllFormat;
+        }
+        else if (dto.ReplaceFields != null)
+        {
+            rule.ReplaceFields = BuildReplaceFields(rule, dto.ReplaceFields, null);
+        }
+        else
+        {
+            throw new InvalidRuleException(rule, $"missing {nameof(dto.ReplaceAllFormat)} or {nameof(dto.ReplaceFields)}");
         }
 
-        private static Rule BuildFilterRule(RuleDto dto)
-        {
-            var rule = new FilterRule();
-            SetBaseRuleProperties(rule, dto);
-            return rule;
-        }
+        return rule;
+    }
 
-        private static Rule BuildRegexGroupRule(RuleDto dto)
-        {
-            var rule = new RegexGroupRule(CreateRegex(dto.GetRegex()!));
-            SetBaseRuleProperties(rule, dto);
+    private static Rule BuildFilterRule(RuleDto dto)
+    {
+        var rule = new FilterRule();
+        SetBaseRuleProperties(rule, dto);
+        return rule;
+    }
 
-            if (dto.ReplaceGroups != null)
+    private static Rule BuildRegexGroupRule(RuleDto dto)
+    {
+        var rule = new RegexGroupRule(CreateRegex(dto.GetRegex()!));
+        SetBaseRuleProperties(rule, dto);
+
+        if (dto.ReplaceGroups != null)
+        {
+            var otherKeys = new List<KeyValuePair<string, string>>();
+
+            rule.ReplaceGroups = BuildReplaceFields(rule, dto.ReplaceGroups, otherKeys);
+
+            if (otherKeys.Count > 0)
             {
-                var otherKeys = new List<KeyValuePair<string, string>>();
-
-                rule.ReplaceGroups = BuildReplaceFields(rule, dto.ReplaceGroups, otherKeys);
-
-                if (otherKeys.Count > 0)
+                rule.ReplaceNamedGroups = new Dictionary<string, string>();
+                foreach (var (key, val) in otherKeys)
                 {
-                    rule.ReplaceNamedGroups = new Dictionary<string, string>();
-                    foreach (var (key, val) in otherKeys)
-                    {
-                        rule.ReplaceNamedGroups[key] = val;
-                    }
+                    rule.ReplaceNamedGroups[key] = val;
                 }
             }
-            else
-            {
-                throw new InvalidRuleException(rule, $"missing {nameof(dto.ReplaceGroups)}");
-            }
-
-            return rule;
+        }
+        else
+        {
+            throw new InvalidRuleException(rule, $"missing {nameof(dto.ReplaceGroups)}");
         }
 
-        private static List<KeyValuePair<FieldRangeList, string>> BuildReplaceFields(
-            Rule rule,
-            object replace,
-            List<KeyValuePair<string, string>>? otherObjectKeys)
+        return rule;
+    }
+
+    private static List<KeyValuePair<FieldRangeList, string>> BuildReplaceFields(
+        Rule rule,
+        object replace,
+        List<KeyValuePair<string, string>>? otherObjectKeys)
+    {
+        if (replace is IList<object?> fieldsList)
         {
-            if (replace is IList<object?> fieldsList)
+            var replaceFields = new List<KeyValuePair<FieldRangeList, string>>(fieldsList.Count);
+
+            for (var i = 0; i < fieldsList.Count; i++)
             {
-                var replaceFields = new List<KeyValuePair<FieldRangeList, string>>(fieldsList.Count);
-
-                for (var i = 0; i < fieldsList.Count; i++)
+                if (fieldsList[i] is not string str)
                 {
-                    if (fieldsList[i] is not string str)
-                    {
-                        throw new InvalidRuleException(rule, "expected string type");
-                    }
+                    throw new InvalidRuleException(rule, "expected string type");
+                }
 
+                replaceFields.Add(new KeyValuePair<FieldRangeList, string>(
+                    new FieldRangeList(new FieldRange(i + 1)),
+                    str));
+            }
+
+            return replaceFields;
+        }
+        else if (replace is IDictionary<string, object?> fieldsObj)
+        {
+            var replaceFields = new List<KeyValuePair<FieldRangeList, string>>(fieldsObj.Count);
+
+            foreach (var (key, val) in fieldsObj)
+            {
+                if (val is not string str)
+                {
+                    throw new InvalidRuleException(rule, "expected string type");
+                }
+
+                if (FieldRangeList.TryParse(key, out var rangeList))
+                {
                     replaceFields.Add(new KeyValuePair<FieldRangeList, string>(
-                        new FieldRangeList(new FieldRange(i + 1)),
+                        rangeList,
                         str));
                 }
-
-                return replaceFields;
-            }
-            else if (replace is IDictionary<string, object?> fieldsObj)
-            {
-                var replaceFields = new List<KeyValuePair<FieldRangeList, string>>(fieldsObj.Count);
-
-                foreach (var (key, val) in fieldsObj)
+                else
                 {
-                    if (val is not string str)
-                    {
-                        throw new InvalidRuleException(rule, "expected string type");
-                    }
-
-                    if (FieldRangeList.TryParse(key, out var rangeList))
-                    {
-                        replaceFields.Add(new KeyValuePair<FieldRangeList, string>(
-                            rangeList,
-                            str));
-                    }
-                    else
-                    {
-                        otherObjectKeys?.Add(new KeyValuePair<string, string>(key, str));
-                    }
-                }
-
-                return replaceFields;
-            }
-
-            throw new InvalidRuleException(rule, "expected list or object type");
-        }
-
-        private static Rule BuildTeeRule(RuleDto dto)
-        {
-            var rule = new TeeRule(dto.Filename!);
-            SetBaseRuleProperties(rule, dto);
-
-            rule.Flush = dto.Flush ?? false;
-            rule.ExtractColors = dto.ExtractColors ?? false;
-
-            return rule;
-        }
-
-        private static Rule BuildUnconditionalReplaceRule(RuleDto dto)
-        {
-            var rule = new UnconditionalReplaceRule(dto.ReplaceAllFormat!);
-            SetBaseRuleProperties(rule, dto);
-
-            return rule;
-        }
-
-        private static void SetBaseRuleProperties(Rule rule, RuleDto dto)
-        {
-            rule.EnableExpression = GetRegex(dto.GetEnableExpression());
-            rule.StdoutOnly = dto.StdoutOnly ?? false;
-            rule.StderrOnly = dto.StderrOnly ?? false;
-            rule.Terminal = dto.Terminal ?? false;
-            rule.TrimNewline = dto.TrimNewline ?? false;
-            rule.ActivationLines = dto.ActivationLines ?? new List<long>();
-            rule.ActivationLinesStdoutOnly = dto.ActivationLinesStdoutOnly ?? new List<long>();
-            rule.ActivationLinesStderrOnly = dto.ActivationLinesStderrOnly ?? new List<long>();
-            rule.DeactivationLines = dto.DeactivationLines ?? new List<long>();
-            rule.DeactivationLinesStdoutOnly = dto.DeactivationLinesStdoutOnly ?? new List<long>();
-            rule.DeactivationLinesStderrOnly = dto.DeactivationLinesStderrOnly ?? new List<long>();
-            rule.ActivationExpressions = CreateActivationExpression(dto.ActivationExpressions);
-            rule.ActivationExpressionsStdoutOnly = CreateActivationExpression(dto.ActivationExpressionsStdoutOnly);
-            rule.ActivationExpressionsStderrOnly = CreateActivationExpression(dto.ActivationExpressionsStderrOnly);
-            rule.DeactivationExpressions = CreateActivationExpression(dto.DeactivationExpressions);
-            rule.DeactivationExpressionsStdoutOnly = CreateActivationExpression(dto.DeactivationExpressionsStdoutOnly);
-            rule.DeactivationExpressionsStderrOnly = CreateActivationExpression(dto.DeactivationExpressionsStderrOnly);
-        }
-
-        private static List<ActivationExpression> CreateActivationExpression(IList<ActivationExpressionDto>? dtos)
-        {
-            if (dtos == null)
-            {
-                return new List<ActivationExpression>();
-            }
-
-            var expressions = new List<ActivationExpression>(dtos.Count);
-
-            for (var i = 0; i < dtos.Count; i++)
-            {
-                var expression = CreateActivationExpression(dtos[i]);
-                if (expression != null)
-                {
-                    expressions.Add(expression);
+                    otherObjectKeys?.Add(new KeyValuePair<string, string>(key, str));
                 }
             }
 
-            return expressions;
+            return replaceFields;
         }
 
-        private static ActivationExpression? CreateActivationExpression(ActivationExpressionDto dto)
-        {
-            var expression = dto.GetExpression();
-            if (expression == null)
-            {
-                return null;
-            }
-
-            return new ActivationExpression(CreateRegex(expression), dto.ActivationOffset ?? 0);
-        }
-
-        private static Type GetRuleType(RuleDto rule)
-        {
-            if (rule.Filter.HasValue && rule.Filter.Value)
-            {
-                return typeof(FilterRule);
-            }
-
-            Type? type = null;
-
-            if (rule.SeparatorExpression != null)
-            {
-                SetType(typeof(FieldSeparatorRule));
-            }
-
-            if (rule.Regex != null)
-            {
-                SetType(typeof(RegexGroupRule));
-            }
-
-            if (rule.Filename != null)
-            {
-                SetType(typeof(TeeRule));
-            }
-
-            if (type == null && rule.ReplaceAllFormat != null)
-            {
-                SetType(typeof(UnconditionalReplaceRule));
-            }
-
-            return type ?? throw CreateUnknownRuleException(rule);
-
-            void SetType(Type value)
-            {
-                if (type != null)
-                {
-                    throw CreateUnknownRuleException(rule);
-                }
-
-                type = value;
-            }
-        }
-
-        private static UnknownRuleException CreateUnknownRuleException(RuleDto rule)
-        {
-            return new UnknownRuleException(JsonSerializer.Serialize(rule, new JsonSerializerOptions
-            {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                WriteIndented = true,
-            }));
-        }
-
-        private static Regex? GetRegex(string? expression)
-        {
-            return expression != null
-                ? CreateRegex(expression)
-                : null;
-        }
-
-        private static Regex CreateRegex(string expression) => new(expression, RegexOptions.Compiled);
+        throw new InvalidRuleException(rule, "expected list or object type");
     }
+
+    private static Rule BuildTeeRule(RuleDto dto)
+    {
+        var rule = new TeeRule(dto.Filename!);
+        SetBaseRuleProperties(rule, dto);
+
+        rule.Flush = dto.Flush ?? false;
+        rule.ExtractColors = dto.ExtractColors ?? false;
+
+        return rule;
+    }
+
+    private static Rule BuildUnconditionalReplaceRule(RuleDto dto)
+    {
+        var rule = new UnconditionalReplaceRule(dto.ReplaceAllFormat!);
+        SetBaseRuleProperties(rule, dto);
+
+        return rule;
+    }
+
+    private static void SetBaseRuleProperties(Rule rule, RuleDto dto)
+    {
+        rule.EnableExpression = GetRegex(dto.GetEnableExpression());
+        rule.StdoutOnly = dto.StdoutOnly ?? false;
+        rule.StderrOnly = dto.StderrOnly ?? false;
+        rule.Terminal = dto.Terminal ?? false;
+        rule.TrimNewline = dto.TrimNewline ?? false;
+        rule.ActivationLines = dto.ActivationLines ?? new List<long>();
+        rule.ActivationLinesStdoutOnly = dto.ActivationLinesStdoutOnly ?? new List<long>();
+        rule.ActivationLinesStderrOnly = dto.ActivationLinesStderrOnly ?? new List<long>();
+        rule.DeactivationLines = dto.DeactivationLines ?? new List<long>();
+        rule.DeactivationLinesStdoutOnly = dto.DeactivationLinesStdoutOnly ?? new List<long>();
+        rule.DeactivationLinesStderrOnly = dto.DeactivationLinesStderrOnly ?? new List<long>();
+        rule.ActivationExpressions = CreateActivationExpression(dto.ActivationExpressions);
+        rule.ActivationExpressionsStdoutOnly = CreateActivationExpression(dto.ActivationExpressionsStdoutOnly);
+        rule.ActivationExpressionsStderrOnly = CreateActivationExpression(dto.ActivationExpressionsStderrOnly);
+        rule.DeactivationExpressions = CreateActivationExpression(dto.DeactivationExpressions);
+        rule.DeactivationExpressionsStdoutOnly = CreateActivationExpression(dto.DeactivationExpressionsStdoutOnly);
+        rule.DeactivationExpressionsStderrOnly = CreateActivationExpression(dto.DeactivationExpressionsStderrOnly);
+    }
+
+    private static List<ActivationExpression> CreateActivationExpression(IList<ActivationExpressionDto>? dtos)
+    {
+        if (dtos == null)
+        {
+            return new List<ActivationExpression>();
+        }
+
+        var expressions = new List<ActivationExpression>(dtos.Count);
+
+        for (var i = 0; i < dtos.Count; i++)
+        {
+            var expression = CreateActivationExpression(dtos[i]);
+            if (expression != null)
+            {
+                expressions.Add(expression);
+            }
+        }
+
+        return expressions;
+    }
+
+    private static ActivationExpression? CreateActivationExpression(ActivationExpressionDto dto)
+    {
+        var expression = dto.GetExpression();
+        if (expression == null)
+        {
+            return null;
+        }
+
+        return new ActivationExpression(CreateRegex(expression), dto.ActivationOffset ?? 0);
+    }
+
+    private static Type GetRuleType(RuleDto rule)
+    {
+        if (rule.Filter.HasValue && rule.Filter.Value)
+        {
+            return typeof(FilterRule);
+        }
+
+        Type? type = null;
+
+        if (rule.SeparatorExpression != null)
+        {
+            SetType(typeof(FieldSeparatorRule));
+        }
+
+        if (rule.Regex != null)
+        {
+            SetType(typeof(RegexGroupRule));
+        }
+
+        if (rule.Filename != null)
+        {
+            SetType(typeof(TeeRule));
+        }
+
+        if (type == null && rule.ReplaceAllFormat != null)
+        {
+            SetType(typeof(UnconditionalReplaceRule));
+        }
+
+        return type ?? throw CreateUnknownRuleException(rule);
+
+        void SetType(Type value)
+        {
+            if (type != null)
+            {
+                throw CreateUnknownRuleException(rule);
+            }
+
+            type = value;
+        }
+    }
+
+    private static UnknownRuleException CreateUnknownRuleException(RuleDto rule)
+    {
+        return new UnknownRuleException(JsonSerializer.Serialize(rule, new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            WriteIndented = true,
+        }));
+    }
+
+    private static Regex? GetRegex(string? expression)
+    {
+        return expression != null
+            ? CreateRegex(expression)
+            : null;
+    }
+
+    private static Regex CreateRegex(string expression) => new(expression, RegexOptions.Compiled);
 }
