@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -11,7 +10,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 {
     public class RuleLoader
     {
-        private static readonly Dictionary<Type, Func<RuleDto, Rule>> RuleBuilders = new Dictionary<Type, Func<RuleDto, Rule>>
+        private static readonly Dictionary<Type, Func<RuleDto, Rule>> RuleBuilders = new()
         {
             [typeof(FieldSeparatorRule)] = BuildFieldSeparatorRule,
             [typeof(FilterRule)] = BuildFilterRule,

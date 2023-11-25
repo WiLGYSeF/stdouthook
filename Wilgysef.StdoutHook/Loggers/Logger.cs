@@ -43,17 +43,13 @@ namespace Wilgysef.StdoutHook.Loggers
 
         private static string GetLogLevel(LogLevel level)
         {
-            switch (level)
+            return level switch
             {
-                case LogLevel.Error:
-                    return "ERR ";
-                case LogLevel.Warn:
-                    return "WARN";
-                case LogLevel.Info:
-                    return "INFO";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(level));
-            }
+                LogLevel.Error => "ERR ",
+                LogLevel.Warn => "WARN",
+                LogLevel.Info => "INFO",
+                _ => throw new ArgumentOutOfRangeException(nameof(level)),
+            };
         }
     }
 }

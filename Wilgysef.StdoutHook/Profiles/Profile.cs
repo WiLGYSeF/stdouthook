@@ -119,6 +119,7 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             State.Dispose();
         }
 

@@ -34,7 +34,7 @@ public abstract class RuleTestBase
         return new Formatter(new FormatFunctionBuilder(formatBuilders));
     }
 
-    protected static Profile CreateDummyProfile()
+    private protected static Profile CreateDummyProfile()
     {
         return new Profile();
     }

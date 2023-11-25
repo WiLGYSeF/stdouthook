@@ -8,10 +8,6 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
     internal abstract class PropertyFormatBuilder<T> : FormatBuilder
     {
-        protected abstract IReadOnlyList<Property> GetProperties();
-
-        protected abstract T GetValue(DataState state);
-
         public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
         {
             foreach (var prop in GetProperties())
@@ -46,10 +42,12 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             throw new ArgumentException($"Invalid property: {state.Contents}");
         }
 
+        protected abstract IReadOnlyList<Property> GetProperties();
+
+        protected abstract T GetValue(DataState state);
+
         protected class Property
         {
-            public bool IsConstant { get; }
-
             private readonly string[] _names;
             private readonly Func<T, string>? _func;
             private readonly Func<T, string, string>? _funcFormat;
@@ -67,6 +65,8 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 _funcFormat = func;
                 IsConstant = isConstant;
             }
+
+            public bool IsConstant { get; }
 
             public bool Matches(
                 string str,

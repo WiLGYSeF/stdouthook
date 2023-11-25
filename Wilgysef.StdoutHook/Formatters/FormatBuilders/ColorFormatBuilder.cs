@@ -398,18 +398,18 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
         private class Color
         {
-            public int Value { get; }
-
-            public int ToggleValue { get; }
-
-            public bool IsSimple { get; }
-
             public Color(int value, int toggleValue, bool isSimple)
             {
                 Value = value;
                 ToggleValue = toggleValue;
                 IsSimple = isSimple;
             }
+
+            public int Value { get; }
+
+            public int ToggleValue { get; }
+
+            public bool IsSimple { get; }
         }
     }
 }

@@ -65,8 +65,6 @@ namespace Wilgysef.StdoutHook.Rules
 
         internal abstract string Apply(DataState state);
 
-        protected abstract Rule CopyInternal();
-
         internal virtual void Build(Profile profile, Formatter formatter)
         {
             if (StdoutOnly && StderrOnly)
@@ -252,6 +250,8 @@ namespace Wilgysef.StdoutHook.Rules
 
             return rule;
         }
+
+        protected abstract Rule CopyInternal();
 
         private static bool DoesFirstCollectionContainMin(long[] first, long[] second)
         {

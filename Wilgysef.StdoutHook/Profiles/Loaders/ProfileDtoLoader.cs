@@ -8,8 +8,6 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 {
     public abstract class ProfileDtoLoader
     {
-        protected abstract Task<List<ProfileDto>> LoadProfileDtosInternalAsync(Stream stream, CancellationToken cancellationToken);
-
         public async Task<List<ProfileDto>> LoadProfileDtosAsync(Stream stream, CancellationToken cancellationToken = default)
         {
             var dtos = await LoadProfileDtosInternalAsync(stream, cancellationToken);
@@ -141,5 +139,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 return true;
             }
         }
+
+        protected abstract Task<List<ProfileDto>> LoadProfileDtosInternalAsync(Stream stream, CancellationToken cancellationToken);
     }
 }

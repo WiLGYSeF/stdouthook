@@ -69,6 +69,11 @@ public class CustomStreamWriter : TextWriter
         FlushInternal();
     }
 
+    protected override void Dispose(bool disposing)
+    {
+        Flush();
+    }
+
     private bool FlushInternal()
     {
         lock (_lock)
@@ -101,10 +106,5 @@ public class CustomStreamWriter : TextWriter
 
             return forced;
         }
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        Flush();
     }
 }
