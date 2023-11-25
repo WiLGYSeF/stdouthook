@@ -5,11 +5,11 @@ namespace Wilgysef.StdoutHook.Profiles
 {
     internal class ColorList
     {
-        public ColorEntry this[int index] => _colors[index];
+        private readonly List<ColorEntry> _colors = new();
 
         public int Count { get; private set; }
 
-        private readonly List<ColorEntry> _colors = new List<ColorEntry>();
+        public ColorEntry this[int index] => _colors[index];
 
         public void AddColor(int position, string str, int startIndex, int endIndex)
         {
@@ -20,7 +20,9 @@ namespace Wilgysef.StdoutHook.Profiles
         public int GetColorIndex(int position, int start = 0)
         {
             var colorIndex = start;
-            for (; colorIndex < Count && _colors[colorIndex].Position < position; colorIndex++) ;
+            for (; colorIndex < Count && _colors[colorIndex].Position < position; colorIndex++)
+            {
+            }
 
             return colorIndex;
         }
@@ -33,10 +35,6 @@ namespace Wilgysef.StdoutHook.Profiles
 
         public class ColorEntry
         {
-            public int Position { get; }
-
-            public ReadOnlySpan<char> Color => _str.AsSpan()[_startIndex.._endIndex];
-
             private readonly string _str;
             private readonly int _startIndex;
             private readonly int _endIndex;
@@ -48,6 +46,10 @@ namespace Wilgysef.StdoutHook.Profiles
                 _startIndex = startIndex;
                 _endIndex = endIndex;
             }
+
+            public int Position { get; }
+
+            public ReadOnlySpan<char> Color => _str.AsSpan()[_startIndex.._endIndex];
         }
     }
 }

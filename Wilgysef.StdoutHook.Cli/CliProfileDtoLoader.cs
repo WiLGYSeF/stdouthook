@@ -6,6 +6,13 @@ namespace Wilgysef.StdoutHook.Cli;
 
 internal class CliProfileDtoLoader
 {
+    private readonly Action<string, int> _verbosePrint;
+
+    public CliProfileDtoLoader(Action<string, int> verbosePrint)
+    {
+        _verbosePrint = verbosePrint;
+    }
+
     public async Task<List<ProfileDto>> LoadProfileDtosAsync(string profileDir)
     {
         var jsonLoader = new JsonProfileDtoLoader();
@@ -15,6 +22,7 @@ internal class CliProfileDtoLoader
             [""] = new[] { jsonLoader },
             [".json"] = new[] { jsonLoader },
             [".txt"] = new[] { jsonLoader },
+
             // [".yaml"] = new[] { yamlLoader },
             // [".yml"] = new[] { yamlLoader },
         };
@@ -22,7 +30,7 @@ internal class CliProfileDtoLoader
         return await LoadProfileDtosFromDirectoryAsync(loaders, profileDir);
     }
 
-    private static async Task<List<ProfileDto>> LoadProfileDtosFromDirectoryAsync(
+    private async Task<List<ProfileDto>> LoadProfileDtosFromDirectoryAsync(
         IReadOnlyDictionary<string, IReadOnlyList<ProfileDtoLoader>> loadersByExtension,
         string path)
     {
@@ -66,7 +74,7 @@ internal class CliProfileDtoLoader
 
                 profiles.AddRange(dtos);
 
-                Shared.VerbosePrint($"loaded profiles from: {file}");
+                _verbosePrint($"loaded profiles from: {file}", 1);
             }
             catch (Exception ex)
             {

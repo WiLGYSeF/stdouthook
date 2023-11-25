@@ -4,20 +4,20 @@ namespace Wilgysef.StdoutHook.Formatters
 {
     internal class FormatComputeState
     {
-        public DataState DataState { get; private set; }
-
-        public ColorList? Colors { get; private set; }
-
-        public int StartPosition { get; }
-
-        public int Position { get; private set; }
-
         public FormatComputeState(DataState dataState, int position = 0)
         {
             DataState = dataState;
             StartPosition = position;
             Position = position;
         }
+
+        public DataState DataState { get; }
+
+        public ColorList? Colors { get; private set; }
+
+        public int StartPosition { get; }
+
+        public int Position { get; private set; }
 
         public void SetPosition(int position)
         {

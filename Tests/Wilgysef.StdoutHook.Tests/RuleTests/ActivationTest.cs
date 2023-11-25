@@ -161,7 +161,7 @@ public class ActivationTest
         {
             DeactivationExpressions = new List<ActivationExpression>
             {
-                new ActivationExpression(new Regex(@"abc"), 2),
+                new(new Regex(@"abc"), 2),
             },
         };
 

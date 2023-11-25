@@ -2,6 +2,9 @@
 {
     public class InheritedProfileNotFoundException : ProfileLoaderException
     {
-        public InheritedProfileNotFoundException(string message) : base(message) { }
+        public InheritedProfileNotFoundException(string message)
+            : base(message)
+        {
+        }
     }
 }

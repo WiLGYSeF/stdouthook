@@ -48,7 +48,9 @@ namespace Wilgysef.StdoutHook.Formatters
                                 goto end;
                         }
                     }
-                end:;
+
+                end:
+                    ;
                 }
             }
 
@@ -80,6 +82,7 @@ namespace Wilgysef.StdoutHook.Formatters
                 {
                     continue;
                 }
+
                 if (colorStart > input.Length)
                 {
                     break;

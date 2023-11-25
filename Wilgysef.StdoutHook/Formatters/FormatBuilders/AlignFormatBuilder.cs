@@ -32,7 +32,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 alignChar = ' ';
                 alignStartIndex = separatorIndex + 1;
             }
-            else if ((separatorIndex == 1 || separatorIndex == 0 && contentsSpan[1] == Formatter.Separator)
+            else if ((separatorIndex == 1 || (separatorIndex == 0 && contentsSpan[1] == Formatter.Separator))
                 && contentsSpan.IndexOfAfter(2, Formatter.Separator) is var index
                 && index > 0
                 && int.TryParse(contentsSpan[2..index], out alignLength))

@@ -5,17 +5,10 @@ namespace Wilgysef.StdoutHook.Rules
 {
     public class FieldRange
     {
-        public int Min { get; set; }
-
-        public int? Max { get; set; }
-
-        public bool InfiniteMax => !Max.HasValue;
-
-        public int? SingleValue => Max.HasValue && Max.Value == Min
-            ? (int?)Min
-            : null;
-
-        public FieldRange(int number) : this(number, number) { }
+        public FieldRange(int number)
+            : this(number, number)
+        {
+        }
 
         public FieldRange(int min, int? max)
         {
@@ -30,6 +23,7 @@ namespace Wilgysef.StdoutHook.Rules
                 {
                     throw new ArgumentException("Maximum cannot be negative.");
                 }
+
                 if (min > max.Value)
                 {
                     throw new ArgumentException("Minimum cannot be greater than maximum", nameof(min));
@@ -39,6 +33,16 @@ namespace Wilgysef.StdoutHook.Rules
             Min = min;
             Max = max;
         }
+
+        public int Min { get; set; }
+
+        public int? Max { get; set; }
+
+        public bool InfiniteMax => !Max.HasValue;
+
+        public int? SingleValue => Max.HasValue && Max.Value == Min
+            ? Min
+            : null;
 
         public bool Contains(int number)
         {

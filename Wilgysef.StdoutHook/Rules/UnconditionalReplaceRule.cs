@@ -5,14 +5,14 @@ namespace Wilgysef.StdoutHook.Rules
 {
     public class UnconditionalReplaceRule : Rule
     {
-        public string Format { get; set; }
-
         private CompiledFormat _compiledFormat = null!;
 
         public UnconditionalReplaceRule(string format)
         {
             Format = format;
         }
+
+        public string Format { get; set; }
 
         internal override void Build(Profile profile, Formatter formatter)
         {

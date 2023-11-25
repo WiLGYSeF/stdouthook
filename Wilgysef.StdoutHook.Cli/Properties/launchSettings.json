@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Wilgysef.StdoutHook.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "-v\r\n--profile test\r\n-i\r\npython\r\nD:\\projects\\stdouthook\\Wilgysef.StdoutHook\\testproc.py"
+    }
+  }
+}

@@ -6,10 +6,6 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 {
     internal class ColorFormatBuilder : FormatBuilder
     {
-        public static char Separator = ';';
-
-        public static char Toggle = '^';
-
         private static readonly Dictionary<string, Color> Colors = new();
 
         static ColorFormatBuilder()
@@ -216,6 +212,10 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
             }
         }
 
+        public char Separator => ';';
+
+        public char Toggle => '^';
+
         public override string? Key => "color";
 
         public override char? KeyShort => 'C';
@@ -226,7 +226,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
         {
             if (state.Contents.StartsWith("raw"))
             {
-                var rawColor = $"\x1b[{state.Contents[3..]}m";
+                var rawColor = $"\x1b[{state.Contents.AsSpan(3)}m";
                 isConstant = false;
                 return computeState =>
                 {
@@ -264,6 +264,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
 
             var colorResults = new List<int>(colors.Count);
             var softResetIndex = -1;
+            var softResetIgnoreFormatColors = false;
 
             for (var i = 0; i < colors.Count; i++)
             {
@@ -274,6 +275,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 }
 
                 var toggle = false;
+                var softNum = 0;
 
                 if (colorStr[0] == Toggle)
                 {
@@ -286,6 +288,13 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                     || colorStr.Equals("softReset", StringComparison.OrdinalIgnoreCase))
                 {
                     softResetIndex = i;
+                    state.Profile.State.TrackColorState();
+                }
+                else if (colorStr.Equals("soft0", StringComparison.OrdinalIgnoreCase)
+                    || colorStr.Equals("softReset0", StringComparison.OrdinalIgnoreCase))
+                {
+                    softResetIndex = i;
+                    softResetIgnoreFormatColors = true;
                     state.Profile.State.TrackColorState();
                 }
                 else if (Colors.TryGetValue(colorStr, out var color))
@@ -321,10 +330,14 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders
                 return computeState =>
                 {
                     var colorState = computeState.DataState.GetColorState(computeState.StartPosition);
+
+                    // TODO: handle soft0
+
                     if (computeState.Colors != null)
                     {
                         colorState.UpdateState(computeState.Colors, int.MaxValue);
                     }
+
                     return $"\x1b[0m{colorState}{resultAfterSoftReset}";
                 };
             }

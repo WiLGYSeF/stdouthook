@@ -4,14 +4,6 @@ namespace Wilgysef.StdoutHook.Profiles
 {
     internal class RuleFieldContext
     {
-        public IReadOnlyList<string> Fields { get; }
-
-        public IReadOnlyList<string> FieldSeparators { get; }
-
-        public int CurrentFieldNumber { get; set; } = 1;
-
-        public bool IncrementFieldNumberOnGet { get; set; }
-
         public RuleFieldContext(IReadOnlyList<string> fieldsWithSeparators)
         {
             var fieldCount = fieldsWithSeparators.Count / 2 + 1;
@@ -37,11 +29,21 @@ namespace Wilgysef.StdoutHook.Profiles
             }
         }
 
+        public IReadOnlyList<string> Fields { get; }
+
+        public IReadOnlyList<string> FieldSeparators { get; }
+
+        public int CurrentFieldNumber { get; set; } = 1;
+
+        public bool IncrementFieldNumberOnGet { get; set; }
+
         public int GetCurrentFieldNumber()
         {
+#pragma warning disable SA1003 // Symbols should be spaced correctly
             return IncrementFieldNumberOnGet
                 ? CurrentFieldNumber++
                 : CurrentFieldNumber;
+#pragma warning restore SA1003 // Symbols should be spaced correctly
         }
     }
 }

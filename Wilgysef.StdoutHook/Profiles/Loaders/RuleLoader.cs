@@ -271,6 +271,6 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 : null;
         }
 
-        private static Regex CreateRegex(string expression) => new Regex(expression, RegexOptions.Compiled);
+        private static Regex CreateRegex(string expression) => new(expression, RegexOptions.Compiled);
     }
 }

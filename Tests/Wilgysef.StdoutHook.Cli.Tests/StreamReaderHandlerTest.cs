@@ -1,5 +1,5 @@
-using Shouldly;
 using System.Text;
+using Shouldly;
 
 namespace Wilgysef.StdoutHook.Cli.Tests;
 
@@ -167,7 +167,10 @@ public class StreamReaderHandlerTest
 
     private class TestStreamReader : StreamReader
     {
-        public TestStreamReader(Stream stream) : base(stream) { }
+        public TestStreamReader(Stream stream)
+            : base(stream)
+        {
+        }
 
         public override async Task<int> ReadAsync(char[] buffer, int index, int count)
         {

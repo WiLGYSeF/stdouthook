@@ -29,7 +29,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                     continue;
                 }
 
-                if (profileName != null && profileName == dto.ProfileName
+                if ((profileName != null && profileName == dto.ProfileName)
                     || MatchesStringOrExpression(command, dto.Command, dto.GetCommandExpression(), dto.CommandIgnoreCase ?? false)
                     || MatchesStringOrExpression(fullCommandPath, dto.FullCommandPath, dto.GetFullCommandPathExpression(), dto.CommandIgnoreCase ?? false))
                 {
@@ -127,6 +127,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                             {
                                 return true;
                             }
+
                             if (mustNotMatch && expression.IsMatch(arguments[argIndex]))
                             {
                                 return false;

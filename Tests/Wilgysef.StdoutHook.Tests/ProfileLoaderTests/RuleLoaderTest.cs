@@ -151,7 +151,7 @@ public class RuleLoaderTest
     {
         var rule = LoadBaseRule(new RuleDto
         {
-            ActivationExpressions = new List<ActivationExpressionDto> 
+            ActivationExpressions = new List<ActivationExpressionDto>
             {
                 new ActivationExpressionDto
                 {
@@ -181,7 +181,7 @@ public class RuleLoaderTest
                 {
                     Expression = "a",
                     ActivationOffset = 2,
-                }
+                },
             },
         });
 
@@ -202,7 +202,7 @@ public class RuleLoaderTest
                 {
                     Expression = "a",
                     ActivationOffset = 2,
-                }
+                },
             },
         });
 
@@ -223,7 +223,7 @@ public class RuleLoaderTest
                 {
                     Expression = "a",
                     ActivationOffset = 2,
-                }
+                },
             },
         });
 
@@ -244,7 +244,7 @@ public class RuleLoaderTest
                 {
                     Expression = "a",
                     ActivationOffset = 2,
-                }
+                },
             },
         });
 
@@ -265,7 +265,7 @@ public class RuleLoaderTest
                 {
                     Expression = "a",
                     ActivationOffset = 2,
-                }
+                },
             },
         });
 
@@ -348,7 +348,7 @@ public class RuleLoaderTest
         var rule = (FieldSeparatorRule)loader.LoadRule(new RuleDto
         {
             SeparatorExpression = @"\s+",
-            ReplaceAllFormat = "test"
+            ReplaceAllFormat = "test",
         });
 
         rule.SeparatorExpression.ToString().ShouldBe(@"\s+");
@@ -391,10 +391,10 @@ public class RuleLoaderTest
     public void FieldSeparator_Invalid()
     {
         var loader = new RuleLoader();
-        
+
         Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
         {
-            SeparatorExpression = @"\s+"
+            SeparatorExpression = @"\s+",
         }));
 
         Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
@@ -422,7 +422,7 @@ public class RuleLoaderTest
     public void Filter()
     {
         var loader = new RuleLoader();
-        var rule = (FilterRule)loader.LoadRule(new RuleDto
+        _ = (FilterRule)loader.LoadRule(new RuleDto
         {
             Filter = true,
         });
@@ -478,7 +478,7 @@ public class RuleLoaderTest
 
         Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
         {
-            Regex = "test"
+            Regex = "test",
         }));
 
         Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto

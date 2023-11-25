@@ -147,6 +147,7 @@ namespace Wilgysef.StdoutHook.Profiles
                                     ForegroundColor = "38;" + multiNum;
                                 }
                             }
+
                             break;
                         case 48:
                             {
@@ -156,6 +157,7 @@ namespace Wilgysef.StdoutHook.Profiles
                                     BackgroundColor = "48;" + multiNum;
                                 }
                             }
+
                             break;
                         default:
                             break;

@@ -21,7 +21,7 @@ namespace Wilgysef.StdoutHook.Formatters
 
             var formatter = new Formatter(new FormatFunctionBuilder(colorFormatBuilder))
             {
-                InvalidFormatBlank = InvalidFormatBlank
+                InvalidFormatBlank = InvalidFormatBlank,
             };
 
             using var profile = new Profile();

@@ -23,7 +23,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 ThrowIfNotSplitExpression(dto.SubcommandExpression, nameof(dto.SubcommandExpression));
 
                 if (dto.Subcommand != null
-                    && !(dto.Subcommand is string)
+                    && dto.Subcommand is not string
                     && !IsStringList(dto.Subcommand))
                 {
                     throw new InvalidPropertyTypeException(
@@ -72,8 +72,8 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                         ThrowIfActivationExpressionsNotSplitExpression(rule.DeactivationExpressionsStderrOnly);
 
                         if (rule.ReplaceFields != null
-                            && !(rule.ReplaceFields is IList<object?>)
-                            && !(rule.ReplaceFields is IDictionary<string, object?>))
+                            && rule.ReplaceFields is not IList<object?>
+                            && rule.ReplaceFields is not IDictionary<string, object?>)
                         {
                             throw new InvalidPropertyTypeException(
                                 nameof(rule.ReplaceFields),
@@ -82,8 +82,8 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                         }
 
                         if (rule.ReplaceGroups != null
-                            && !(rule.ReplaceGroups is IList<object?>)
-                            && !(rule.ReplaceGroups is IDictionary<string, object?>))
+                            && rule.ReplaceGroups is not IList<object?>
+                            && rule.ReplaceGroups is not IDictionary<string, object?>)
                         {
                             throw new InvalidPropertyTypeException(
                                 nameof(rule.ReplaceFields),
@@ -125,14 +125,14 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
 
             static bool IsStringList(object? obj)
             {
-                if (!(obj is IList<object?> list))
+                if (obj is not IList<object?> list)
                 {
                     return false;
                 }
 
                 for (var i = 0; i < list.Count; i++)
                 {
-                    if (!(list[i] is string))
+                    if (list[i] is not string)
                     {
                         return false;
                     }

@@ -69,7 +69,7 @@ namespace Wilgysef.StdoutHook.Profiles.Loaders
                 var currentCopy = new ProfileDto
                 {
                     Enabled = current.Enabled,
-                    ProfileName = current.ProfileName
+                    ProfileName = current.ProfileName,
                 };
 
                 CombineProfileDto(currentCopy, current);

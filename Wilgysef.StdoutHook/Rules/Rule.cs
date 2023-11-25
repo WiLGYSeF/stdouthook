@@ -9,6 +9,20 @@ namespace Wilgysef.StdoutHook.Rules
 {
     public abstract class Rule
     {
+        protected SortedListIncrementMatch<long> _activationLines = null!;
+        protected SortedListIncrementMatch<long> _activationLinesStdoutOnly = null!;
+        protected SortedListIncrementMatch<long> _activationLinesStderrOnly = null!;
+        protected SortedListIncrementMatch<long> _deactivationLines = null!;
+        protected SortedListIncrementMatch<long> _deactivationLinesStdoutOnly = null!;
+        protected SortedListIncrementMatch<long> _deactivationLinesStderrOnly = null!;
+
+        protected HashSet<long> _activationOffsetLines = new();
+        protected HashSet<long> _activationOffsetStdoutOnlyLines = new();
+        protected HashSet<long> _activationOffsetStderrOnlyLines = new();
+        protected HashSet<long> _deactivationOffsetLines = new();
+        protected HashSet<long> _deactivationOffsetStdoutOnlyLines = new();
+        protected HashSet<long> _deactivationOffsetStderrOnlyLines = new();
+
         public Regex? EnableExpression { get; set; }
 
         public bool StdoutOnly { get; set; }
@@ -45,23 +59,9 @@ namespace Wilgysef.StdoutHook.Rules
 
         public virtual bool Filter { get; protected set; }
 
+        protected bool Active { get; set; } = true;
+
         private protected Formatter Formatter { get; private set; } = null!;
-
-        protected SortedListIncrementMatch<long> _activationLines = null!;
-        protected SortedListIncrementMatch<long> _activationLinesStdoutOnly = null!;
-        protected SortedListIncrementMatch<long> _activationLinesStderrOnly = null!;
-        protected SortedListIncrementMatch<long> _deactivationLines = null!;
-        protected SortedListIncrementMatch<long> _deactivationLinesStdoutOnly = null!;
-        protected SortedListIncrementMatch<long> _deactivationLinesStderrOnly = null!;
-
-        protected HashSet<long> _activationOffsetLines = new HashSet<long>();
-        protected HashSet<long> _activationOffsetStdoutOnlyLines = new HashSet<long>();
-        protected HashSet<long> _activationOffsetStderrOnlyLines = new HashSet<long>();
-        protected HashSet<long> _deactivationOffsetLines = new HashSet<long>();
-        protected HashSet<long> _deactivationOffsetStdoutOnlyLines = new HashSet<long>();
-        protected HashSet<long> _deactivationOffsetStderrOnlyLines = new HashSet<long>();
-
-        protected bool _active = true;
 
         internal abstract string Apply(DataState state);
 
@@ -101,19 +101,19 @@ namespace Wilgysef.StdoutHook.Rules
                     _deactivationLinesStderrOnly.GetFirstOrDefault(long.MaxValue),
                 };
 
-                _active = !DoesFirstCollectionContainMin(activationLineMins, deactivationLineMins);
+                Active = !DoesFirstCollectionContainMin(activationLineMins, deactivationLineMins);
             }
             else if (ActivationExpressions.Count + ActivationExpressionsStdoutOnly.Count + ActivationExpressionsStderrOnly.Count > 0
                 && DeactivationExpressions.Count + DeactivationExpressionsStdoutOnly.Count + DeactivationExpressionsStderrOnly.Count == 0)
             {
-                _active = false;
+                Active = false;
             }
         }
 
         internal virtual bool IsActive(DataState state)
         {
-            if (StdoutOnly && !state.Stdout
-                || StderrOnly && state.Stdout)
+            if ((StdoutOnly && !state.Stdout)
+                || (StderrOnly && state.Stdout))
             {
                 return false;
             }
@@ -163,16 +163,16 @@ namespace Wilgysef.StdoutHook.Rules
 
             if (deactivate)
             {
-                _active = false;
+                Active = false;
             }
 
             // activation takes priority over deactivation
             if (active)
             {
-                _active = true;
+                Active = true;
             }
 
-            if (!_active
+            if (!Active
                 || (data != null
                     && EnableExpression != null
                     && !EnableExpression.IsMatch(state.DataExtractedColorTrimEndNewline)))
@@ -218,7 +218,7 @@ namespace Wilgysef.StdoutHook.Rules
             rule._deactivationLines = new SortedListIncrementMatch<long>(DeactivationLines);
             rule._activationOffsetLines = new HashSet<long>();
             rule._deactivationOffsetLines = new HashSet<long>();
-            rule._active = _active;
+            rule.Active = Active;
 
             if (!StderrOnly)
             {
@@ -253,43 +253,6 @@ namespace Wilgysef.StdoutHook.Rules
             return rule;
         }
 
-        protected class SortedListIncrementMatch<T> where T : IEquatable<T>
-        {
-            private readonly List<T> _items;
-            private readonly int _itemCount;
-
-            private int _index = 0;
-
-            public SortedListIncrementMatch(ICollection<T> items)
-            {
-                _items = new List<T>(items);
-                _items.Sort();
-
-                _itemCount = _items.Count;
-            }
-
-            public bool MatchesCurrent(T item)
-            {
-                if (_index == _itemCount)
-                {
-                    return false;
-                }
-
-                var originalIndex = _index;
-
-                for (; _index < _itemCount && item.Equals(_items[_index]); _index++) ;
-
-                return originalIndex != _index;
-            }
-
-            public T GetFirstOrDefault(T defaultValue)
-            {
-                return _itemCount > 0
-                    ? _items[0]
-                    : defaultValue;
-            }
-        }
-
         private static bool DoesFirstCollectionContainMin(long[] first, long[] second)
         {
             var min = long.MaxValue;
@@ -317,6 +280,46 @@ namespace Wilgysef.StdoutHook.Rules
             }
 
             return !secondMatch;
+        }
+
+        protected class SortedListIncrementMatch<T>
+            where T : IEquatable<T>
+        {
+            private readonly List<T> _items;
+            private readonly int _itemCount;
+
+            private int _index = 0;
+
+            public SortedListIncrementMatch(ICollection<T> items)
+            {
+                _items = new List<T>(items);
+                _items.Sort();
+
+                _itemCount = _items.Count;
+            }
+
+            public bool MatchesCurrent(T item)
+            {
+                if (_index == _itemCount)
+                {
+                    return false;
+                }
+
+                var originalIndex = _index;
+
+                for (; _index < _itemCount && item.Equals(_items[_index]); _index++)
+                {
+                }
+
+                return originalIndex != _index;
+            }
+
+            public T GetFirstOrDefault(T defaultValue)
+            {
+                return _itemCount > 0
+                    ? _items[0]
+                    : defaultValue;
+            }
         }
     }
 }

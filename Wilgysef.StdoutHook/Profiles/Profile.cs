@@ -8,6 +8,8 @@ namespace Wilgysef.StdoutHook.Profiles
 {
     public class Profile : IDisposable
     {
+        private Formatter _formatter = null!;
+
         public string? ProfileName { get; set; }
 
         public bool PseudoTty { get; set; }
@@ -27,8 +29,6 @@ namespace Wilgysef.StdoutHook.Profiles
         public IDictionary<string, string> CustomColors { get; set; } = new Dictionary<string, string>();
 
         public ProfileState State { get; set; } = new ProfileState();
-
-        private Formatter _formatter = null!;
 
         public void Build()
         {

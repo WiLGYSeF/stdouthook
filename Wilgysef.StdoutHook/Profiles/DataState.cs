@@ -5,6 +5,26 @@ namespace Wilgysef.StdoutHook.Profiles
 {
     internal class DataState
     {
+        private readonly ColorList _extractedColors = new();
+        private string _data = null!;
+
+        private string? _dataTrimEndNewline;
+        private string? _dataExtractedColorTrimEndNewline;
+        private string? _newline;
+        private bool _extractedColorsUpdated;
+
+        public DataState(string data, bool stdout, Profile profile)
+        {
+            Data = data;
+            Stdout = stdout;
+            Profile = profile;
+        }
+
+        public DataState(Profile profile)
+        {
+            Profile = profile;
+        }
+
         public string Data
         {
             get => _data;
@@ -76,26 +96,6 @@ namespace Wilgysef.StdoutHook.Profiles
         public RuleContext Context { get; } = new();
 
         internal int LastColorFormatIndex { get; set; } = -1;
-
-        private readonly ColorList _extractedColors = new();
-        private string _data = null!;
-
-        private string? _dataTrimEndNewline;
-        private string? _dataExtractedColorTrimEndNewline;
-        private string? _newline;
-        private bool _extractedColorsUpdated;
-
-        public DataState(string data, bool stdout, Profile profile)
-        {
-            Data = data;
-            Stdout = stdout;
-            Profile = profile;
-        }
-
-        public DataState(Profile profile)
-        {
-            Profile = profile;
-        }
 
         public ColorState GetColorState(int position)
         {

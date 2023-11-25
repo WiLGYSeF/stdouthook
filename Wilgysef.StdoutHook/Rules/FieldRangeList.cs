@@ -7,20 +7,23 @@ namespace Wilgysef.StdoutHook.Rules
 {
     public class FieldRangeList
     {
-        public IList<FieldRange> Fields => _fields;
+        private readonly List<FieldRange> _fields = new();
 
-        public int? SingleValue => Fields.Count == 1
-            ? Fields[0].SingleValue
-            : null;
-
-        private readonly List<FieldRange> _fields = new List<FieldRange>();
-
-        public FieldRangeList(params FieldRange[] fields) : this((IEnumerable<FieldRange>)fields) { }
+        public FieldRangeList(params FieldRange[] fields)
+            : this((IEnumerable<FieldRange>)fields)
+        {
+        }
 
         public FieldRangeList(IEnumerable<FieldRange> fields)
         {
             _fields.AddRange(fields);
         }
+
+        public IList<FieldRange> Fields => _fields;
+
+        public int? SingleValue => Fields.Count == 1
+            ? Fields[0].SingleValue
+            : null;
 
         public int GetMin()
         {

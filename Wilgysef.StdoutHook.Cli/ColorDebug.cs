@@ -14,13 +14,14 @@ public static class ColorDebug
 
         var styles = new[]
         {
-            "nor", "bol", "dim", "ita", "und", "bli", "inv", "hid", "str", "ove"
+            "nor", "bol", "dim", "ita", "und", "bli", "inv", "hid", "str", "ove",
         };
 
         foreach (var style in styles)
         {
             writer.Write(formatter.Format($"%C({style}) {style} %Cz"));
         }
+
         writer.WriteLine(reset);
 
         writer.WriteLine();
@@ -47,7 +48,7 @@ public static class ColorDebug
         {
             var colors = new[]
             {
-                "black", "red", "green", "yellow", "blue", "magenta", "cyan", "gray"
+                "black", "red", "green", "yellow", "blue", "magenta", "cyan", "gray",
             };
 
             var backgroundStr = background ? "^" : "";

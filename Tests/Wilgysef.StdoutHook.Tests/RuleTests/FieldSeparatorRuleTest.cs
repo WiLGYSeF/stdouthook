@@ -329,7 +329,7 @@ public class FieldSeparatorRuleTest : RuleTestBase
     {
         var rule = new FieldSeparatorRule(new Regex(" "), "%F1 %F2 %F3")
         {
-            TrimNewline = true
+            TrimNewline = true,
         };
         ShouldRuleBe(rule, "a b c\n", "a b c");
     }

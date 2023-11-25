@@ -24,7 +24,7 @@ namespace Wilgysef.StdoutHook.Utilities
 
                 for (var i = 0; i < list.Count; i++)
                 {
-                    if (!(list[i] is string item))
+                    if (list[i] is not string item)
                     {
                         throw new ArgumentException("Invalid type.");
                     }

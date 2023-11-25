@@ -5,10 +5,6 @@ namespace Wilgysef.StdoutHook.Rules
 {
     public class ActivationExpression
     {
-        public Regex Expression { get; set; }
-
-        public long ActivationOffset { get; set; }
-
         public ActivationExpression(Regex expression, long activationOffset = 0)
         {
             if (activationOffset < 0)
@@ -19,5 +15,9 @@ namespace Wilgysef.StdoutHook.Rules
             Expression = expression;
             ActivationOffset = activationOffset;
         }
+
+        public Regex Expression { get; set; }
+
+        public long ActivationOffset { get; set; }
     }
 }
