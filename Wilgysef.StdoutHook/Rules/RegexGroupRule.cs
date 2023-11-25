@@ -12,12 +12,6 @@ public class RegexGroupRule : Rule
 {
     private static readonly int MaximumGroupCount = 32;
 
-    public Regex Regex { get; set; }
-
-    public IList<KeyValuePair<FieldRangeList, string>>? ReplaceGroups { get; set; }
-
-    public IDictionary<string, string>? ReplaceNamedGroups { get; set; }
-
     private readonly List<KeyValuePair<FieldRangeList, CompiledFormat>> _outOfRangeReplaceGroups = new List<KeyValuePair<FieldRangeList, CompiledFormat>>();
     private readonly Dictionary<string, CompiledFormat> _namedGroups = new Dictionary<string, CompiledFormat>();
 
@@ -52,6 +46,13 @@ public class RegexGroupRule : Rule
         ReplaceNamedGroups = replaceNamedGroups;
     }
 
+    public Regex Regex { get; set; }
+
+    public IList<KeyValuePair<FieldRangeList, string>>? ReplaceGroups { get; set; }
+
+    public IDictionary<string, string>? ReplaceNamedGroups { get; set; }
+
+    /// <inheritdoc/>
     internal override void Build(Profile profile, Formatter formatter)
     {
         base.Build(profile, formatter);
@@ -74,6 +75,7 @@ public class RegexGroupRule : Rule
         }
     }
 
+    /// <inheritdoc/>
     internal override string Apply(DataState state)
     {
         var data = state.DataExtractedColorTrimEndNewline.AsSpan();
@@ -179,6 +181,7 @@ public class RegexGroupRule : Rule
         }
     }
 
+    /// <inheritdoc/>
     protected override Rule CopyInternal()
     {
         var rule = new RegexGroupRule(Regex)

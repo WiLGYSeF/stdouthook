@@ -5,6 +5,7 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders;
 
 internal abstract class AlignFormatBuilder : FormatBuilder
 {
+    /// <inheritdoc/>
     public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
     {
         var format = state.Profile.CompileFormat(GetAlign(state.Contents, out var alignChar, out var alignLength));

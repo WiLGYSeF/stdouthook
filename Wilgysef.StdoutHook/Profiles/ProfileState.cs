@@ -14,27 +14,47 @@ namespace Wilgysef.StdoutHook.Profiles;
 /// </remarks>
 public class ProfileState : IDisposable
 {
-    public Process Process { get; private set; } = null!;
-
-    public long StdoutLineCount { get; set; }
-
-    public long StderrLineCount { get; set; }
-
-    public long LineCount => StdoutLineCount + StderrLineCount;
-
-    internal Func<string, Stream> StreamFactory { get; set; } =
-        absolutePath => new FileStream(absolutePath, FileMode.Append, FileAccess.Write, FileShare.Read);
-
     private readonly ConcurrentDictionary<string, ConcurrentStream> _fileStreams = new();
     private readonly ColorState _colorState = new();
 
     private bool _trackColorState;
 
+    /// <summary>
+    /// Running process.
+    /// </summary>
+    public Process Process { get; private set; } = null!;
+
+    /// <summary>
+    /// Number of stdout lines passed.
+    /// </summary>
+    public long StdoutLineCount { get; set; }
+
+    /// <summary>
+    /// Number of stderr lines passed.
+    /// </summary>
+    public long StderrLineCount { get; set; }
+
+    /// <summary>
+    /// Number of lines passed.
+    /// </summary>
+    public long LineCount => StdoutLineCount + StderrLineCount;
+
+    /// <summary>
+    /// Stream factory.
+    /// </summary>
+    internal Func<string, Stream> StreamFactory { get; set; } =
+        absolutePath => new FileStream(absolutePath, FileMode.Append, FileAccess.Write, FileShare.Read);
+
+    /// <summary>
+    /// Sets the running process.
+    /// </summary>
+    /// <param name="process">Process.</param>
     public void SetProcess(Process process)
     {
         Process = process;
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         GC.SuppressFinalize(this);
@@ -49,6 +69,11 @@ public class ProfileState : IDisposable
         _fileStreams.Clear();
     }
 
+    /// <summary>
+    /// Gets or creates a file stream.
+    /// </summary>
+    /// <param name="absolutePath">File path.</param>
+    /// <returns>File stream.</returns>
     internal ConcurrentStream GetOrCreateFileStream(string absolutePath)
     {
         ConcurrentStream? stream;
@@ -91,11 +116,18 @@ public class ProfileState : IDisposable
         }
     }
 
+    /// <summary>
+    /// Enables tracking color state.
+    /// </summary>
     internal void TrackColorState()
     {
         _trackColorState = true;
     }
 
+    /// <summary>
+    /// Applies color state.
+    /// </summary>
+    /// <param name="colors">Color list.</param>
     internal void ApplyColorState(ColorList colors)
     {
         if (!_trackColorState)
@@ -109,6 +141,12 @@ public class ProfileState : IDisposable
         }
     }
 
+    /// <summary>
+    /// Gets the color state.
+    /// </summary>
+    /// <param name="dataState">Data state.</param>
+    /// <param name="position">Start position offset.</param>
+    /// <returns>Color state.</returns>
     internal ColorState GetColorState(DataState dataState, int position)
     {
         var copy = _colorState.Copy();

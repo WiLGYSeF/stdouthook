@@ -5,10 +5,6 @@ namespace Wilgysef.StdoutHook.Tests;
 
 internal class TestFormatBuilder : FormatBuilder
 {
-    public override string? Key => _key;
-
-    public override char? KeyShort => _keyShort;
-
     private readonly string? _key;
     private readonly char? _keyShort;
     private readonly Func<FormatComputeState, string>? _func;
@@ -25,6 +21,10 @@ internal class TestFormatBuilder : FormatBuilder
         _func = func;
         _constantFunc = constantFunc;
     }
+
+    public override string? Key => _key;
+
+    public override char? KeyShort => _keyShort;
 
     public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
     {

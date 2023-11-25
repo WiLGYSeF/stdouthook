@@ -8,10 +8,13 @@ internal class DataFormatBuilder : FormatBuilder
 
     private const string Newline = "newline";
 
+    /// <inheritdoc/>
     public override string? Key => "data";
 
+    /// <inheritdoc/>
     public override char? KeyShort => null;
 
+    /// <inheritdoc/>
     public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
     {
         isConstant = false;

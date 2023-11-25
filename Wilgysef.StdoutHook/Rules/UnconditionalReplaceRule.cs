@@ -14,6 +14,7 @@ public class UnconditionalReplaceRule : Rule
 
     public string Format { get; set; }
 
+    /// <inheritdoc/>
     internal override void Build(Profile profile, Formatter formatter)
     {
         base.Build(profile, formatter);
@@ -21,6 +22,7 @@ public class UnconditionalReplaceRule : Rule
         _compiledFormat = Formatter.CompileFormat(Format, profile);
     }
 
+    /// <inheritdoc/>
     internal override string Apply(DataState state)
     {
         var result = _compiledFormat.Compute(state);
@@ -30,6 +32,7 @@ public class UnconditionalReplaceRule : Rule
             : result + state.Newline;
     }
 
+    /// <inheritdoc/>
     protected override Rule CopyInternal()
     {
         return new UnconditionalReplaceRule(Format)

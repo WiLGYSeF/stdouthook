@@ -6,10 +6,13 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders;
 
 internal class FieldFormatBuilder : FormatBuilder
 {
+    /// <inheritdoc/>
     public override string? Key => "field";
 
+    /// <inheritdoc/>
     public override char? KeyShort => 'F';
 
+    /// <inheritdoc/>
     public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
     {
         if (state.Contents.Length == 0)

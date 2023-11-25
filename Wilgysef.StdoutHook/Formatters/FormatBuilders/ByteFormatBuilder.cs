@@ -3,12 +3,18 @@ using System.Text;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders;
 
+/// <summary>
+/// Format builder for byte values.
+/// </summary>
 internal class ByteFormatBuilder : FormatBuilder
 {
+    /// <inheritdoc/>
     public override string? Key => null;
 
+    /// <inheritdoc/>
     public override char? KeyShort => 'x';
 
+    /// <inheritdoc/>
     public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
     {
         isConstant = true;
@@ -30,32 +36,10 @@ internal class ByteFormatBuilder : FormatBuilder
 
     private static bool IsHexChar(char c)
     {
-        switch (c)
+        return c switch
         {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-            case 'a':
-            case 'b':
-            case 'c':
-            case 'd':
-            case 'e':
-            case 'f':
-            case 'A':
-            case 'B':
-            case 'C':
-            case 'E':
-            case 'F':
-                return true;
-            default:
-                return false;
-        }
+            '0' or '1' or '2' or '3' or '4' or '5' or '6' or '7' or '8' or '9' or 'a' or 'b' or 'c' or 'd' or 'e' or 'f' or 'A' or 'B' or 'C' or 'E' or 'F' => true,
+            _ => false,
+        };
     }
 }

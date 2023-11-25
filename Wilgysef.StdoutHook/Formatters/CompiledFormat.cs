@@ -4,26 +4,57 @@ using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters;
 
+/// <summary>
+/// Compiled format.
+/// </summary>
 internal class CompiledFormat
 {
-    public CompiledFormat(string[] parts, Func<FormatComputeState, string>[] funcs)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CompiledFormat"/> class.
+    /// </summary>
+    /// <remarks>
+    /// The length of <paramref name="parts"/> must be one greater than the length of <paramref name="funcs"/>.
+    /// </remarks>
+    /// <param name="parts">String parts, joined around each format function.</param>
+    /// <param name="funcs">Format functions.</param>
+    internal CompiledFormat(string[] parts, Func<FormatComputeState, string>[] funcs)
     {
         Parts = parts;
         Funcs = funcs;
         IsConstant = Parts.Length == 1;
     }
 
+    /// <summary>
+    /// Indicates if the compiled format value is constant.
+    /// </summary>
     public bool IsConstant { get; }
 
+    /// <summary>
+    /// Format string parts, joined around each format function.
+    /// </summary>
     internal string[] Parts { get; }
 
+    /// <summary>
+    /// Format functions.
+    /// </summary>
     internal Func<FormatComputeState, string>[] Funcs { get; }
 
+    /// <summary>
+    /// Computes the format.
+    /// </summary>
+    /// <param name="dataState">Data state.</param>
+    /// <returns>Computed format.</returns>
     public string Compute(DataState dataState)
     {
         return Compute(dataState, 0);
     }
 
+    /// <summary>
+    /// Computes the format.
+    /// </summary>
+    /// <param name="dataState">Data state.</param>
+    /// <param name="startPosition">Sets the start position offset.</param>
+    /// <returns>Computed format.</returns>
     public string Compute(DataState dataState, int startPosition)
     {
         if (IsConstant)
@@ -46,6 +77,10 @@ internal class CompiledFormat
             .ToString();
     }
 
+    /// <summary>
+    /// Copies the compiled format.
+    /// </summary>
+    /// <returns>Compiled format copy.</returns>
     public CompiledFormat Copy()
     {
         return new CompiledFormat(Parts, Funcs);

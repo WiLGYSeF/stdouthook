@@ -22,7 +22,7 @@ public class FieldSeparatorRule : Rule
 
     public string? ReplaceAllFormat { get; set; }
 
-    private readonly List<KeyValuePair<FieldRangeList, CompiledFormat>> _outOfRangeReplaceFields = new List<KeyValuePair<FieldRangeList, CompiledFormat>>();
+    private readonly List<KeyValuePair<FieldRangeList, CompiledFormat>> _outOfRangeReplaceFields = new();
 
     // TODO: optimize to sparse?
     private CompiledFormat?[]? _fieldReplacers;
@@ -46,6 +46,7 @@ public class FieldSeparatorRule : Rule
         ReplaceAllFormat = replaceAllFormat;
     }
 
+    /// <inheritdoc/>
     internal override void Build(Profile profile, Formatter formatter)
     {
         base.Build(profile, formatter);
@@ -68,6 +69,7 @@ public class FieldSeparatorRule : Rule
             format => Formatter.CompileFormat(format, profile));
     }
 
+    /// <inheritdoc/>
     internal override string Apply(DataState state)
     {
         var splitData = SeparatorExpression.SplitWithSeparators(
@@ -152,6 +154,7 @@ public class FieldSeparatorRule : Rule
         return builder.ToString();
     }
 
+    /// <inheritdoc/>
     protected override Rule CopyInternal()
     {
         var rule = new FieldSeparatorRule(SeparatorExpression)

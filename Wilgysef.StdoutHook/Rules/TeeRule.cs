@@ -9,12 +9,6 @@ namespace Wilgysef.StdoutHook.Rules;
 
 public class TeeRule : Rule
 {
-    public string Filename { get; set; }
-
-    public bool Flush { get; set; }
-
-    public bool ExtractColors { get; set; }
-
     private string _absolutePath = null!;
     private ConcurrentStream? _stream;
 
@@ -23,6 +17,13 @@ public class TeeRule : Rule
         Filename = filename;
     }
 
+    public string Filename { get; set; }
+
+    public bool Flush { get; set; }
+
+    public bool ExtractColors { get; set; }
+
+    /// <inheritdoc/>
     internal override void Build(Profile profile, Formatter formatter)
     {
         base.Build(profile, formatter);
@@ -30,6 +31,7 @@ public class TeeRule : Rule
         _absolutePath = Path.GetFullPath(Filename);
     }
 
+    /// <inheritdoc/>
     internal override string Apply(DataState state)
     {
         // profile state remains the same
@@ -51,6 +53,7 @@ public class TeeRule : Rule
         return state.Data;
     }
 
+    /// <inheritdoc/>
     protected override Rule CopyInternal()
     {
         return new TeeRule(Filename)

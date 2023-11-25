@@ -3,12 +3,18 @@ using Wilgysef.StdoutHook.Extensions;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders;
 
+/// <summary>
+/// Format builder for substrings.
+/// </summary>
 internal class SubstringFormatBuilder : FormatBuilder
 {
+    /// <inheritdoc/>
     public override string? Key => "substring";
 
+    /// <inheritdoc/>
     public override char? KeyShort => null;
 
+    /// <inheritdoc/>
     public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
     {
         var contentsSpan = state.Contents.AsSpan();
@@ -23,9 +29,9 @@ internal class SubstringFormatBuilder : FormatBuilder
 
         var secondSeparatorIndex = contentsSpan.IndexOfAfter(separatorIndex + 1, Formatter.Separator);
         if (secondSeparatorIndex >= 0
-            && int.TryParse(contentsSpan[(separatorIndex + 1)..secondSeparatorIndex], out var _endIndex))
+            && int.TryParse(contentsSpan[(separatorIndex + 1)..secondSeparatorIndex], out var endIndex_))
         {
-            endIndex = _endIndex;
+            endIndex = endIndex_;
         }
         else
         {

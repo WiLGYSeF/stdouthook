@@ -5,19 +5,41 @@ using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters;
 
+/// <summary>
+/// Formatter.
+/// </summary>
 internal class Formatter
 {
+    /// <summary>
+    /// Key-value format separator.
+    /// </summary>
     public static readonly char Separator = ':';
-
-    public bool InvalidFormatBlank { get; set; }
 
     private readonly FormatFunctionBuilder _formatFunctionBuilder;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Formatter"/> class.
+    /// </summary>
+    /// <param name="formatFunctionBuilder">Format function builder.</param>
     public Formatter(FormatFunctionBuilder formatFunctionBuilder)
     {
         _formatFunctionBuilder = formatFunctionBuilder;
     }
 
+    /// <summary>
+    /// Indicates if invalid format values should be replaced with empty strings.
+    /// </summary>
+    public bool InvalidFormatBlank { get; set; }
+
+    /// <summary>
+    /// Compiles the format <paramref name="format"/>.
+    /// </summary>
+    /// <remarks>
+    /// Formatters are in the format <c>%formatKey</c>, <c>%(formatKey)</c>, or <c>%(formatKey:formatValue)</c>.
+    /// </remarks>
+    /// <param name="format">Format to compile.</param>
+    /// <param name="profile">Profile.</param>
+    /// <returns>Compiled format.</returns>
     public CompiledFormat CompileFormat(string format, Profile profile)
     {
         var parts = new List<string>();
@@ -38,7 +60,7 @@ internal class Formatter
 
                 var nextCharIsParen = format[i + 1] == '(';
                 if (nextCharIsParen
-                    || i < format.Length - 2 && IsKeyChar(format[i + 1]) && format[i + 2] == '(')
+                    || (i < format.Length - 2 && IsKeyChar(format[i + 1]) && format[i + 2] == '('))
                 {
                     var key = format.AsSpan(i + 1, nextCharIsParen ? 0 : 1);
                     var start = i + (nextCharIsParen ? 2 : 3);
@@ -162,6 +184,12 @@ internal class Formatter
         }
     }
 
+    /// <summary>
+    /// Compile and compute format <paramref name="format"/>.
+    /// </summary>
+    /// <param name="format">Format.</param>
+    /// <param name="state">Data state.</param>
+    /// <returns>Formatted string.</returns>
     public string Format(string format, DataState state)
     {
         return CompileFormat(format, state.Profile).Compute(state);

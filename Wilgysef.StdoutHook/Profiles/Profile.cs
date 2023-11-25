@@ -117,6 +117,7 @@ public class Profile : IDisposable
         }
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         GC.SuppressFinalize(this);

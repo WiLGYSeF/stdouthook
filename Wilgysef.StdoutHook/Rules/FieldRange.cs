@@ -49,6 +49,7 @@ public class FieldRange
         return Min <= number && (!Max.HasValue || number <= Max.Value);
     }
 
+    /// <inheritdoc/>
     public override string ToString()
     {
         if (SingleValue.HasValue)

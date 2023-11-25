@@ -14,6 +14,7 @@ public class Logger : ILogger
         _stream = stream;
     }
 
+    /// <inheritdoc/>
     public void Log(LogLevel level, string message)
     {
         var builder = new StringBuilder();
@@ -29,16 +30,20 @@ public class Logger : ILogger
         _stream.WriteLine(result);
     }
 
+    /// <inheritdoc/>
     public void Error(string message) => Log(LogLevel.Error, message);
 
+    /// <inheritdoc/>
     public void Error(Exception exception, string message)
     {
         Log(LogLevel.Error, message);
         Log(LogLevel.Error, exception.ToString());
     }
 
+    /// <inheritdoc/>
     public void Warn(string message) => Log(LogLevel.Warn, message);
 
+    /// <inheritdoc/>
     public void Info(string message) => Log(LogLevel.Info, message);
 
     private static string GetLogLevel(LogLevel level)

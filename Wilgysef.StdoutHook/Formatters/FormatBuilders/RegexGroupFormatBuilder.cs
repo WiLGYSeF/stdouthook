@@ -4,10 +4,13 @@ namespace Wilgysef.StdoutHook.Formatters.FormatBuilders;
 
 internal class RegexGroupFormatBuilder : FormatBuilder
 {
+    /// <inheritdoc/>
     public override string? Key => "group";
 
+    /// <inheritdoc/>
     public override char? KeyShort => 'G';
 
+    /// <inheritdoc/>
     public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
     {
         if (state.Contents.Length == 0)

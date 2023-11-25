@@ -216,12 +216,15 @@ internal class ColorFormatBuilder : FormatBuilder
 
     public char Toggle => '^';
 
+    /// <inheritdoc/>
     public override string? Key => "color";
 
+    /// <inheritdoc/>
     public override char? KeyShort => 'C';
 
     public IDictionary<string, string> CustomColors { get; set; } = new Dictionary<string, string>();
 
+    /// <inheritdoc/>
     public override Func<FormatComputeState, string> Build(FormatBuildState state, out bool isConstant)
     {
         if (state.Contents.StartsWith("raw"))

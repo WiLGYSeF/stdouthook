@@ -3,6 +3,9 @@ using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders;
 
+/// <summary>
+/// Format builder for <see cref="Profile"/> properties.
+/// </summary>
 internal class ProfileFormatBuilder : PropertyFormatBuilder<Profile>
 {
     private static readonly Property[] ProfileProperties = new[]
@@ -14,15 +17,19 @@ internal class ProfileFormatBuilder : PropertyFormatBuilder<Profile>
         new Property(new[] { "totalLines", "totalLineCount" }, (profile, format) => profile.State.LineCount.ToString(format), false),
     };
 
+    /// <inheritdoc/>
     public override string? Key => "profile";
 
+    /// <inheritdoc/>
     public override char? KeyShort => null;
 
+    /// <inheritdoc/>
     protected override IReadOnlyList<Property> GetProperties()
     {
         return ProfileProperties;
     }
 
+    /// <inheritdoc/>
     protected override Profile GetValue(DataState state)
     {
         return state.Profile;

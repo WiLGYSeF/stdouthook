@@ -86,6 +86,7 @@ public class FieldRangeList
         return false;
     }
 
+    /// <inheritdoc/>
     public override string ToString()
     {
         return string.Join(", ", Fields.Select(f => f.ToString()));

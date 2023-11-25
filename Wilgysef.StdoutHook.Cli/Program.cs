@@ -292,7 +292,7 @@ finally
     errorStreamWriter?.Dispose();
 
     // TODO: remove
-    if (options.Verbose >= 3)
+    if (options != null && options.Verbose >= 3)
     {
         VerbosePrint("", 3);
         VerbosePrint($"argument parsing: {argparseTimeElapsed}", 3);
@@ -373,7 +373,7 @@ TextWriter CreateRedirectedStream(string filename, bool append)
 
         return new StreamWriter(new FileStream(
             filename,
-            append ? FileMode.Append : FileMode.Open,
+            append ? FileMode.Append : FileMode.OpenOrCreate,
             FileAccess.Write));
     }
     catch (Exception ex)

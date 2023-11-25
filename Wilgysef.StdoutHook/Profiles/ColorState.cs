@@ -242,6 +242,7 @@ internal class ColorState
         return copy;
     }
 
+    /// <inheritdoc/>
     public override string ToString()
     {
         var builder = new StringBuilder();

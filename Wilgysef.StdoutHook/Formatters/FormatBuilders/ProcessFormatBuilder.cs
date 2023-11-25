@@ -7,12 +7,11 @@ using Wilgysef.StdoutHook.Utilities;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders;
 
+/// <summary>
+/// Format builder for <see cref="Process"/> values.
+/// </summary>
 internal class ProcessFormatBuilder : PropertyFormatBuilder<Process>
 {
-    public override string? Key => "process";
-
-    public override char? KeyShort => null;
-
     private readonly Property[] _processProperties;
     private readonly OffsetStopwatch _durationStopwatch;
     private readonly ConcurrentDictionary<string, string> _startTimeCache = new();
@@ -22,6 +21,9 @@ internal class ProcessFormatBuilder : PropertyFormatBuilder<Process>
     private int _processId;
     private bool _cached;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ProcessFormatBuilder"/> class.
+    /// </summary>
     public ProcessFormatBuilder()
     {
         _durationStopwatch = new OffsetStopwatch();
@@ -51,11 +53,19 @@ internal class ProcessFormatBuilder : PropertyFormatBuilder<Process>
         };
     }
 
+    /// <inheritdoc/>
+    public override string? Key => "process";
+
+    /// <inheritdoc/>
+    public override char? KeyShort => null;
+
+    /// <inheritdoc/>
     protected override IReadOnlyList<Property> GetProperties()
     {
         return _processProperties;
     }
 
+    /// <inheritdoc/>
     protected override Process GetValue(DataState state)
     {
         var process = state.Profile.State.Process;

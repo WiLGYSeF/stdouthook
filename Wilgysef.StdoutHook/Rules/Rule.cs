@@ -9,19 +9,19 @@ namespace Wilgysef.StdoutHook.Rules;
 
 public abstract class Rule
 {
-    protected SortedListIncrementMatch<long> _activationLines = null!;
-    protected SortedListIncrementMatch<long> _activationLinesStdoutOnly = null!;
-    protected SortedListIncrementMatch<long> _activationLinesStderrOnly = null!;
-    protected SortedListIncrementMatch<long> _deactivationLines = null!;
-    protected SortedListIncrementMatch<long> _deactivationLinesStdoutOnly = null!;
-    protected SortedListIncrementMatch<long> _deactivationLinesStderrOnly = null!;
+    private SortedListIncrementMatch<long> _activationLines = null!;
+    private SortedListIncrementMatch<long> _activationLinesStdoutOnly = null!;
+    private SortedListIncrementMatch<long> _activationLinesStderrOnly = null!;
+    private SortedListIncrementMatch<long> _deactivationLines = null!;
+    private SortedListIncrementMatch<long> _deactivationLinesStdoutOnly = null!;
+    private SortedListIncrementMatch<long> _deactivationLinesStderrOnly = null!;
 
-    protected HashSet<long> _activationOffsetLines = new();
-    protected HashSet<long> _activationOffsetStdoutOnlyLines = new();
-    protected HashSet<long> _activationOffsetStderrOnlyLines = new();
-    protected HashSet<long> _deactivationOffsetLines = new();
-    protected HashSet<long> _deactivationOffsetStdoutOnlyLines = new();
-    protected HashSet<long> _deactivationOffsetStderrOnlyLines = new();
+    private HashSet<long> _activationOffsetLines = new();
+    private HashSet<long> _activationOffsetStdoutOnlyLines = new();
+    private HashSet<long> _activationOffsetStderrOnlyLines = new();
+    private HashSet<long> _deactivationOffsetLines = new();
+    private HashSet<long> _deactivationOffsetStdoutOnlyLines = new();
+    private HashSet<long> _deactivationOffsetStderrOnlyLines = new();
 
     public Regex? EnableExpression { get; set; }
 
@@ -282,7 +282,7 @@ public abstract class Rule
         return !secondMatch;
     }
 
-    protected class SortedListIncrementMatch<T>
+    private class SortedListIncrementMatch<T>
         where T : IEquatable<T>
     {
         private readonly List<T> _items;
