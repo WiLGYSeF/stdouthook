@@ -1,19 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 using System.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Wilgysef.StdoutHook.Profiles;
 
-internal class ColorState
+internal class ColorState : IEquatable<ColorState>
 {
-    private const string ForegroundColorDefault = "39";
-    private const string BackgroundColorDefault = "49";
+    private HashSet<int> _styles = new();
 
-    internal string ForegroundColor { get; private set; } = ForegroundColorDefault;
+    internal string? ForegroundColor { get; private set; }
 
-    internal string BackgroundColor { get; private set; } = BackgroundColorDefault;
+    internal string? BackgroundColor { get; private set; }
 
-    internal HashSet<int> Styles { get; } = new();
+    internal IReadOnlyCollection<int> Styles => _styles;
 
     public void UpdateState(ColorList colors, int position)
     {
@@ -26,6 +28,11 @@ internal class ColorState
             }
 
             var color = colorEntry.Color;
+            if (color[^1] != 'm')
+            {
+                continue;
+            }
+
             var end = color.Length - 1;
 
             for (var cur = 2; cur < end;)
@@ -39,9 +46,9 @@ internal class ColorState
                 switch (num)
                 {
                     case 0:
-                        ForegroundColor = ForegroundColorDefault;
-                        BackgroundColor = BackgroundColorDefault;
-                        Styles.Clear();
+                        ForegroundColor = null;
+                        BackgroundColor = null;
+                        _styles.Clear();
                         break;
                     case 1:
                     case 2:
@@ -61,44 +68,44 @@ internal class ColorState
                     case 62:
                     case 63:
                     case 64:
-                        Styles.Add(num);
+                        _styles.Add(num);
                         break;
                     case 21:
-                        Styles.Remove(1);
-                        Styles.Add(21);
+                        _styles.Remove(1);
+                        _styles.Add(21);
+                        break;
+                    case 22:
+                        _styles.Remove(1);
+                        _styles.Remove(2);
+                        break;
+                    case 23:
+                        _styles.Remove(3);
+                        _styles.Remove(20);
+                        break;
+                    case 24:
+                        _styles.Remove(4);
+                        _styles.Remove(21);
                         break;
                     case 25:
                     case 26:
                     case 27:
                     case 28:
                     case 29:
-                        Styles.Remove(num - 20);
-                        break;
-                    case 22:
-                        Styles.Remove(1);
-                        Styles.Remove(2);
-                        break;
-                    case 23:
-                        Styles.Remove(3);
-                        Styles.Remove(20);
-                        break;
-                    case 24:
-                        Styles.Remove(4);
-                        Styles.Remove(21);
+                        _styles.Remove(num - 20);
                         break;
                     case 54:
-                        Styles.Remove(51);
-                        Styles.Remove(52);
+                        _styles.Remove(51);
+                        _styles.Remove(52);
                         break;
                     case 55:
-                        Styles.Remove(53);
+                        _styles.Remove(53);
                         break;
                     case 65:
-                        Styles.Remove(60);
-                        Styles.Remove(61);
-                        Styles.Remove(62);
-                        Styles.Remove(63);
-                        Styles.Remove(64);
+                        _styles.Remove(60);
+                        _styles.Remove(61);
+                        _styles.Remove(62);
+                        _styles.Remove(63);
+                        _styles.Remove(64);
                         break;
                     case 30:
                     case 31:
@@ -226,6 +233,45 @@ internal class ColorState
         }
     }
 
+    public ColorState Diff(ColorState other)
+    {
+        var diff = new ColorState();
+
+        if (ForegroundColor != other.ForegroundColor)
+        {
+            diff.ForegroundColor = other.ForegroundColor
+                ?? "39";
+        }
+
+        if (BackgroundColor != other.BackgroundColor)
+        {
+            diff.BackgroundColor = other.BackgroundColor
+                ?? "49";
+        }
+
+        foreach (var style in Styles)
+        {
+            if (!other._styles.Contains(style))
+            {
+                var inverseStyle = GetInverseStyle(style);
+                if (inverseStyle.HasValue)
+                {
+                    diff._styles.Add(inverseStyle.Value);
+                }
+            }
+        }
+
+        foreach (var style in other._styles)
+        {
+            if (!_styles.Contains(style))
+            {
+                diff._styles.Add(style);
+            }
+        }
+
+        return diff;
+    }
+
     public ColorState Copy()
     {
         var copy = new ColorState
@@ -234,9 +280,9 @@ internal class ColorState
             BackgroundColor = BackgroundColor,
         };
 
-        foreach (var style in Styles)
+        foreach (var style in _styles)
         {
-            copy.Styles.Add(style);
+            copy._styles.Add(style);
         }
 
         return copy;
@@ -245,21 +291,79 @@ internal class ColorState
     /// <inheritdoc/>
     public override string ToString()
     {
-        var builder = new StringBuilder();
-        builder
-            .Append("\x1b[")
-            .Append(ForegroundColor)
-            .Append(';')
-            .Append(BackgroundColor);
-
-        foreach (var style in Styles)
+        if (ForegroundColor == null
+            && BackgroundColor == null
+            && _styles.Count == 0)
         {
-            builder
-                .Append(';')
-                .Append(style);
+            return "";
+        }
+
+        var builder = new StringBuilder();
+        var hasColor = false;
+
+        builder.Append("\x1b[");
+
+        if (ForegroundColor != null)
+        {
+            builder.Append(ForegroundColor);
+            hasColor = true;
+        }
+
+        if (BackgroundColor != null)
+        {
+            if (hasColor)
+            {
+                builder.Append(';');
+            }
+
+            builder.Append(BackgroundColor);
+            hasColor = true;
+        }
+
+        foreach (var style in _styles)
+        {
+            if (hasColor)
+            {
+                builder.Append(';');
+            }
+
+            builder.Append(style);
+            hasColor = true;
         }
 
         return builder.Append('m')
             .ToString();
+    }
+
+    public override bool Equals(object? obj)
+        => obj is ColorState state && Equals(state);
+
+    public bool Equals(ColorState? other)
+    {
+        if (other == null
+            || ForegroundColor != other.ForegroundColor
+            || BackgroundColor != other.BackgroundColor
+            || _styles.Count != other._styles.Count)
+        {
+            return false;
+        }
+
+        return _styles.SetEquals(other._styles);
+    }
+
+    public int GetHashCode([DisallowNull] ColorState obj)
+        => ToString().GetHashCode();
+
+    private static int? GetInverseStyle(int style)
+    {
+        return style switch
+        {
+            1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 => style + 20,
+            20 => 23,
+            51 or 52 => 54,
+            53 => 55,
+            60 or 61 or 62 or 63 or 64 => 65,
+            _ => null,
+        };
     }
 }

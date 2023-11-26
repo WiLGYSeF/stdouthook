@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Wilgysef.StdoutHook.Profiles;
 
 namespace Wilgysef.StdoutHook.Formatters.FormatBuilders;
 
@@ -266,8 +267,8 @@ internal class ColorFormatBuilder : FormatBuilder
         }
 
         var colorResults = new List<int>(colors.Count);
-        var softResetIndex = -1;
-        var softResetIgnoreFormatColors = false;
+        var softReset = false;
+        var softResetZero = false;
 
         for (var i = 0; i < colors.Count; i++)
         {
@@ -278,7 +279,6 @@ internal class ColorFormatBuilder : FormatBuilder
             }
 
             var toggle = false;
-            var softNum = 0;
 
             if (colorStr[0] == Toggle)
             {
@@ -290,15 +290,7 @@ internal class ColorFormatBuilder : FormatBuilder
                 || colorStr.Equals("soft", StringComparison.OrdinalIgnoreCase)
                 || colorStr.Equals("softReset", StringComparison.OrdinalIgnoreCase))
             {
-                softResetIndex = i;
-                state.Profile.State.TrackColorState();
-            }
-            else if (colorStr.Equals("soft0", StringComparison.OrdinalIgnoreCase)
-                || colorStr.Equals("softReset0", StringComparison.OrdinalIgnoreCase))
-            {
-                softResetIndex = i;
-                softResetIgnoreFormatColors = true;
-                state.Profile.State.TrackColorState();
+                softReset = true;
             }
             else if (Colors.TryGetValue(colorStr, out var color))
             {
@@ -323,25 +315,33 @@ internal class ColorFormatBuilder : FormatBuilder
             }
         }
 
-        if (softResetIndex != -1)
+        if (softReset)
         {
-            var colorsAfterSoftReset = string.Join(';', colorResults.Skip(softResetIndex));
-            var resultAfterSoftReset = colorsAfterSoftReset.Length > 0
-                ? $"\x1b[{colorsAfterSoftReset}m"
+            var colorString = colorResults.Count > 0
+                ? $"\x1b[{string.Join(';', colorResults)}m"
                 : "";
+
             isConstant = false;
             return computeState =>
             {
-                var colorState = computeState.DataState.GetColorState(computeState.StartPosition);
+                ColorState targetColorState;
+                ColorState currentColorState;
 
-                // TODO: handle soft0
-
+                targetColorState = computeState.DataState.GetColorState(computeState.StartPosition);
                 if (computeState.Colors != null)
                 {
-                    colorState.UpdateState(computeState.Colors, int.MaxValue);
+                    targetColorState.UpdateState(computeState.Colors, int.MaxValue);
                 }
 
-                return $"\x1b[0m{colorState}{resultAfterSoftReset}";
+                currentColorState = targetColorState.Copy();
+
+                currentColorState.UpdateState(computeState.DataState.ExtractedColors, computeState.Position);
+
+                var diffColorState = !currentColorState.Equals(targetColorState)
+                    ? currentColorState.Diff(targetColorState).ToString()
+                    : "";
+
+                return $"{diffColorState}{colorString}";
             };
         }
 

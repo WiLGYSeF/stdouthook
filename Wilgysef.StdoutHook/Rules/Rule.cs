@@ -118,7 +118,6 @@ public abstract class Rule
 
         var profileState = state.Profile.State;
 
-        // avoid potential race conditions by caching values
         var lineCount = profileState.LineCount;
         var stdoutLineCount = profileState.StdoutLineCount;
         var stderrLineCount = profileState.StderrLineCount;

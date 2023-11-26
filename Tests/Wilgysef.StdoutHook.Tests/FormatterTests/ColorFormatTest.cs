@@ -135,27 +135,31 @@ public class ColorFormatTest : RuleTestBase
         using var profile = new Profile();
         profile.Rules.Add(new RegexGroupRule(new Regex(@"^z (.*)"), new List<KeyValuePair<FieldRangeList, string>>
         {
-            new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1"), "=%Cblue%Gc%Cs="),
+            new(FieldRangeList.Parse("1"), "=%Cblue%Gc%Cs="),
         }));
         profile.Rules.Add(new RegexGroupRule(new Regex(@"^y (.*)"), new List<KeyValuePair<FieldRangeList, string>>
         {
-            new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1"), "=%Gc%Cs="),
+            new(FieldRangeList.Parse("1"), "=%Gc%Cs="),
         }));
         profile.Rules.Add(new RegexGroupRule(new Regex(@"^x (.*)"), new List<KeyValuePair<FieldRangeList, string>>
         {
-            new KeyValuePair<FieldRangeList, string>(FieldRangeList.Parse("1"), "=%Gc%C(s;bol)="),
+            new(FieldRangeList.Parse("1"), "=%Gc%C(s;bol)="),
         }));
         profile.Build();
 
         profile.ApplyRules("abc \x1b[31maaa", true).ShouldBe("abc \x1b[31maaa");
-        profile.ApplyRules("z test", true).ShouldBe("z =\x1b[34mtest\x1b[0m\x1b[34;49m=");
-        profile.ApplyRules("z te\x1b[36mst", true).ShouldBe("z =\x1b[34mte\x1b[36mst\x1b[0m\x1b[34;49m=");
+        profile.ApplyRules("z test", true).ShouldBe("z =\x1b[34mtest=");
+        profile.ApplyRules("z te\x1b[36mst", true).ShouldBe("z =\x1b[34mte\x1b[36mst\x1b[34m=");
+        profile.ApplyRules("z\x1b[31m te\x1b[36mst", true).ShouldBe("z\x1b[31m =\x1b[34mte\x1b[36mst\x1b[34m=");
 
         profile.ApplyRules("abc \x1b[31maaa", true).ShouldBe("abc \x1b[31maaa");
-        profile.ApplyRules("y te\x1b[36mst", true).ShouldBe("y =te\x1b[36mst\x1b[0m\x1b[31;49m=");
+        profile.ApplyRules("y te\x1b[36mst", true).ShouldBe("y =te\x1b[36mst\x1b[31m=");
+
+        profile.ApplyRules("\x1b[0m", true);
+        profile.ApplyRules("y test", true).ShouldBe("y =test=");
 
         profile.ApplyRules("abc \x1b[31maaa", true).ShouldBe("abc \x1b[31maaa");
-        profile.ApplyRules("x te\x1b[36mst", true).ShouldBe("x =te\x1b[36mst\x1b[0m\x1b[31;49m\x1b[1m=");
+        profile.ApplyRules("x te\x1b[36mst", true).ShouldBe("x =te\x1b[36mst\x1b[31m\x1b[1m=");
     }
 
     private static void ShouldFormatBe(string format, string expected)

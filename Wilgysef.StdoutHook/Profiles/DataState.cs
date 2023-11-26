@@ -32,7 +32,7 @@ internal class DataState
         {
             if (_data != value)
             {
-                _data = value!;
+                _data = value;
                 _dataTrimEndNewline = null;
                 _dataExtractedColorTrimEndNewline = null;
                 _extractedColors.Clear();

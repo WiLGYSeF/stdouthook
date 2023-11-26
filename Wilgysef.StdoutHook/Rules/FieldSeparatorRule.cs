@@ -12,16 +12,6 @@ public class FieldSeparatorRule : Rule
 {
     private static readonly int MaximumFieldCount = 128;
 
-    public Regex SeparatorExpression { get; set; }
-
-    public int? MinFields { get; set; }
-
-    public int? MaxFields { get; set; }
-
-    public IList<KeyValuePair<FieldRangeList, string>>? ReplaceFields { get; set; }
-
-    public string? ReplaceAllFormat { get; set; }
-
     private readonly List<KeyValuePair<FieldRangeList, CompiledFormat>> _outOfRangeReplaceFields = new();
 
     // TODO: optimize to sparse?
@@ -45,6 +35,16 @@ public class FieldSeparatorRule : Rule
         SeparatorExpression = separatorRegex;
         ReplaceAllFormat = replaceAllFormat;
     }
+
+    public Regex SeparatorExpression { get; set; }
+
+    public int? MinFields { get; set; }
+
+    public int? MaxFields { get; set; }
+
+    public IList<KeyValuePair<FieldRangeList, string>>? ReplaceFields { get; set; }
+
+    public string? ReplaceAllFormat { get; set; }
 
     /// <inheritdoc/>
     internal override void Build(Profile profile, Formatter formatter)
@@ -76,8 +76,8 @@ public class FieldSeparatorRule : Rule
             state.DataExtractedColorTrimEndNewline,
             out var splitCount);
 
-        if (MinFields.HasValue && MinFields.Value > splitCount
-            || MaxFields.HasValue && MaxFields.Value < splitCount)
+        if ((MinFields.HasValue && MinFields.Value > splitCount)
+            || (MaxFields.HasValue && MaxFields.Value < splitCount))
         {
             return state.Data;
         }
