@@ -1,13 +1,12 @@
 ﻿using Wilgysef.StdoutHook.Utilities;
 
-namespace Wilgysef.StdoutHook.Profiles.Dtos
+namespace Wilgysef.StdoutHook.Profiles.Dtos;
+
+public class ActivationExpressionDto
 {
-    public class ActivationExpressionDto
-    {
-        public object? Expression { get; set; }
+    public object? Expression { get; set; }
 
-        public long? ActivationOffset { get; set; }
+    public long? ActivationOffset { get; set; }
 
-        public string? GetExpression() => StringExpressions.GetExpression(Expression);
-    }
+    public string? GetExpression() => StringExpressions.GetExpression(Expression);
 }

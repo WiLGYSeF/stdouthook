@@ -202,7 +202,7 @@ public class ProfileLoaderTest
                     {
                         ReplaceAllFormat = "test",
                     },
-                }
+                },
             },
         };
 
@@ -244,7 +244,7 @@ public class ProfileLoaderTest
                     new ArgumentPatternDto
                     {
                         ArgumentExpression = "argumentexpression",
-                    }
+                    },
                 },
                 MinArguments = 1,
                 MaxArguments = 4,
@@ -261,7 +261,7 @@ public class ProfileLoaderTest
                     {
                         ReplaceAllFormat = "test",
                     },
-                }
+                },
             },
         };
 
@@ -313,7 +313,7 @@ public class ProfileLoaderTest
                     {
                         ReplaceAllFormat = "test",
                     },
-                }
+                },
             },
         };
 
@@ -469,7 +469,7 @@ public class ProfileLoaderTest
                     {
                         ReplaceAllFormat = "test3",
                     },
-                }
+                },
             },
         };
 
@@ -499,7 +499,7 @@ public class ProfileLoaderTest
                     {
                         ReplaceAllFormat = "test",
                     },
-                }
+                },
             },
             new ProfileDto
             {

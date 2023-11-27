@@ -11,9 +11,10 @@ public class CommandLocator
         var envPathExts = Environment.GetEnvironmentVariable("PATHEXT")
             ?.Split(Path.PathSeparator) ?? Array.Empty<string>();
 
-        var envPaths = new List<string>(envPathsArr.Length + 1);
-
-        envPaths.Add(Environment.CurrentDirectory);
+        var envPaths = new List<string>(envPathsArr.Length + 1)
+        {
+            Environment.CurrentDirectory,
+        };
         envPaths.AddRange(envPathsArr);
 
         return LocateCommand(command, envPaths, envPathExts);

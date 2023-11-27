@@ -27,7 +27,7 @@ public class RuleTest
             Terminal = true,
             TrimNewline = true,
             ActivationLines = new List<long> { 1, 3, 5 },
-            DeactivationLines = new List<long> { 2, 4, 6 }
+            DeactivationLines = new List<long> { 2, 4, 6 },
         };
 
         rule.ActivationExpressions.Add(new ActivationExpression(new Regex("active")));
@@ -44,7 +44,6 @@ public class RuleTest
 
         rule.ActivationExpressionsStderrOnly.Add(new ActivationExpression(new Regex("aese")));
         rule.DeactivationExpressionsStderrOnly.Add(new ActivationExpression(new Regex("dese")));
-
 
         var copy = rule.Copy();
 

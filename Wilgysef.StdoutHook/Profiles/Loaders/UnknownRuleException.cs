@@ -1,7 +1,9 @@
-﻿namespace Wilgysef.StdoutHook.Profiles.Loaders
+﻿namespace Wilgysef.StdoutHook.Profiles.Loaders;
+
+public class UnknownRuleException : ProfileLoaderException
 {
-    public class UnknownRuleException : ProfileLoaderException
+    public UnknownRuleException(string rule)
+        : base(rule)
     {
-        public UnknownRuleException(string rule) : base(rule) { }
     }
 }

@@ -1,45 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Wilgysef.StdoutHook.Extensions
+namespace Wilgysef.StdoutHook.Extensions;
+
+internal static class IListExtensions
 {
-    internal static class IListExtensions
+    public static void InsertRange<T>(this IList<T> list, int index, IList<T> items)
     {
-        public static void InsertRange<T>(this IList<T> list, int index, IList<T> items)
+        var startListCount = list.Count;
+
+        if (index < 0 || index > startListCount)
         {
-            var startListCount = list.Count;
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
 
-            if (index < 0 || index > startListCount)
+        var itemsStartIndex = startListCount - index;
+
+        if (itemsStartIndex >= 0)
+        {
+            for (var i = itemsStartIndex; i < items.Count; i++)
             {
-                throw new ArgumentOutOfRangeException(nameof(index));
+                list.Add(items[i]);
             }
+        }
 
-            var itemsStartIndex = startListCount - index;
+        for (var i = startListCount > items.Count ? startListCount - items.Count : index; i < startListCount; i++)
+        {
+            list.Add(list[i]);
+        }
 
-            if (itemsStartIndex >= 0)
-            {
-                for (var i = itemsStartIndex; i < items.Count; i++)
-                {
-                    list.Add(items[i]);
-                }
-            }
+        var limit = Math.Max(index, items.Count);
+        for (var i = startListCount - 1; i >= limit; i--)
+        {
+            list[i] = list[i - items.Count];
+        }
 
-            for (var i = startListCount > items.Count ? startListCount - items.Count : index; i < startListCount; i++)
-            {
-                list.Add(list[i]);
-            }
-
-            var limit = Math.Max(index, items.Count);
-            for (var i = startListCount - 1; i >= limit; i--)
-            {
-                list[i] = list[i - items.Count];
-            }
-
-            limit = Math.Min(itemsStartIndex, items.Count);
-            for (var i = 0; i < limit; i++)
-            {
-                list[i + index] = items[i];
-            }
+        limit = Math.Min(itemsStartIndex, items.Count);
+        for (var i = 0; i < limit; i++)
+        {
+            list[i + index] = items[i];
         }
     }
 }

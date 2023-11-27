@@ -1,5 +1,5 @@
-﻿using Shouldly;
-using System.Text;
+﻿using System.Text;
+using Shouldly;
 using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Rules;
 
@@ -89,7 +89,7 @@ public class StreamOutputHandlerTest
             Rules = new List<Rule>
             {
                 new UnconditionalReplaceRule("test %data"),
-            }
+            },
         };
     }
 }

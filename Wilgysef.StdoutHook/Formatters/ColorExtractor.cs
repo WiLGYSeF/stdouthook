@@ -3,181 +3,183 @@ using System.Text;
 using Wilgysef.StdoutHook.Profiles;
 using Wilgysef.StdoutHook.Rules;
 
-namespace Wilgysef.StdoutHook.Formatters
+namespace Wilgysef.StdoutHook.Formatters;
+
+internal static class ColorExtractor
 {
-    internal static class ColorExtractor
+    public static string ExtractColor(string data, ColorList? colors)
     {
-        public static string ExtractColor(string data, ColorList? colors)
-        {
-            var length = data.Length;
-            var builder = new StringBuilder(length);
-            var dataSpan = data.AsSpan();
-            var subtractOffset = 0;
-            var last = 0;
+        var length = data.Length;
+        var builder = new StringBuilder(length);
+        var dataSpan = data.AsSpan();
+        var subtractOffset = 0;
+        var last = 0;
 
-            for (var i = 0; i < length - 2; i++)
+        for (var i = 0; i < length - 2; i++)
+        {
+            if (data[i] == 0x1b && data[i + 1] == '[')
             {
-                if (data[i] == 0x1b && data[i + 1] == '[')
+                for (var colorIndex = i + 2; colorIndex < length; colorIndex++)
                 {
-                    for (var colorIndex = i + 2; colorIndex < length; colorIndex++)
+                    switch (data[colorIndex])
                     {
-                        switch (data[colorIndex])
-                        {
-                            case '0':
-                            case '1':
-                            case '2':
-                            case '3':
-                            case '4':
-                            case '5':
-                            case '6':
-                            case '7':
-                            case '8':
-                            case '9':
-                            case ';':
-                                break;
-                            case 'm':
-                                colorIndex++;
-                                colors?.AddColor(i - subtractOffset, data, i, colorIndex);
-                                subtractOffset += colorIndex - i;
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '4':
+                        case '5':
+                        case '6':
+                        case '7':
+                        case '8':
+                        case '9':
+                        case ';':
+                            break;
+                        case 'm':
+                            colorIndex++;
+                            colors?.AddColor(i - subtractOffset, data, i, colorIndex);
+                            subtractOffset += colorIndex - i;
 
-                                builder.Append(dataSpan[last..i]);
-                                i = colorIndex - 1;
-                                last = colorIndex;
-                                goto end;
-                            default:
-                                goto end;
-                        }
+                            builder.Append(dataSpan[last..i]);
+                            i = colorIndex - 1;
+                            last = colorIndex;
+                            goto end;
+                        default:
+                            goto end;
                     }
-                end:;
                 }
-            }
 
-            if (last == 0)
-            {
-                return data;
+            end:
+                ;
             }
-
-            return builder.Append(dataSpan[last..])
-                .ToString();
         }
 
-        public static int InsertExtractedColors(
-            StringBuilder builder,
-            ReadOnlySpan<char> input,
-            int offset,
-            ColorList colors,
-            int? colorStartIndex = null)
+        if (last == 0)
         {
-            var colorIndex = colorStartIndex ?? colors.GetColorIndex(offset);
-            var last = 0;
+            return data;
+        }
 
-            for (; colorIndex < colors.Count; colorIndex++)
+        return builder.Append(dataSpan[last..])
+            .ToString();
+    }
+
+    public static int InsertExtractedColors(
+        StringBuilder builder,
+        ReadOnlySpan<char> input,
+        int offset,
+        ColorList colors,
+        int? colorStartIndex = null)
+    {
+        var colorIndex = colorStartIndex ?? colors.GetColorIndex(offset);
+        var last = 0;
+
+        for (; colorIndex < colors.Count; colorIndex++)
+        {
+            var color = colors[colorIndex];
+            var colorStart = color.Position - offset;
+
+            if (colorStart < 0)
             {
-                var color = colors[colorIndex];
-                var colorStart = color.Position - offset;
-
-                if (colorStart < 0)
-                {
-                    continue;
-                }
-                if (colorStart > input.Length)
-                {
-                    break;
-                }
-
-                builder
-                    .Append(input[last..colorStart])
-                    .Append(color.Color);
-                last = colorStart;
+                continue;
             }
 
-            builder.Append(input[last..]);
-            return colorIndex;
+            if (colorStart > input.Length)
+            {
+                break;
+            }
+
+            builder
+                .Append(input[last..colorStart])
+                .Append(color.Color);
+            last = colorStart;
         }
 
-        public static void InsertExtractedColors(string[] splitData, ColorList colors)
+        builder.Append(input[last..]);
+        return colorIndex;
+    }
+
+    public static void InsertExtractedColors(string[] splitData, ColorList colors)
+    {
+        var builder = new StringBuilder();
+        var offset = 0;
+        var colorIndex = 0;
+
+        for (var i = 0; i < splitData.Length && colorIndex < colors.Count; i++)
         {
-            var builder = new StringBuilder();
-            var offset = 0;
-            var colorIndex = 0;
+            var splitSpan = splitData[i].AsSpan();
+            var endOffset = offset + splitSpan.Length;
+            var isField = (i & 1) == 0;
 
-            for (var i = 0; i < splitData.Length && colorIndex < colors.Count; i++)
+            if (offset <= colors[colorIndex].Position
+                && IsColorPositionWithinMax(colors[colorIndex].Position, endOffset, isField))
             {
-                var splitSpan = splitData[i].AsSpan();
-                var endOffset = offset + splitSpan.Length;
-                var isField = (i & 1) == 0;
+                splitData[i] = InsertExtractedColors(splitSpan, colors, builder, offset, endOffset, ref colorIndex, isField);
+            }
 
-                if (offset <= colors[colorIndex].Position
-                    && IsColorPositionWithinMax(colors[colorIndex].Position, endOffset, isField))
-                {
-                    splitData[i] = InsertExtractedColors(splitSpan, colors, builder, offset, endOffset, ref colorIndex, isField);
-                }
+            offset += splitSpan.Length;
+        }
+    }
 
-                offset += splitSpan.Length;
+    public static void InsertExtractedColors(StringBuilder builder, MatchGroup[] matches, ColorList colors)
+    {
+        var colorIndex = 0;
+        var colorCount = colors.Count;
+
+        for (var i = 0; i < matches.Length && colorIndex < colorCount; i++)
+        {
+            var match = matches[i];
+            var offset = match.Index;
+            var endOffset = offset + match.Value.Length;
+
+            colorIndex = colors.GetColorIndex(offset, colorIndex);
+            if (colorIndex == colorCount)
+            {
+                break;
+            }
+
+            if (offset <= colors[colorIndex].Position
+                && IsColorPositionWithinMax(colors[colorIndex].Position, endOffset, true))
+            {
+                var colorIndexCopy = colorIndex;
+                match.Value = InsertExtractedColors(match.Value.AsSpan(), colors, builder, offset, endOffset, ref colorIndexCopy, true);
             }
         }
+    }
 
-        public static void InsertExtractedColors(StringBuilder builder, MatchGroup[] matches, ColorList colors)
+    private static string InsertExtractedColors(
+        ReadOnlySpan<char> data,
+        ColorList colors,
+        StringBuilder builder,
+        int offset,
+        int endOffset,
+        ref int colorIndex,
+        bool isField)
+    {
+        var last = 0;
+
+        builder.Clear();
+
+        do
         {
-            var colorIndex = 0;
-            var colorCount = colors.Count;
+            var delta = colors[colorIndex].Position - offset;
+            builder
+                .Append(data[last..delta])
+                .Append(colors[colorIndex].Color);
 
-            for (var i = 0; i < matches.Length && colorIndex < colorCount; i++)
-            {
-                var match = matches[i];
-                var offset = match.Index;
-                var endOffset = offset + match.Value.Length;
-
-                colorIndex = colors.GetColorIndex(offset, colorIndex);
-                if (colorIndex == colorCount)
-                {
-                    break;
-                }
-
-                if (offset <= colors[colorIndex].Position
-                    && IsColorPositionWithinMax(colors[colorIndex].Position, endOffset, true))
-                {
-                    var colorIndexCopy = colorIndex;
-                    match.Value = InsertExtractedColors(match.Value.AsSpan(), colors, builder, offset, endOffset, ref colorIndexCopy, true);
-                }
-            }
+            last = delta;
+            colorIndex++;
         }
+        while (colorIndex < colors.Count
+            && IsColorPositionWithinMax(colors[colorIndex].Position, endOffset, isField));
 
-        private static string InsertExtractedColors(
-            ReadOnlySpan<char> data,
-            ColorList colors,
-            StringBuilder builder,
-            int offset,
-            int endOffset,
-            ref int colorIndex,
-            bool isField)
-        {
-            var last = 0;
+        return builder.Append(data[last..])
+            .ToString();
+    }
 
-            builder.Clear();
-
-            do
-            {
-                var delta = colors[colorIndex].Position - offset;
-                builder
-                    .Append(data[last..delta])
-                    .Append(colors[colorIndex].Color);
-
-                last = delta;
-                colorIndex++;
-            }
-            while (colorIndex < colors.Count
-                && IsColorPositionWithinMax(colors[colorIndex].Position, endOffset, isField));
-
-            return builder.Append(data[last..])
-                .ToString();
-        }
-
-        private static bool IsColorPositionWithinMax(int position, int max, bool isField)
-        {
-            return isField
-                ? position <= max
-                : position < max;
-        }
+    private static bool IsColorPositionWithinMax(int position, int max, bool isField)
+    {
+        return isField
+            ? position <= max
+            : position < max;
     }
 }

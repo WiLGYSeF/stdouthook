@@ -6,8 +6,6 @@ namespace Wilgysef.StdoutHook.Tests.ProfileLoaderTests;
 
 public class RuleLoaderTest
 {
-    #region Base Rule
-
     [Fact]
     public void EnableExpression()
     {
@@ -151,7 +149,7 @@ public class RuleLoaderTest
     {
         var rule = LoadBaseRule(new RuleDto
         {
-            ActivationExpressions = new List<ActivationExpressionDto> 
+            ActivationExpressions = new List<ActivationExpressionDto>
             {
                 new ActivationExpressionDto
                 {
@@ -181,7 +179,7 @@ public class RuleLoaderTest
                 {
                     Expression = "a",
                     ActivationOffset = 2,
-                }
+                },
             },
         });
 
@@ -202,7 +200,7 @@ public class RuleLoaderTest
                 {
                     Expression = "a",
                     ActivationOffset = 2,
-                }
+                },
             },
         });
 
@@ -223,7 +221,7 @@ public class RuleLoaderTest
                 {
                     Expression = "a",
                     ActivationOffset = 2,
-                }
+                },
             },
         });
 
@@ -244,7 +242,7 @@ public class RuleLoaderTest
                 {
                     Expression = "a",
                     ActivationOffset = 2,
-                }
+                },
             },
         });
 
@@ -265,7 +263,7 @@ public class RuleLoaderTest
                 {
                     Expression = "a",
                     ActivationOffset = 2,
-                }
+                },
             },
         });
 
@@ -294,269 +292,4 @@ public class RuleLoaderTest
 
         return loader.LoadRule(dto);
     }
-
-    #endregion
-
-    #region Field Separator Rule
-
-    [Fact]
-    public void FieldSeparator_ReplaceFields_List()
-    {
-        var loader = new RuleLoader();
-        var rule = (FieldSeparatorRule)loader.LoadRule(new RuleDto
-        {
-            SeparatorExpression = @"\s+",
-            ReplaceFields = new List<object?> { "a", "b" },
-        });
-
-        rule.SeparatorExpression.ToString().ShouldBe(@"\s+");
-
-        rule.ReplaceFields!.Count.ShouldBe(2);
-        rule.ReplaceFields[0].Key.ToString().ShouldBe("1");
-        rule.ReplaceFields[0].Value.ShouldBe("a");
-        rule.ReplaceFields[1].Key.ToString().ShouldBe("2");
-        rule.ReplaceFields[1].Value.ShouldBe("b");
-    }
-
-    [Fact]
-    public void FieldSeparator_ReplaceFields_Object()
-    {
-        var loader = new RuleLoader();
-        var rule = (FieldSeparatorRule)loader.LoadRule(new RuleDto
-        {
-            SeparatorExpression = @"\s+",
-            ReplaceFields = new Dictionary<string, object?>
-            {
-                ["1"] = "a",
-                ["2"] = "b",
-            },
-        });
-
-        rule.SeparatorExpression.ToString().ShouldBe(@"\s+");
-
-        rule.ReplaceFields!.Count.ShouldBe(2);
-        rule.ReplaceFields[0].Key.ToString().ShouldBe("1");
-        rule.ReplaceFields[0].Value.ShouldBe("a");
-        rule.ReplaceFields[1].Key.ToString().ShouldBe("2");
-        rule.ReplaceFields[1].Value.ShouldBe("b");
-    }
-
-    [Fact]
-    public void FieldSeparator_ReplaceAllFormat()
-    {
-        var loader = new RuleLoader();
-        var rule = (FieldSeparatorRule)loader.LoadRule(new RuleDto
-        {
-            SeparatorExpression = @"\s+",
-            ReplaceAllFormat = "test"
-        });
-
-        rule.SeparatorExpression.ToString().ShouldBe(@"\s+");
-
-        rule.ReplaceAllFormat.ShouldBe("test");
-    }
-
-    [Fact]
-    public void FieldSeparator_Range()
-    {
-        var loader = new RuleLoader();
-        var rule = (FieldSeparatorRule)loader.LoadRule(new RuleDto
-        {
-            SeparatorExpression = @"\s+",
-            MinFields = 1,
-            MaxFields = 4,
-            ReplaceAllFormat = "test",
-        });
-
-        rule.SeparatorExpression.ToString().ShouldBe(@"\s+");
-
-        rule.MinFields.ShouldBe(1);
-        rule.MaxFields.ShouldBe(4);
-    }
-
-    [Fact]
-    public void FieldSeparator_SeparatorExpression_Split()
-    {
-        var loader = new RuleLoader();
-        var rule = (FieldSeparatorRule)loader.LoadRule(new RuleDto
-        {
-            SeparatorExpression = new List<object?> { "a", "b" },
-            ReplaceAllFormat = "test",
-        });
-
-        rule.SeparatorExpression.ToString().ShouldBe("ab");
-    }
-
-    [Fact]
-    public void FieldSeparator_Invalid()
-    {
-        var loader = new RuleLoader();
-        
-        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
-        {
-            SeparatorExpression = @"\s+"
-        }));
-
-        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
-        {
-            SeparatorExpression = @"\s+",
-            ReplaceFields = new List<object?> { "a", 1 },
-        }));
-
-        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
-        {
-            SeparatorExpression = @"\s+",
-            ReplaceFields = new Dictionary<string, object?>
-            {
-                ["a"] = "1",
-                ["b"] = 2,
-            },
-        }));
-    }
-
-    #endregion
-
-    #region Filter Rule
-
-    [Fact]
-    public void Filter()
-    {
-        var loader = new RuleLoader();
-        var rule = (FilterRule)loader.LoadRule(new RuleDto
-        {
-            Filter = true,
-        });
-    }
-
-    #endregion
-
-    #region Regex Group Rule
-
-    [Fact]
-    public void RegexGroup_ReplaceGroups_List()
-    {
-        var loader = new RuleLoader();
-        var rule = (RegexGroupRule)loader.LoadRule(new RuleDto
-        {
-            Regex = "test",
-            ReplaceGroups = new List<object?> { "a", "b", "c" },
-        });
-
-        rule.Regex.ToString().ShouldBe("test");
-
-        rule.ReplaceGroups!.Count.ShouldBe(3);
-    }
-
-    [Fact]
-    public void RegexGroup_ReplaceGroups_Object()
-    {
-        var loader = new RuleLoader();
-        var rule = (RegexGroupRule)loader.LoadRule(new RuleDto
-        {
-            Regex = "test",
-            ReplaceGroups = new Dictionary<string, object?>
-            {
-                ["1"] = "a",
-                ["group"] = "b",
-            },
-        });
-
-        rule.Regex.ToString().ShouldBe("test");
-
-        rule.ReplaceGroups!.Count.ShouldBe(1);
-        rule.ReplaceGroups[0].Key.ToString().ShouldBe("1");
-        rule.ReplaceGroups[0].Value.ShouldBe("a");
-
-        rule.ReplaceNamedGroups!.Count.ShouldBe(1);
-        rule.ReplaceNamedGroups["group"].ShouldBe("b");
-    }
-
-    [Fact]
-    public void RegexGroup_Invalid()
-    {
-        var loader = new RuleLoader();
-
-        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
-        {
-            Regex = "test"
-        }));
-
-        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
-        {
-            Regex = "test",
-            ReplaceGroups = new List<object?> { "a", 2 },
-        }));
-
-        Should.Throw<InvalidRuleException>(() => loader.LoadRule(new RuleDto
-        {
-            Regex = "test",
-            ReplaceGroups = new Dictionary<object, object?>
-            {
-                ["a"] = "1",
-                ["b"] = 2,
-            },
-        }));
-    }
-
-    #endregion
-
-    #region Tee Rule
-
-    [Fact]
-    public void Tee()
-    {
-        var loader = new RuleLoader();
-        var rule = (TeeRule)loader.LoadRule(new RuleDto
-        {
-            Filename = "a",
-        });
-
-        rule.Filename.ShouldBe("a");
-    }
-
-    [Fact]
-    public void Tee_Flush()
-    {
-        var loader = new RuleLoader();
-        var rule = (TeeRule)loader.LoadRule(new RuleDto
-        {
-            Filename = "a",
-            Flush = true,
-        });
-
-        rule.Filename.ShouldBe("a");
-        rule.Flush.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Tee_ExtractColors()
-    {
-        var loader = new RuleLoader();
-        var rule = (TeeRule)loader.LoadRule(new RuleDto
-        {
-            Filename = "a",
-            ExtractColors = true,
-        });
-
-        rule.Filename.ShouldBe("a");
-        rule.ExtractColors.ShouldBeTrue();
-    }
-
-    #endregion
-
-    #region Unconditional Replace Rule
-
-    [Fact]
-    public void UnconditionalReplace()
-    {
-        var loader = new RuleLoader();
-        var rule = (UnconditionalReplaceRule)loader.LoadRule(new RuleDto
-        {
-            ReplaceAllFormat = "a",
-        });
-
-        rule.Format.ShouldBe("a");
-    }
-
-    #endregion
 }

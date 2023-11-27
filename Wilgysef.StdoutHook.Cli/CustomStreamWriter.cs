@@ -4,8 +4,6 @@ namespace Wilgysef.StdoutHook.Cli;
 
 public class CustomStreamWriter : TextWriter
 {
-    public override Encoding Encoding => _encoding;
-
     private readonly Stream _stream;
     private readonly Encoding _encoding;
     private readonly char[] _buffer;
@@ -21,6 +19,8 @@ public class CustomStreamWriter : TextWriter
         _buffer = new char[bufferSize];
         _byteBuffer = new byte[_encoding.GetMaxByteCount(bufferSize)];
     }
+
+    public override Encoding Encoding => _encoding;
 
     // need to override the TextWriter Write(char)
     public override void Write(char value)
@@ -69,6 +69,11 @@ public class CustomStreamWriter : TextWriter
         FlushInternal();
     }
 
+    protected override void Dispose(bool disposing)
+    {
+        Flush();
+    }
+
     private bool FlushInternal()
     {
         lock (_lock)
@@ -101,10 +106,5 @@ public class CustomStreamWriter : TextWriter
 
             return forced;
         }
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        Flush();
     }
 }

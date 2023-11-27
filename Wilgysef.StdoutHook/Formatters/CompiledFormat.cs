@@ -2,53 +2,87 @@
 using System.Text;
 using Wilgysef.StdoutHook.Profiles;
 
-namespace Wilgysef.StdoutHook.Formatters
+namespace Wilgysef.StdoutHook.Formatters;
+
+/// <summary>
+/// Compiled format.
+/// </summary>
+internal class CompiledFormat
 {
-    internal class CompiledFormat
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CompiledFormat"/> class.
+    /// </summary>
+    /// <remarks>
+    /// The length of <paramref name="parts"/> must be one greater than the length of <paramref name="funcs"/>.
+    /// </remarks>
+    /// <param name="parts">String parts, joined around each format function.</param>
+    /// <param name="funcs">Format functions.</param>
+    internal CompiledFormat(string[] parts, Func<FormatComputeState, string>[] funcs)
     {
-        public bool IsConstant { get; }
+        Parts = parts;
+        Funcs = funcs;
+        IsConstant = Parts.Length == 1;
+    }
 
-        internal string[] Parts { get; }
+    /// <summary>
+    /// Indicates if the compiled format value is constant.
+    /// </summary>
+    public bool IsConstant { get; }
 
-        internal Func<FormatComputeState, string>[] Funcs { get; }
+    /// <summary>
+    /// Format string parts, joined around each format function.
+    /// </summary>
+    internal string[] Parts { get; }
 
-        public CompiledFormat(string[] parts, Func<FormatComputeState, string>[] funcs)
+    /// <summary>
+    /// Format functions.
+    /// </summary>
+    internal Func<FormatComputeState, string>[] Funcs { get; }
+
+    /// <summary>
+    /// Computes the format.
+    /// </summary>
+    /// <param name="dataState">Data state.</param>
+    /// <returns>Computed format.</returns>
+    public string Compute(DataState dataState)
+    {
+        return Compute(dataState, 0);
+    }
+
+    /// <summary>
+    /// Computes the format.
+    /// </summary>
+    /// <param name="dataState">Data state.</param>
+    /// <param name="startPosition">Sets the start position offset.</param>
+    /// <returns>Computed format.</returns>
+    public string Compute(DataState dataState, int startPosition)
+    {
+        if (IsConstant)
         {
-            Parts = parts;
-            Funcs = funcs;
-            IsConstant = Parts.Length == 1;
+            return Parts[0];
         }
 
-        public string Compute(DataState dataState)
+        var builder = new StringBuilder();
+        var computeState = new FormatComputeState(dataState, startPosition);
+
+        for (var i = 0; i < Funcs.Length; i++)
         {
-            return Compute(dataState, 0);
+            builder.Append(Parts[i]);
+
+            computeState.SetPosition(builder.Length + startPosition);
+            builder.Append(Funcs[i](computeState));
         }
 
-        public string Compute(DataState dataState, int startPosition)
-        {
-            if (IsConstant)
-            {
-                return Parts[0];
-            }
+        return builder.Append(Parts[^1])
+            .ToString();
+    }
 
-            var builder = new StringBuilder();
-            var computeState = new FormatComputeState(dataState, startPosition);
-
-            for (var i = 0; i < Funcs.Length; i++)
-            {
-                builder.Append(Parts[i]);
-
-                computeState.SetPosition(builder.Length + startPosition);
-                builder.Append(Funcs[i](computeState));
-            }
-
-            return builder.Append(Parts[^1])
-                .ToString();
-        }
-
-        public CompiledFormat Copy()
-        {
-            return new CompiledFormat(Parts, Funcs);
-        }
+    /// <summary>
+    /// Copies the compiled format.
+    /// </summary>
+    /// <returns>Compiled format copy.</returns>
+    public CompiledFormat Copy()
+    {
+        return new CompiledFormat(Parts, Funcs);
     }
 }

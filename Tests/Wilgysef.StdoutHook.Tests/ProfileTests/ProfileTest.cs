@@ -12,8 +12,8 @@ public class ProfileTest
         {
             Rules = new List<Rule>
             {
-                new FilterRule()
-            }
+                new FilterRule(),
+            },
         };
 
         profile.Build();
@@ -33,7 +33,7 @@ public class ProfileTest
                     Terminal = true,
                 },
                 new UnconditionalReplaceRule("test"),
-            }
+            },
         };
 
         profile.Build();
@@ -52,8 +52,8 @@ public class ProfileTest
             },
             Rules = new List<Rule>
             {
-                new UnconditionalReplaceRule("%C(test)123")
-            }
+                new UnconditionalReplaceRule("%C(test)123"),
+            },
         };
 
         profile.Build();

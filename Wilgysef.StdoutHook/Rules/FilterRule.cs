@@ -1,20 +1,26 @@
 ﻿using Wilgysef.StdoutHook.Profiles;
 
-namespace Wilgysef.StdoutHook.Rules
+namespace Wilgysef.StdoutHook.Rules;
+
+public class FilterRule : Rule
 {
-    public class FilterRule : Rule
+    /// <inheritdoc/>
+    public override sealed bool Filter
     {
-        public override sealed bool Filter { get => true; protected set { } }
+        get => true;
+        protected set { }
+    }
 
-        internal override string Apply(DataState state)
-        {
-            // should not be reached
-            return state.Data;
-        }
+    /// <inheritdoc/>
+    internal override string Apply(DataState state)
+    {
+        // should not be reached
+        return state.Data;
+    }
 
-        protected override Rule CopyInternal()
-        {
-            return new FilterRule();
-        }
+    /// <inheritdoc/>
+    protected override Rule CopyInternal()
+    {
+        return new FilterRule();
     }
 }

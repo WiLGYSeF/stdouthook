@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>$(SolutionDir)StyleCop.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.507" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

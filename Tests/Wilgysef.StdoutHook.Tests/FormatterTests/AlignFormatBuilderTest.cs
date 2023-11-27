@@ -90,10 +90,12 @@ public class AlignFormatBuilderTest : RuleTestBase
         formatter.Format($"%(align{alignment}:{contents})", new DataState(profile)).ShouldBe(expected);
     }
 
+#pragma warning disable SA1201 // Elements should appear in the correct order
     private enum Alignment
+#pragma warning restore SA1201 // Elements should appear in the correct order
     {
         Left,
         Center,
-        Right
+        Right,
     }
 }

@@ -1,5 +1,5 @@
-﻿using Shouldly;
-using System.Text;
+﻿using System.Text;
+using Shouldly;
 
 namespace Wilgysef.StdoutHook.Cli.Tests;
 

@@ -17,7 +17,9 @@ public class StreamOutputHandler : IDisposable
         StreamReader stderrInput,
         TextWriter stdoutOutput,
         TextWriter stderrOutput)
-        : this(profile, profile, stdoutInput, stderrInput, stdoutOutput, stderrOutput) { }
+        : this(profile, profile, stdoutInput, stderrInput, stdoutOutput, stderrOutput)
+    {
+    }
 
     public StreamOutputHandler(
         Profile stdoutProfile,

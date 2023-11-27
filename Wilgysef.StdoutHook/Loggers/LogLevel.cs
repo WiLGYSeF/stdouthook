@@ -1,9 +1,8 @@
-﻿namespace Wilgysef.StdoutHook.Loggers
+﻿namespace Wilgysef.StdoutHook.Loggers;
+
+public enum LogLevel
 {
-    public enum LogLevel
-    {
-        Error,
-        Warn,
-        Info,
-    }
+    Error,
+    Warn,
+    Info,
 }

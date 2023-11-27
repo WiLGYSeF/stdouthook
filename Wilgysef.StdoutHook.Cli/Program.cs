@@ -1,7 +1,7 @@
-﻿using CommandLine;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using CommandLine;
 using Wilgysef.StdoutHook.Cli;
 using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Profiles;
@@ -14,6 +14,7 @@ const int BufferSizeDefault = 16384;
 const int OutputFlushIntervalDefault = 250;
 const int InteractiveFlushIntervalDefault = 200;
 
+Options options = null!;
 StreamWriter? logStream = null;
 Profile? profile = null;
 Process? process = null;
@@ -46,21 +47,20 @@ try
         throw new ProgramSetupException();
     }
 
-    Shared.Options = argParseResult.Value;
+    options = argParseResult.Value;
     ValidateArgs();
 
-    var configDir = GetConfigurationDirectory(Shared.Options.ConfigDir);
+    var configDir = GetConfigurationDirectory(options.ConfigDir);
 
-    if (Shared.Options.ColorDebug)
+    if (options.ColorDebug)
     {
         ColorDebug.WriteColorDebug(Console.Out);
         return 0;
     }
 
-    if (Shared.Options.Arguments.Count == 0)
+    if (options.Arguments.Count == 0)
     {
-        Console.Error.WriteLine("ERROR: command is required");
-        return 1;
+        throw new ProgramSetupException("command is required");
     }
 
     logStream = new StreamWriter(GetLogStream(
@@ -71,13 +71,13 @@ try
 
     stopwatch.Restart();
 
-    var command = Shared.Options.Arguments[0];
-    var commandArguments = Shared.Options.Arguments.Skip(1).ToArray();
+    var command = options.Arguments[0];
+    var commandArguments = options.Arguments.Skip(1).ToArray();
 
     var commandPaths = new CommandLocator().LocateCommand(command);
     var fullCommandPath = commandPaths.FirstOrDefault() ?? command;
 
-    var cliProfileDtoLoader = new CliProfileDtoLoader();
+    var cliProfileDtoLoader = new CliProfileDtoLoader(VerbosePrint);
     var profileDtos = configDir != null
         ? await cliProfileDtoLoader.LoadProfileDtosAsync(configDir)
         : new List<ProfileDto>();
@@ -87,29 +87,29 @@ try
     {
         (profile, var profileDtoPicked) = LoadProfile(
             profileDtos,
-            Shared.Options.ProfileName,
+            options.ProfileName,
             command,
             fullCommandPath,
             commandArguments);
         profileLoaded = profile != null;
 
-        Shared.VerbosePrint(profileLoaded
+        VerbosePrint(profileLoaded
             ? $"using profile: {profile!.ProfileName ?? "<unnamed>"}"
             : "no profile selected");
 
-        if (profileLoaded && Shared.Options.Verbose >= 2)
+        if (profileLoaded && options.Verbose >= 2)
         {
-            var options = new JsonSerializerOptions
+            var jsonOptions = new JsonSerializerOptions
             {
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 WriteIndented = true,
             };
-            Shared.VerbosePrint($"using profile: {JsonSerializer.Serialize(profileDtoPicked, options)}", 2);
+            VerbosePrint($"using profile: {JsonSerializer.Serialize(profileDtoPicked, jsonOptions)}", 2);
         }
     }
     catch (Exception ex)
     {
-        Shared.VerbosePrintError($"failed to load profile: {ex.GetType().Name} {ex.Message}");
+        VerbosePrintError($"failed to load profile: {ex.GetType().Name} {ex.Message}");
         GlobalLogger.Error(ex, "failed to load profile");
     }
 
@@ -119,21 +119,21 @@ try
     }
     catch (Exception ex)
     {
-        Shared.VerbosePrintError($"failed to build profile: {ex.Message}");
+        VerbosePrintError($"failed to build profile: {ex.Message}");
         GlobalLogger.Error(ex, "failed to build profile");
         profileLoaded = false;
     }
 
     profileLoadingTimeElapsed = stopwatch.Elapsed;
 
-    if (Shared.Options.Stdout != null)
+    if (options.Stdout != null)
     {
-        outputStreamWriter = CreateRedirectedStream(Shared.Options.Stdout, Shared.Options.StdoutAppend);
+        outputStreamWriter = CreateRedirectedStream(options.Stdout, options.StdoutAppend);
     }
 
-    if (Shared.Options.Stderr != null)
+    if (options.Stderr != null)
     {
-        errorStreamWriter = CreateRedirectedStream(Shared.Options.Stderr, Shared.Options.StderrAppend);
+        errorStreamWriter = CreateRedirectedStream(options.Stderr, options.StderrAppend);
     }
 
     processStopwatch.Start();
@@ -143,7 +143,9 @@ try
     {
         GlobalLogger.ProcessName = process.ProcessName;
     }
-    catch { }
+    catch
+    {
+    }
 
     Task? readStreamTask = null;
     using var cancellationTokenSource = new CancellationTokenSource();
@@ -152,8 +154,8 @@ try
     {
         profile!.State.SetProcess(process);
 
-        var flush = profile.Flush || Shared.Options.Flush;
-        var bufferSize = flush ? 1 : (Shared.Options.BufferSize ?? profile.BufferSize ?? BufferSizeDefault);
+        var flush = profile.Flush || options.Flush;
+        var bufferSize = flush ? 1 : (options.BufferSize ?? profile.BufferSize ?? BufferSizeDefault);
         outputStreamWriter ??= new CustomStreamWriter(Console.OpenStandardOutput(), Console.OutputEncoding, bufferSize);
         errorStreamWriter ??= new CustomStreamWriter(Console.OpenStandardError(), Console.OutputEncoding, bufferSize);
 
@@ -168,8 +170,8 @@ try
             errorStreamWriter);
 
         readStreamTask = streamOutputHandler.ReadLinesAsync(
-            forceProcessTimeout: (Shared.Options.Interactive || profile.Interactive)
-                ? TimeSpan.FromMilliseconds(Shared.Options.InteractiveFlushInterval
+            forceProcessTimeout: (options.Interactive || profile.Interactive)
+                ? TimeSpan.FromMilliseconds(options.InteractiveFlushInterval
                     ?? profile.InteractiveFlushInterval
                     ?? InteractiveFlushIntervalDefault)
                 : null,
@@ -179,10 +181,10 @@ try
         {
             _ = Task.Run(async () =>
             {
-                //periodically flush the output
+                // periodically flush the output
 
                 var cancellationToken = cancellationTokenSource.Token;
-                var interval = Shared.Options.OutputFlushInterval ?? profile.OutputFlushInterval ?? OutputFlushIntervalDefault;
+                var interval = options.OutputFlushInterval ?? profile.OutputFlushInterval ?? OutputFlushIntervalDefault;
 
                 while (true)
                 {
@@ -212,7 +214,9 @@ try
     {
         process.WaitForExit();
     }
-    catch { }
+    catch
+    {
+    }
 
     cancellationTokenSource.Cancel();
 
@@ -224,7 +228,9 @@ try
         {
             await readStreamTask;
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException)
+        {
+        }
         catch (Exception ex)
         {
             GlobalLogger.Error(ex, "exception occurred");
@@ -244,13 +250,13 @@ try
 }
 catch (ProgramSetupException setupException)
 {
-    Shared.ErrorEx(setupException.InnerException, setupException.Message);
+    Error(setupException.InnerException, setupException.Message);
     return setupException.ExitCode;
 }
 catch (Exception ex)
 {
-    Shared.VerbosePrintError("uncaught exception");
-    Shared.VerbosePrintError(ex.ToString());
+    VerbosePrintError("uncaught exception");
+    VerbosePrintError(ex.ToString());
     return 1;
 }
 finally
@@ -267,7 +273,9 @@ finally
                 process.Kill();
             }
         }
-        catch { }
+        catch
+        {
+        }
 
         process.Dispose();
     }
@@ -276,18 +284,20 @@ finally
     {
         streamOutputHandler?.Dispose();
     }
-    catch { }
+    catch
+    {
+    }
 
     outputStreamWriter?.Dispose();
     errorStreamWriter?.Dispose();
 
     // TODO: remove
-    if (Shared.Options.Verbose >= 3)
+    if (options != null && options.Verbose >= 3)
     {
-        Shared.VerbosePrint("", 3);
-        Shared.VerbosePrint($"argument parsing: {argparseTimeElapsed}", 3);
-        Shared.VerbosePrint($"profile loading:  {profileLoadingTimeElapsed}", 3);
-        Shared.VerbosePrint($"process runtime:  {processRuntime}", 3);
+        VerbosePrint("", 3);
+        VerbosePrint($"argument parsing: {argparseTimeElapsed}", 3);
+        VerbosePrint($"profile loading:  {profileLoadingTimeElapsed}", 3);
+        VerbosePrint($"process runtime:  {processRuntime}", 3);
     }
 
     logStream?.Dispose();
@@ -325,13 +335,8 @@ Process StartProcess(Profile? profile, string command, IReadOnlyList<string> arg
 {
     try
     {
-        var process = Process.Start(CreateProcessStartInfo(profile, command, arguments));
-        if (process == null)
-        {
-            throw new ProgramSetupException($"process could not be started: {command}");
-        }
-
-        return process;
+        return Process.Start(CreateProcessStartInfo(profile, command, arguments))
+            ?? throw new ProgramSetupException($"process could not be started: {command}");
     }
     catch (Exception ex)
     {
@@ -368,7 +373,7 @@ TextWriter CreateRedirectedStream(string filename, bool append)
 
         return new StreamWriter(new FileStream(
             filename,
-            append ? FileMode.Append : FileMode.Open,
+            append ? FileMode.Append : FileMode.OpenOrCreate,
             FileAccess.Write));
     }
     catch (Exception ex)
@@ -381,7 +386,7 @@ Stream GetLogStream(string? filename)
 {
     if (filename == null)
     {
-        Shared.VerbosePrintError("ERROR: failed to open log file");
+        VerbosePrintError("ERROR: failed to open log file");
         return new MemoryStream();
     }
 
@@ -391,7 +396,7 @@ Stream GetLogStream(string? filename)
     }
     catch (Exception ex)
     {
-        Shared.VerbosePrintError($"ERROR: failed to open log file: {ex.Message}");
+        VerbosePrintError($"ERROR: failed to open log file: {ex.Message}");
         return new MemoryStream();
     }
 }
@@ -424,18 +429,50 @@ string? GetConfigurationDirectory(string? configDir)
 
 void ValidateArgs()
 {
-    if (Shared.Options.BufferSize.HasValue && Shared.Options.BufferSize.Value < 1)
+    if (options.BufferSize.HasValue && options.BufferSize.Value < 1)
     {
-        Shared.Options.BufferSize = null;
+        options.BufferSize = null;
     }
 
-    if (Shared.Options.OutputFlushInterval.HasValue && Shared.Options.OutputFlushInterval.Value < 0)
+    if (options.OutputFlushInterval.HasValue && options.OutputFlushInterval.Value < 0)
     {
-        Shared.Options.OutputFlushInterval = null;
+        options.OutputFlushInterval = null;
     }
 
-    if (Shared.Options.InteractiveFlushInterval.HasValue && Shared.Options.InteractiveFlushInterval.Value < 0)
+    if (options.InteractiveFlushInterval.HasValue && options.InteractiveFlushInterval.Value < 0)
     {
-        Shared.Options.InteractiveFlushInterval = null;
+        options.InteractiveFlushInterval = null;
+    }
+}
+
+void Error(Exception? ex, string message, string? consoleMessage = null)
+{
+    Console.Error.WriteLine("STDOUTHOOK: " + (consoleMessage ?? message));
+
+    if (ex != null)
+    {
+        GlobalLogger.Error(ex, message);
+    }
+}
+
+void VerbosePrint(string message, int level = 1)
+{
+    var formattedMessage = "STDOUTHOOK: " + message;
+    Debug.WriteLine(formattedMessage);
+
+    if (options.Verbose >= level)
+    {
+        Console.Error.WriteLine(formattedMessage);
+    }
+}
+
+void VerbosePrintError(string message, int level = 1)
+{
+    var formattedMessage = "STDOUTHOOK: " + message;
+    Debug.WriteLine(formattedMessage);
+
+    if (options.Verbose >= level)
+    {
+        Console.Error.WriteLine(formattedMessage);
     }
 }

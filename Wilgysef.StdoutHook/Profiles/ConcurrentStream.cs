@@ -1,51 +1,75 @@
 ﻿using System;
 using System.IO;
 
-namespace Wilgysef.StdoutHook.Profiles
+namespace Wilgysef.StdoutHook.Profiles;
+
+/// <summary>
+/// Wrapper for concurrent writing to a stream.
+/// </summary>
+internal class ConcurrentStream : IDisposable
 {
-    internal class ConcurrentStream : IDisposable
+    private readonly Stream _stream;
+
+    private readonly object _lock = new();
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConcurrentStream"/> class.
+    /// </summary>
+    /// <param name="stream">Stream.</param>
+    /// <param name="flush">Whether to flush the stream after writing.</param>
+    public ConcurrentStream(Stream stream, bool flush = false)
     {
-        public bool AutoFlush { get; set; }
+        AutoFlush = flush;
+        _stream = stream;
+    }
 
-        private readonly Stream _stream;
+    /// <summary>
+    /// Whether the stream flushes after writing.
+    /// </summary>
+    public bool AutoFlush { get; set; }
 
-        private readonly object _lock = new object();
-
-        public ConcurrentStream(Stream stream, bool flush = false)
+    /// <summary>
+    /// Writes to the stream.
+    /// </summary>
+    /// <param name="data">Data.</param>
+    /// <param name="flush">Whether to flush after writing.</param>
+    public void Write(byte[] data, bool flush = false)
+    {
+        lock (_lock)
         {
-            AutoFlush = flush;
-            _stream = stream;
-        }
+            _stream.Write(data);
 
-        public void Write(byte[] data, bool flush = false)
-        {
-            lock (_lock)
-            {
-                _stream.Write(data);
-
-                if (flush || AutoFlush)
-                {
-                    _stream.Flush();
-                }
-            }
-        }
-
-        public void Flush()
-        {
-            lock (_lock)
+            if (flush || AutoFlush)
             {
                 _stream.Flush();
             }
         }
+    }
 
-        public bool IsStream(Stream stream)
+    /// <summary>
+    /// Flushes the stream.
+    /// </summary>
+    public void Flush()
+    {
+        lock (_lock)
         {
-            return stream == _stream;
+            _stream.Flush();
         }
+    }
 
-        public void Dispose()
-        {
-            _stream.Dispose();
-        }
+    /// <summary>
+    /// Checks if <paramref name="stream"/> is the wrapped stream.
+    /// </summary>
+    /// <param name="stream">Stream to compare.</param>
+    /// <returns><see langword="true"/> if the stream matches, otherwise <see langword="false"/>.</returns>
+    public bool IsStream(Stream stream)
+    {
+        return stream == _stream;
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        _stream.Dispose();
     }
 }

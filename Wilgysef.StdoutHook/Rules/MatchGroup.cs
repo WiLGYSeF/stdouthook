@@ -1,21 +1,20 @@
-﻿namespace Wilgysef.StdoutHook.Rules
+﻿namespace Wilgysef.StdoutHook.Rules;
+
+internal class MatchGroup
 {
-    internal class MatchGroup
+    public MatchGroup(string value, string name, int index)
     {
-        public string Value { get; internal set; }
-
-        public string Name { get; }
-
-        public int Index { get; }
-
-        public int EndIndex { get; }
-
-        public MatchGroup(string value, string name, int index)
-        {
-            Value = value;
-            Name = name;
-            Index = index;
-            EndIndex = Index + Value.Length;
-        }
+        Value = value;
+        Name = name;
+        Index = index;
+        EndIndex = Index + Value.Length;
     }
+
+    public string Value { get; internal set; }
+
+    public string Name { get; }
+
+    public int Index { get; }
+
+    public int EndIndex { get; }
 }

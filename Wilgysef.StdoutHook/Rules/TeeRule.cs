@@ -5,60 +5,62 @@ using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Profiles;
 
-namespace Wilgysef.StdoutHook.Rules
+namespace Wilgysef.StdoutHook.Rules;
+
+public class TeeRule : Rule
 {
-    public class TeeRule : Rule
+    private string _absolutePath = null!;
+    private ConcurrentStream? _stream;
+
+    public TeeRule(string filename)
     {
-        public string Filename { get; set; }
+        Filename = filename;
+    }
 
-        public bool Flush { get; set; }
+    public string Filename { get; set; }
 
-        public bool ExtractColors { get; set; }
+    public bool Flush { get; set; }
 
-        private string _absolutePath = null!;
-        private ConcurrentStream? _stream;
+    public bool ExtractColors { get; set; }
 
-        public TeeRule(string filename)
+    /// <inheritdoc/>
+    internal override void Build(Profile profile, Formatter formatter)
+    {
+        base.Build(profile, formatter);
+
+        _absolutePath = Path.GetFullPath(Filename);
+    }
+
+    /// <inheritdoc/>
+    internal override string Apply(DataState state)
+    {
+        // profile state remains the same
+        _stream ??= state.Profile.State.GetOrCreateFileStream(_absolutePath);
+
+        var data = Encoding.UTF8.GetBytes(ExtractColors
+            ? state.DataExtractedColorTrimEndNewline + state.Newline
+            : state.Data);
+
+        try
         {
-            Filename = filename;
+            _stream.Write(data, Flush);
+        }
+        catch (Exception ex)
+        {
+            GlobalLogger.Error($"failed to write output to file: {ex.Message}: {_absolutePath}");
         }
 
-        internal override void Build(Profile profile, Formatter formatter)
+        return state.Data;
+    }
+
+    /// <inheritdoc/>
+    protected override Rule CopyInternal()
+    {
+        return new TeeRule(Filename)
         {
-            base.Build(profile, formatter);
-
-            _absolutePath = Path.GetFullPath(Filename);
-        }
-
-        internal override string Apply(DataState state)
-        {
-            // profile state remains the same
-            _stream ??= state.Profile.State.GetOrCreateFileStream(_absolutePath);
-
-            var data = Encoding.UTF8.GetBytes(ExtractColors
-                ? state.DataExtractedColorTrimEndNewline + state.Newline
-                : state.Data);
-
-            try
-            {
-                _stream.Write(data, Flush);
-            }
-            catch (Exception ex)
-            {
-                GlobalLogger.Error($"failed to write output to file: {ex.Message}: {_absolutePath}");
-            }
-
-            return state.Data;
-        }
-
-        protected override Rule CopyInternal()
-        {
-            return new TeeRule(Filename)
-            {
-                Flush = Flush,
-                ExtractColors = ExtractColors,
-                _absolutePath = _absolutePath,
-            };
-        }
+            Flush = Flush,
+            ExtractColors = ExtractColors,
+            _absolutePath = _absolutePath,
+        };
     }
 }
