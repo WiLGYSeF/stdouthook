@@ -17,8 +17,6 @@ public class ProfileState : IDisposable
     private readonly ConcurrentDictionary<string, ConcurrentStream> _fileStreams = new();
     private readonly ColorState _colorState = new();
 
-    private bool _trackColorState;
-
     /// <summary>
     /// Running process.
     /// </summary>
@@ -117,28 +115,12 @@ public class ProfileState : IDisposable
     }
 
     /// <summary>
-    /// Enables tracking color state.
-    /// </summary>
-    internal void TrackColorState()
-    {
-        _trackColorState = true;
-    }
-
-    /// <summary>
     /// Applies color state.
     /// </summary>
     /// <param name="colors">Color list.</param>
     internal void ApplyColorState(ColorList colors)
     {
-        if (!_trackColorState)
-        {
-            return;
-        }
-
-        lock (_colorState)
-        {
-            _colorState.UpdateState(colors, int.MaxValue);
-        }
+        _colorState.UpdateState(colors, int.MaxValue);
     }
 
     /// <summary>

@@ -9,6 +9,7 @@ namespace Wilgysef.StdoutHook.Profiles;
 public class Profile : IDisposable
 {
     private Formatter _formatter = null!;
+    private object _lock = new();
 
     public string? ProfileName { get; set; }
 
@@ -44,39 +45,42 @@ public class Profile : IDisposable
 
     public string? ApplyRules(string line, bool stdout)
     {
-        var dataState = new DataState(line, stdout, this);
-
-        for (var i = 0; i < Rules.Count; i++)
+        lock (_lock)
         {
-            dataState.Context.Reset();
+            var dataState = new DataState(line, stdout, this);
 
-            var rule = Rules[i];
-            if (rule.IsActive(dataState))
+            for (var i = 0; i < Rules.Count; i++)
             {
-                if (rule.Filter)
-                {
-                    return null;
-                }
+                dataState.Context.Reset();
 
-                try
+                var rule = Rules[i];
+                if (rule.IsActive(dataState))
                 {
-                    dataState.Data = rule.Apply(dataState);
-
-                    if (rule.Terminal)
+                    if (rule.Filter)
                     {
-                        break;
+                        return null;
+                    }
+
+                    try
+                    {
+                        dataState.Data = rule.Apply(dataState);
+
+                        if (rule.Terminal)
+                        {
+                            break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        GlobalLogger.Error(ex, "exception occurred when applying rule");
                     }
                 }
-                catch (Exception ex)
-                {
-                    GlobalLogger.Error(ex, "exception occurred when applying rule");
-                }
             }
+
+            State.ApplyColorState(dataState.ExtractedColors);
+
+            return dataState.Data;
         }
-
-        State.ApplyColorState(dataState.ExtractedColors);
-
-        return dataState.Data;
     }
 
     public void Split(out Profile stdoutProfile, out Profile stderrProfile)
