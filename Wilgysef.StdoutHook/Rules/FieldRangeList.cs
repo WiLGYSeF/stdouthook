@@ -89,7 +89,7 @@ public class FieldRangeList
     /// <inheritdoc/>
     public override string ToString()
     {
-        return string.Join(", ", Fields.Select(f => f.ToString()));
+        return string.Join(", ", Fields);
     }
 
     public static FieldRangeList Parse(string s)

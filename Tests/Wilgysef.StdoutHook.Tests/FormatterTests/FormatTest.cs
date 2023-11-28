@@ -218,8 +218,8 @@ public class FormatTest : RuleTestBase
 
         var compiledFormat = formatter.CompileFormat(format, profile);
         compiledFormat.Compute(dataState).ShouldBe(expected);
-        compiledFormat.Parts.Length.ShouldBe(expectedFuncs.Length + 1);
-        compiledFormat.Funcs.Length.ShouldBe(expectedFuncs.Length);
+        compiledFormat.Parts.Count.ShouldBe(expectedFuncs.Length + 1);
+        compiledFormat.Funcs.Count.ShouldBe(expectedFuncs.Length);
 
         for (var i = 0; i < expectedFuncs.Length; i++)
         {

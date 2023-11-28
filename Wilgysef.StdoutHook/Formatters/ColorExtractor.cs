@@ -70,7 +70,8 @@ internal static class ColorExtractor
         ColorList colors,
         int? colorStartIndex = null)
     {
-        var colorIndex = colorStartIndex ?? colors.GetColorIndex(offset);
+        var colorIndex = colorStartIndex
+            ?? colors.GetColorIndex(offset);
         var last = 0;
 
         for (; colorIndex < colors.Count; colorIndex++)

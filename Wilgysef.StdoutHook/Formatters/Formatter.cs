@@ -153,7 +153,7 @@ internal class Formatter
 
         parts.Add(lastPart + format[last..]);
 
-        return new CompiledFormat(parts.ToArray(), funcs.ToArray());
+        return new CompiledFormat(parts, funcs);
 
         void BuildFormat(string key, string contents, int startIndex, int endIndex)
         {

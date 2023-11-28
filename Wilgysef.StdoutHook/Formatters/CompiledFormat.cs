@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using Wilgysef.StdoutHook.Profiles;
 
@@ -17,11 +18,13 @@ internal class CompiledFormat
     /// </remarks>
     /// <param name="parts">String parts, joined around each format function.</param>
     /// <param name="funcs">Format functions.</param>
-    internal CompiledFormat(string[] parts, Func<FormatComputeState, string>[] funcs)
+    internal CompiledFormat(
+        IReadOnlyList<string> parts,
+        IReadOnlyList<Func<FormatComputeState, string>> funcs)
     {
         Parts = parts;
         Funcs = funcs;
-        IsConstant = Parts.Length == 1;
+        IsConstant = Parts.Count == 1;
     }
 
     /// <summary>
@@ -32,12 +35,12 @@ internal class CompiledFormat
     /// <summary>
     /// Format string parts, joined around each format function.
     /// </summary>
-    internal string[] Parts { get; }
+    internal IReadOnlyList<string> Parts { get; }
 
     /// <summary>
     /// Format functions.
     /// </summary>
-    internal Func<FormatComputeState, string>[] Funcs { get; }
+    internal IReadOnlyList<Func<FormatComputeState, string>> Funcs { get; }
 
     /// <summary>
     /// Computes the format.
@@ -65,7 +68,7 @@ internal class CompiledFormat
         var builder = new StringBuilder();
         var computeState = new FormatComputeState(dataState, startPosition);
 
-        for (var i = 0; i < Funcs.Length; i++)
+        for (var i = 0; i < Funcs.Count; i++)
         {
             builder.Append(Parts[i]);
 
