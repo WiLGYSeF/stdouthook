@@ -319,6 +319,24 @@ public class ColorStateTest
             => CreateState(color1).Equals(CreateState(color2));
     }
 
+    [Fact]
+    public void Diff()
+    {
+        DiffState("\x1b[31m", "\x1b[31m").ShouldBe("");
+        DiffState("\x1b[31m", "\x1b[32m").ShouldBe("\x1b[32m");
+        DiffState("\x1b[41m", "\x1b[42m").ShouldBe("\x1b[42m");
+        DiffState("\x1b[41m", "\x1b[31m").ShouldBe("\x1b[31;49m");
+        DiffState("\x1b[31m", "\x1b[41m").ShouldBe("\x1b[39;41m");
+
+        DiffState("\x1b[1;2m", "\x1b[3;4m").ShouldBe("\x1b[21;22;3;4m");
+        DiffState("\x1b[31;1m", "\x1b[32;1m").ShouldBe("\x1b[32m");
+
+        DiffState("\x1b[31;1;2;3;20;51;53;60m", "\x1b[31m").ShouldBe("\x1b[21;22;23;54;55;65m");
+
+        static string DiffState(string color1, string color2)
+            => CreateState(color1).Diff(CreateState(color2)).ToString();
+    }
+
     private static ColorState CreateState(string color)
     {
         var state = new ColorState();

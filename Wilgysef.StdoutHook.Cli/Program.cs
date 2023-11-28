@@ -26,6 +26,7 @@ var argparseTimeElapsed = TimeSpan.Zero;
 var profileLoadingTimeElapsed = TimeSpan.Zero;
 var processRuntime = TimeSpan.Zero;
 
+// TODO: remove
 var globalStopwatch = Stopwatch.StartNew();
 var processStopwatch = new Stopwatch();
 var stopwatch = new Stopwatch();
@@ -74,8 +75,10 @@ try
     var command = options.Arguments[0];
     var commandArguments = options.Arguments.Skip(1).ToArray();
 
-    var commandPaths = new CommandLocator().LocateCommand(command);
-    var fullCommandPath = commandPaths.FirstOrDefault() ?? command;
+    var commandPaths = new CommandLocator()
+        .LocateCommand(command);
+    var fullCommandPath = commandPaths.FirstOrDefault()
+        ?? command;
 
     var cliProfileDtoLoader = new CliProfileDtoLoader(VerbosePrint);
     var profileDtos = configDir != null
@@ -155,7 +158,9 @@ try
         profile!.State.SetProcess(process);
 
         var flush = profile.Flush || options.Flush;
-        var bufferSize = flush ? 1 : (options.BufferSize ?? profile.BufferSize ?? BufferSizeDefault);
+        var bufferSize = flush
+            ? 1
+            : (options.BufferSize ?? profile.BufferSize ?? BufferSizeDefault);
         outputStreamWriter ??= new CustomStreamWriter(Console.OpenStandardOutput(), Console.OutputEncoding, bufferSize);
         errorStreamWriter ??= new CustomStreamWriter(Console.OpenStandardError(), Console.OutputEncoding, bufferSize);
 
@@ -184,7 +189,9 @@ try
                 // periodically flush the output
 
                 var cancellationToken = cancellationTokenSource.Token;
-                var interval = options.OutputFlushInterval ?? profile.OutputFlushInterval ?? OutputFlushIntervalDefault;
+                var interval = options.OutputFlushInterval
+                    ?? profile.OutputFlushInterval
+                    ?? OutputFlushIntervalDefault;
 
                 while (true)
                 {

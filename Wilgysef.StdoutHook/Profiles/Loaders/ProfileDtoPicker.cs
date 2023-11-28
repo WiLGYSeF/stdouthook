@@ -120,17 +120,15 @@ public class ProfileDtoPicker
 
                     var expression = new Regex(argExpression, RegexOptions.Compiled);
                     var limit = Math.Min(argPattern.MaxPosition ?? arguments.Count, arguments.Count);
+                    var argIndex = argPattern.MinPosition.HasValue
+                        ? argPattern.MinPosition.Value - 1
+                        : 0;
 
-                    for (var argIndex = argPattern.MinPosition.HasValue ? argPattern.MinPosition.Value - 1 : 0; argIndex < limit; argIndex++)
+                    for (; argIndex < limit; argIndex++)
                     {
-                        if (!mustNotMatch && expression.IsMatch(arguments[argIndex]))
+                        if (expression.IsMatch(arguments[argIndex]))
                         {
-                            return true;
-                        }
-
-                        if (mustNotMatch && expression.IsMatch(arguments[argIndex]))
-                        {
-                            return false;
+                            return !mustNotMatch;
                         }
                     }
 

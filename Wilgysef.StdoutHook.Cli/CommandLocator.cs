@@ -4,12 +4,22 @@ namespace Wilgysef.StdoutHook.Cli;
 
 public class CommandLocator
 {
+    private readonly Func<string, bool> _fileExists;
+
+    public CommandLocator(Func<string, bool>? fileExists = null)
+    {
+        _fileExists = fileExists
+            ?? File.Exists;
+    }
+
     public List<string> LocateCommand(string command)
     {
         var envPathsArr = Environment.GetEnvironmentVariable("PATH")
-            ?.Split(Path.PathSeparator) ?? Array.Empty<string>();
+            ?.Split(Path.PathSeparator)
+            ?? Array.Empty<string>();
         var envPathExts = Environment.GetEnvironmentVariable("PATHEXT")
-            ?.Split(Path.PathSeparator) ?? Array.Empty<string>();
+            ?.Split(Path.PathSeparator)
+            ?? Array.Empty<string>();
 
         var envPaths = new List<string>(envPathsArr.Length + 1)
         {
@@ -32,7 +42,7 @@ public class CommandLocator
         {
             var fullPath = Path.Combine(pathsToCheck[i], command);
 
-            if (File.Exists(fullPath) && !paths.Contains(fullPath))
+            if (_fileExists(fullPath) && !paths.Contains(fullPath))
             {
                 paths.Add(fullPath);
             }
@@ -51,7 +61,7 @@ public class CommandLocator
                         .Append(extensions[j])
                         .ToString();
 
-                    if (File.Exists(fullPathWithExt) && !paths.Contains(fullPathWithExt))
+                    if (_fileExists(fullPathWithExt) && !paths.Contains(fullPathWithExt))
                     {
                         paths.Add(fullPathWithExt);
                     }
