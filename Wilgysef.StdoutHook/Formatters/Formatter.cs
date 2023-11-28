@@ -1,153 +1,215 @@
 ﻿using System;
 using System.Collections.Generic;
+using Wilgysef.StdoutHook.Loggers;
+using Wilgysef.StdoutHook.Profiles;
 
-namespace Wilgysef.StdoutHook.Formatters
+namespace Wilgysef.StdoutHook.Formatters;
+
+/// <summary>
+/// Formatter.
+/// </summary>
+internal class Formatter
 {
-    internal class Formatter
+    /// <summary>
+    /// Key-value format separator.
+    /// </summary>
+    public static readonly char Separator = ':';
+
+    private readonly FormatFunctionBuilder _formatFunctionBuilder;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Formatter"/> class.
+    /// </summary>
+    /// <param name="formatFunctionBuilder">Format function builder.</param>
+    public Formatter(FormatFunctionBuilder formatFunctionBuilder)
     {
-        private readonly FormatFunctionBuilder _formatFunctionBuilder;
+        _formatFunctionBuilder = formatFunctionBuilder;
+    }
 
-        public Formatter(FormatFunctionBuilder formatFunctionBuilder)
+    /// <summary>
+    /// Indicates if invalid format values should be replaced with empty strings.
+    /// </summary>
+    public bool InvalidFormatBlank { get; set; }
+
+    /// <summary>
+    /// Compiles the format <paramref name="format"/>.
+    /// </summary>
+    /// <remarks>
+    /// Formatters are in the format <c>%formatKey</c>, <c>%(formatKey)</c>, or <c>%(formatKey:formatValue)</c>.
+    /// </remarks>
+    /// <param name="format">Format to compile.</param>
+    /// <param name="profile">Profile.</param>
+    /// <returns>Compiled format.</returns>
+    public CompiledFormat CompileFormat(string format, Profile profile)
+    {
+        var parts = new List<string>();
+        var funcs = new List<Func<FormatComputeState, string>>();
+        var last = 0;
+        var lastPart = "";
+
+        for (var i = 0; i < format.Length; i++)
         {
-            _formatFunctionBuilder = formatFunctionBuilder;
-        }
-
-        public CompiledFormat CompileFormat(string format)
-        {
-            var parts = new List<string>();
-            var funcs = new List<Func<string>>();
-            var last = 0;
-
-            for (var i = 0; i < format.Length; i++)
+            if (format[i] == '%' && i < format.Length - 1)
             {
-                if (format[i] == '\\')
+                if (format[i + 1] == '%')
                 {
-                    i++;
+                    lastPart += format[last..i];
+                    last = ++i;
                     continue;
                 }
 
-                if (format[i] == '%' && i < format.Length - 1)
+                var nextCharIsParen = format[i + 1] == '(';
+                if (nextCharIsParen
+                    || (i < format.Length - 2 && IsKeyChar(format[i + 1]) && format[i + 2] == '('))
                 {
-                    if (format[i + 1] == '(')
+                    var key = format.AsSpan(i + 1, nextCharIsParen ? 0 : 1);
+                    var start = i + (nextCharIsParen ? 2 : 3);
+                    var endIndex = start;
+
+                    for (var count = 1; endIndex < format.Length; endIndex++)
                     {
-                        var j = i + 2;
-                        for (; j < format.Length; j++)
+                        if (format[endIndex] == '(')
                         {
-                            if (format[j] == ')')
+                            count++;
+                        }
+                        else if (format[endIndex] == ')')
+                        {
+                            if (--count == 0)
                             {
                                 break;
                             }
                         }
+                    }
 
-                        if (j < format.Length)
+                    if (endIndex < format.Length)
+                    {
+                        var contents = format.AsSpan(start, endIndex - start);
+                        if (key.Length == 0)
                         {
-                            parts.Add(format[last..i]);
-                            funcs.Add(() => "_TODO_");
-                            last = j + 1;
+                            var k = 0;
+                            var validKey = true;
+
+                            for (; k < contents.Length; k++)
+                            {
+                                if (!IsNameChar(contents[k]))
+                                {
+                                    validKey = contents[k] == Separator;
+                                    break;
+                                }
+                            }
+
+                            if (k == contents.Length)
+                            {
+                                key = contents;
+                                contents = "";
+                            }
+                            else if (validKey)
+                            {
+                                key = contents[..k];
+                                contents = contents[(k + 1)..];
+                            }
                         }
 
-                        i = j;
+                        if (key.Length > 0)
+                        {
+                            BuildFormat(key.ToString(), contents.ToString(), i, endIndex + 1);
+                        }
+                        else
+                        {
+                            lastPart += format[last..(endIndex + 1)];
+                            last = endIndex + 1;
+                        }
+                    }
+
+                    i = endIndex;
+                }
+                else
+                {
+                    var start = i + 1;
+                    var endIndex = start;
+
+                    for (; endIndex < format.Length; endIndex++)
+                    {
+                        if (!IsNameChar(format[endIndex]))
+                        {
+                            break;
+                        }
+                    }
+
+                    if (endIndex != start)
+                    {
+                        BuildFormat(format[start..endIndex], "", i, endIndex);
                     }
                     else
                     {
-                        var j = i + 1;
-                        for (; j < format.Length; j++)
-                        {
-                            if (!IsNameChar(format[j]))
-                            {
-                                break;
-                            }
-                        }
-
-                        parts.Add(format[last..i]);
-                        funcs.Add(() => "_TODO_");
-                        last = j;
-                        i = j;
+                        lastPart += format[last..endIndex];
+                        last = endIndex;
                     }
+
+                    i = endIndex - 1;
                 }
             }
-
-            parts.Add(format[last..]);
-
-            return new CompiledFormat(parts.ToArray(), funcs.ToArray());
         }
 
-        public string Format(string format)
-        {
-            return CompileFormat(format).ToString();
-        }
+        parts.Add(lastPart + format[last..]);
 
-        private static bool IsNameChar(char c)
+        return new CompiledFormat(parts.ToArray(), funcs.ToArray());
+
+        void BuildFormat(string key, string contents, int startIndex, int endIndex)
         {
-            switch (c)
+            try
             {
-                case 'A':
-                case 'B':
-                case 'C':
-                case 'D':
-                case 'E':
-                case 'F':
-                case 'G':
-                case 'H':
-                case 'I':
-                case 'J':
-                case 'K':
-                case 'L':
-                case 'M':
-                case 'N':
-                case 'O':
-                case 'P':
-                case 'Q':
-                case 'R':
-                case 'S':
-                case 'T':
-                case 'U':
-                case 'V':
-                case 'W':
-                case 'X':
-                case 'Y':
-                case 'Z':
-                case 'a':
-                case 'b':
-                case 'c':
-                case 'd':
-                case 'e':
-                case 'f':
-                case 'g':
-                case 'h':
-                case 'i':
-                case 'j':
-                case 'k':
-                case 'l':
-                case 'm':
-                case 'n':
-                case 'o':
-                case 'p':
-                case 'q':
-                case 'r':
-                case 's':
-                case 't':
-                case 'u':
-                case 'v':
-                case 'w':
-                case 'x':
-                case 'y':
-                case 'z':
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                case '_': // TODO: keep?
-                    return true;
-                default:
-                    return false;
+                var func = _formatFunctionBuilder.Build(key, contents, profile, out var isConstant);
+
+                if (isConstant)
+                {
+                    lastPart += format[last..startIndex] + func(new FormatComputeState(new DataState(profile)));
+                }
+                else
+                {
+                    parts.Add(lastPart + format[last..startIndex]);
+                    funcs.Add(func);
+                    lastPart = "";
+                }
             }
+            catch (Exception ex)
+            {
+                GlobalLogger.Error($"Invalid format: {ex.Message}");
+
+                var end = InvalidFormatBlank ? startIndex : endIndex;
+                lastPart += format[last..end];
+            }
+
+            last = endIndex;
         }
+    }
+
+    /// <summary>
+    /// Compile and compute format <paramref name="format"/>.
+    /// </summary>
+    /// <param name="format">Format.</param>
+    /// <param name="state">Data state.</param>
+    /// <returns>Formatted string.</returns>
+    public string Format(string format, DataState state)
+    {
+        return CompileFormat(format, state.Profile).Compute(state);
+    }
+
+    private static bool IsNameChar(char c)
+    {
+        return c switch
+        {
+            'A' or 'B' or 'C' or 'D' or 'E' or 'F' or 'G' or 'H' or 'I' or 'J' or 'K' or 'L' or 'M' or 'N' or 'O' or 'P' or 'Q' or 'R' or 'S' or 'T' or 'U' or 'V' or 'W' or 'X' or 'Y' or 'Z' or 'a' or 'b' or 'c' or 'd' or 'e' or 'f' or 'g' or 'h' or 'i' or 'j' or 'k' or 'l' or 'm' or 'n' or 'o' or 'p' or 'q' or 'r' or 's' or 't' or 'u' or 'v' or 'w' or 'x' or 'y' or 'z' or '0' or '1' or '2' or '3' or '4' or '5' or '6' or '7' or '8' or '9' or '_' => true,
+            _ => false,
+        };
+    }
+
+    private static bool IsKeyChar(char c)
+    {
+        return c switch
+        {
+            'A' or 'B' or 'C' or 'D' or 'E' or 'F' or 'G' or 'H' or 'I' or 'J' or 'K' or 'L' or 'M' or 'N' or 'O' or 'P' or 'Q' or 'R' or 'S' or 'T' or 'U' or 'V' or 'W' or 'X' or 'Y' or 'Z' or 'a' or 'b' or 'c' or 'd' or 'e' or 'f' or 'g' or 'h' or 'i' or 'j' or 'k' or 'l' or 'm' or 'n' or 'o' or 'p' or 'q' or 'r' or 's' or 't' or 'u' or 'v' or 'w' or 'x' or 'y' or 'z' => true,
+            _ => false,
+        };
     }
 }

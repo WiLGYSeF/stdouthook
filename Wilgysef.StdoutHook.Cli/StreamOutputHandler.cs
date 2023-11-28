@@ -4,29 +4,46 @@ namespace Wilgysef.StdoutHook.Cli;
 
 public class StreamOutputHandler : IDisposable
 {
-    private const int BufferSize = 4096;
-
-    public bool FlushOutput { get; set; }
-
-    public bool FlushError { get; set; }
-
-    private readonly Profile _profile;
+    private readonly Profile _stdoutProfile;
+    private readonly Profile _stderrProfile;
     private readonly StreamReaderHandler _outputReaderHandler;
     private readonly StreamReaderHandler _errorReaderHandler;
+    private readonly TextWriter _stdout;
+    private readonly TextWriter _stderr;
 
-    private readonly ProfileState _profileState = new();
-
-    public StreamOutputHandler(Profile profile, StreamReader stdout, StreamReader stderr)
+    public StreamOutputHandler(
+        Profile profile,
+        StreamReader stdoutInput,
+        StreamReader stderrInput,
+        TextWriter stdoutOutput,
+        TextWriter stderrOutput)
+        : this(profile, profile, stdoutInput, stderrInput, stdoutOutput, stderrOutput)
     {
-        _profile = profile;
-        _outputReaderHandler = new StreamReaderHandler(stdout, HandleOutput);
-        _errorReaderHandler = new StreamReaderHandler(stderr, HandleError);
     }
 
-    public async Task ReadLinesAsync(CancellationToken cancellationToken = default)
+    public StreamOutputHandler(
+        Profile stdoutProfile,
+        Profile stderrProfile,
+        StreamReader stdoutInput,
+        StreamReader stderrInput,
+        TextWriter stdoutOutput,
+        TextWriter stderrOutput)
     {
-        var readOutputTask = _outputReaderHandler.ReadLinesAsync(BufferSize, cancellationToken);
-        var readErrorTask = _errorReaderHandler.ReadLinesAsync(BufferSize, cancellationToken);
+        _stdoutProfile = stdoutProfile;
+        _stderrProfile = stderrProfile;
+        _outputReaderHandler = new StreamReaderHandler(stdoutInput, HandleOutput);
+        _errorReaderHandler = new StreamReaderHandler(stderrInput, HandleError);
+        _stdout = stdoutOutput;
+        _stderr = stderrOutput;
+    }
+
+    public async Task ReadLinesAsync(
+        int bufferSize = 4096,
+        TimeSpan? forceProcessTimeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        var readOutputTask = _outputReaderHandler.ReadLinesAsync(bufferSize, forceProcessTimeout, cancellationToken);
+        var readErrorTask = _errorReaderHandler.ReadLinesAsync(bufferSize, forceProcessTimeout, cancellationToken);
 
         await Task.WhenAll(readOutputTask, readErrorTask);
     }
@@ -34,46 +51,30 @@ public class StreamOutputHandler : IDisposable
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        _profileState.Dispose();
+
+        _outputReaderHandler.Dispose();
+        _errorReaderHandler.Dispose();
     }
 
     private void HandleOutput(string line)
     {
-        _profileState.StdoutLineCount++;
+        _stdoutProfile.State.StdoutLineCount++;
 
-        if (_profile.ApplyRules(ref line, true, _profileState))
+        var output = _stdoutProfile.ApplyRules(line, true);
+        if (output != null)
         {
-            WriteConsoleOutput(line);
+            _stdout.Write(output);
         }
     }
 
     private void HandleError(string line)
     {
-        _profileState.StderrLineCount++;
+        _stderrProfile.State.StderrLineCount++;
 
-        if (_profile.ApplyRules(ref line, false, _profileState))
+        var output = _stderrProfile.ApplyRules(line, false);
+        if (output != null)
         {
-            WriteConsoleError(line);
-        }
-    }
-
-    private void WriteConsoleOutput(string line)
-    {
-        Console.Write(line);
-
-        if (FlushOutput)
-        {
-            Console.Out.Flush();
-        }
-    }
-
-    private void WriteConsoleError(string line)
-    {
-        Console.Error.Write(line);
-
-        if (FlushError)
-        {
-            Console.Error.Flush();
+            _stderr.Write(output);
         }
     }
 }

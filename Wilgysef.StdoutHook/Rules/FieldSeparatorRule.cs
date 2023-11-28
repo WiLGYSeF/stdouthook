@@ -1,117 +1,186 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 using Wilgysef.StdoutHook.Extensions;
 using Wilgysef.StdoutHook.Formatters;
 using Wilgysef.StdoutHook.Profiles;
 
-namespace Wilgysef.StdoutHook.Rules
+namespace Wilgysef.StdoutHook.Rules;
+
+public class FieldSeparatorRule : Rule
 {
-    public class FieldSeparatorRule : Rule
+    private static readonly int MaximumFieldCount = 128;
+
+    private readonly List<KeyValuePair<FieldRangeList, CompiledFormat>> _outOfRangeReplaceFields = new();
+
+    // TODO: optimize to sparse?
+    private CompiledFormat?[]? _fieldReplacers;
+    private CompiledFormat? _replaceAll;
+
+    public FieldSeparatorRule(Regex separatorRegex)
     {
-        private const int MaximumFieldCount = 128;
+        SeparatorExpression = separatorRegex;
+        ReplaceFields = new List<KeyValuePair<FieldRangeList, string>>();
+    }
 
-        public Regex SeparatorRegex { get; set; }
+    public FieldSeparatorRule(Regex separatorRegex, IList<KeyValuePair<FieldRangeList, string>> replaceFields)
+    {
+        SeparatorExpression = separatorRegex;
+        ReplaceFields = replaceFields;
+    }
 
-        public int? MinFields { get; set; }
+    public FieldSeparatorRule(Regex separatorRegex, string replaceAllFormat)
+    {
+        SeparatorExpression = separatorRegex;
+        ReplaceAllFormat = replaceAllFormat;
+    }
 
-        public int? MaxFields { get; set; }
+    public Regex SeparatorExpression { get; set; }
 
-        public FieldRange? FieldCheck { get; set; }
+    public int? MinFields { get; set; }
 
-        public Regex? FieldRegex { get; set; }
+    public int? MaxFields { get; set; }
 
-        public IList<KeyValuePair<FieldRange, string>> ReplaceFields { get; set; }
+    public IList<KeyValuePair<FieldRangeList, string>>? ReplaceFields { get; set; }
 
-        private readonly List<KeyValuePair<FieldRange, string>> _outOfRangeReplaceFields = new List<KeyValuePair<FieldRange, string>>();
+    public string? ReplaceAllFormat { get; set; }
 
-        private Formatter _formatter;
-        private string?[]? _fieldReplacers;
+    /// <inheritdoc/>
+    internal override void Build(Profile profile, Formatter formatter)
+    {
+        base.Build(profile, formatter);
 
-        internal override void Build(Formatter formatter)
+        if (ReplaceAllFormat != null && ReplaceFields != null && ReplaceFields.Count > 0)
         {
-            base.Build(formatter);
+            throw new Exception($"Cannot have {nameof(ReplaceAllFormat)} and {nameof(ReplaceFields)} set.");
+        }
 
-            var maxRange = GetMaximumNoninfiniteRange();
-            var maxRangeClamped = Math.Min(maxRange, MaximumFieldCount);
+        if (ReplaceAllFormat != null)
+        {
+            _replaceAll = Formatter.CompileFormat(ReplaceAllFormat, profile);
+            return;
+        }
 
-            _fieldReplacers = new string[maxRangeClamped];
+        _fieldReplacers = FieldRangeFormatCompiler.CompileFieldRangeFormats(
+            ReplaceFields!,
+            MaximumFieldCount,
+            _outOfRangeReplaceFields,
+            format => Formatter.CompileFormat(format, profile));
+    }
 
-            for (var i = 0; i < maxRangeClamped; i++)
+    /// <inheritdoc/>
+    internal override string Apply(DataState state)
+    {
+        var splitData = SeparatorExpression.SplitWithSeparators(
+            state.DataExtractedColorTrimEndNewline,
+            out var splitCount);
+
+        if ((MinFields.HasValue && MinFields.Value > splitCount)
+            || (MaxFields.HasValue && MaxFields.Value < splitCount))
+        {
+            return state.Data;
+        }
+
+        ColorExtractor.InsertExtractedColors(splitData, state.ExtractedColors);
+        state.Context.SetFieldContext(splitData);
+
+        if (_replaceAll != null)
+        {
+            state.Context.FieldContext!.IncrementFieldNumberOnGet = true;
+            return _replaceAll.Compute(state);
+        }
+
+        state.Context.FieldContext!.IncrementFieldNumberOnGet = false;
+
+        var builder = new StringBuilder();
+        var limit = Math.Min(splitCount, _fieldReplacers!.Length);
+        var index = 0;
+
+        for (var i = 0; i < limit; i++)
+        {
+            var replace = _fieldReplacers[i];
+            if (replace != null)
             {
-                _fieldReplacers[i] = GetFirstRangeOrDefault(i + 1);
+                state.Context.FieldContext.CurrentFieldNumber = i + 1;
+                builder.Append(replace.Compute(state, builder.Length));
+                index++;
+            }
+            else
+            {
+                builder.Append(splitData[index++]);
             }
 
-            foreach (var kvp in ReplaceFields)
+            if (index < splitData.Length)
             {
-                if (kvp.Key.Min > maxRangeClamped)
-                {
-                    _outOfRangeReplaceFields.Add(kvp);
-                }
+                builder.Append(splitData[index++]);
             }
         }
 
-        internal override string Apply(string data, bool stdout, ProfileState state)
+        for (var i = limit; i < splitCount; i++)
         {
-            var splitData = SeparatorRegex.SplitWithSeparators(data, out var splitCount);
-
-            if (MinFields.HasValue && MinFields.Value > splitCount
-                || MaxFields.HasValue && MaxFields.Value < splitCount)
+            CompiledFormat? foundReplace = null;
+            foreach (var (rangeList, replace) in _outOfRangeReplaceFields)
             {
-                return data;
-            }
-
-            var limit = Math.Min(splitCount, _fieldReplacers!.Length);
-            for (var i = 0; i < limit; i++)
-            {
-                var replace = _fieldReplacers[i];
-                if (replace != null)
+                if (rangeList.Contains(i))
                 {
-                    splitData[i * 2] = replace;
+                    foundReplace = replace;
+                    break;
                 }
             }
 
-            for (var i = limit; i < splitCount; i++)
+            if (foundReplace != null)
             {
-                foreach (var (range, replace) in _outOfRangeReplaceFields)
-                {
-                    if (range.Contains(i))
-                    {
-                        splitData[i * 2] = replace;
-                        break;
-                    }
-                }
+                state.Context.FieldContext.CurrentFieldNumber = i + 1;
+                builder.Append(foundReplace.Compute(state, builder.Length));
+                index++;
+            }
+            else
+            {
+                builder.Append(splitData[index++]);
             }
 
-            return string.Join("", splitData);
+            if (index < splitData.Length)
+            {
+                builder.Append(splitData[index++]);
+            }
         }
 
-        private string? GetFirstRangeOrDefault(int position)
+        if (!TrimNewline)
         {
-            foreach (var (range, replace) in ReplaceFields)
-            {
-                if (range.Contains(position))
-                {
-                    return replace;
-                }
-            }
-
-            return null;
+            builder.Append(state.Newline);
         }
 
-        private int GetMaximumNoninfiniteRange()
+        return builder.ToString();
+    }
+
+    /// <inheritdoc/>
+    protected override Rule CopyInternal()
+    {
+        var rule = new FieldSeparatorRule(SeparatorExpression)
         {
-            var max = 0;
+            MinFields = MinFields,
+            MaxFields = MaxFields,
+            ReplaceFields = ReplaceFields,
+            ReplaceAllFormat = ReplaceAllFormat,
+        };
 
-            foreach (var range in ReplaceFields)
+        if (_fieldReplacers != null)
+        {
+            rule._fieldReplacers = new CompiledFormat?[_fieldReplacers.Length];
+            for (var i = 0; i < _fieldReplacers.Length; i++)
             {
-                if (range.Key.Max > max)
-                {
-                    max = range.Key.Max;
-                }
+                rule._fieldReplacers[i] = _fieldReplacers[i]?.Copy();
             }
-
-            return max;
         }
+
+        for (var i = 0; i < _outOfRangeReplaceFields.Count; i++)
+        {
+            var (rangeList, replace) = _outOfRangeReplaceFields[i];
+            rule._outOfRangeReplaceFields.Add(new KeyValuePair<FieldRangeList, CompiledFormat>(rangeList, replace.Copy()));
+        }
+
+        rule._replaceAll = _replaceAll?.Copy();
+        return rule;
     }
 }

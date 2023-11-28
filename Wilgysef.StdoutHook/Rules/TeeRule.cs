@@ -2,66 +2,65 @@
 using System.IO;
 using System.Text;
 using Wilgysef.StdoutHook.Formatters;
+using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Profiles;
 
-namespace Wilgysef.StdoutHook.Rules
+namespace Wilgysef.StdoutHook.Rules;
+
+public class TeeRule : Rule
 {
-    public class TeeRule : Rule
+    private string _absolutePath = null!;
+    private ConcurrentStream? _stream;
+
+    public TeeRule(string filename)
     {
-        public string Filename { get; set; }
+        Filename = filename;
+    }
 
-        public bool Flush { get; set; }
+    public string Filename { get; set; }
 
-        private string _absolutePath;
+    public bool Flush { get; set; }
 
-        internal override void Build(Formatter formatter)
+    public bool ExtractColors { get; set; }
+
+    /// <inheritdoc/>
+    internal override void Build(Profile profile, Formatter formatter)
+    {
+        base.Build(profile, formatter);
+
+        _absolutePath = Path.GetFullPath(Filename);
+    }
+
+    /// <inheritdoc/>
+    internal override string Apply(DataState state)
+    {
+        // profile state remains the same
+        _stream ??= state.Profile.State.GetOrCreateFileStream(_absolutePath);
+
+        var data = Encoding.UTF8.GetBytes(ExtractColors
+            ? state.DataExtractedColorTrimEndNewline + state.Newline
+            : state.Data);
+
+        try
         {
-            base.Build(formatter);
-
-            _absolutePath = Path.GetFullPath(Filename);
+            _stream.Write(data, Flush);
+        }
+        catch (Exception ex)
+        {
+            GlobalLogger.Error($"failed to write output to file: {ex.Message}: {_absolutePath}");
         }
 
-        internal override string Apply(string data, bool stdout, ProfileState state)
+        return state.Data;
+    }
+
+    /// <inheritdoc/>
+    protected override Rule CopyInternal()
+    {
+        return new TeeRule(Filename)
         {
-            FileStream? factoryStream = null;
-            var lockedStream = state.FileStreams.GetOrAdd(_absolutePath, CreateStream);
-
-            if (factoryStream != null && factoryStream != lockedStream?.Stream)
-            {
-                // a stream was created but the key already exists
-                factoryStream.Dispose();
-                factoryStream = null;
-            }
-
-            if (lockedStream == null)
-            {
-                return data;
-            }
-
-            lock (lockedStream.Lock)
-            {
-                lockedStream.Stream.Write(Encoding.UTF8.GetBytes(data));
-
-                if (Flush)
-                {
-                    lockedStream.Stream.Flush();
-                }
-            }
-
-            return data;
-
-            ProfileState.LockedFileStream? CreateStream(string key)
-            {
-                try
-                {
-                    factoryStream = new FileStream(key, FileMode.Append);
-                    return new ProfileState.LockedFileStream(factoryStream);
-                }
-                catch (Exception e)
-                {
-                    return null;
-                }
-            }
-        }
+            Flush = Flush,
+            ExtractColors = ExtractColors,
+            _absolutePath = _absolutePath,
+        };
     }
 }

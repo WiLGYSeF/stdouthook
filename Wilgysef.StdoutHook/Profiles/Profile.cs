@@ -1,52 +1,145 @@
 ﻿using System;
 using System.Collections.Generic;
 using Wilgysef.StdoutHook.Formatters;
+using Wilgysef.StdoutHook.Loggers;
 using Wilgysef.StdoutHook.Rules;
 
-namespace Wilgysef.StdoutHook.Profiles
+namespace Wilgysef.StdoutHook.Profiles;
+
+public class Profile : IDisposable
 {
-    public class Profile
+    private Formatter _formatter = null!;
+    private object _lock = new();
+
+    public string? ProfileName { get; set; }
+
+    public bool PseudoTty { get; set; }
+
+    public bool Flush { get; set; }
+
+    public int? BufferSize { get; set; }
+
+    public int? OutputFlushInterval { get; set; }
+
+    public bool Interactive { get; set; }
+
+    public int? InteractiveFlushInterval { get; set; }
+
+    public IList<Rule> Rules { get; set; } = new List<Rule>();
+
+    public IDictionary<string, string> CustomColors { get; set; } = new Dictionary<string, string>();
+
+    public ProfileState State { get; set; } = new ProfileState();
+
+    public void Build()
     {
-        public IList<Rule> Rules => _rules;
+        var formatFunctionBuilder = FormatFunctionBuilder.Create();
 
-        private readonly List<Rule> _rules = new List<Rule>();
-
-        public void Build()
+        if (CustomColors.Count > 0)
         {
-            Build(new Formatter(new FormatFunctionBuilder()));
+            formatFunctionBuilder.SetCustomColors(CustomColors);
         }
 
-        public bool ApplyRules(ref string line, bool stdout, ProfileState state)
+        Build(new Formatter(formatFunctionBuilder));
+    }
+
+    public string? ApplyRules(string line, bool stdout)
+    {
+        lock (_lock)
         {
-            for (var i = 0; i < _rules.Count; i++)
+            var dataState = new DataState(line, stdout, this);
+
+            for (var i = 0; i < Rules.Count; i++)
             {
-                var rule = _rules[i];
-                if (rule.IsActive(stdout, state))
+                dataState.Context.Reset();
+
+                var rule = Rules[i];
+                if (rule.IsActive(dataState))
                 {
+                    if (rule.Filter)
+                    {
+                        return null;
+                    }
+
                     try
                     {
-                        line = rule.Apply(line, stdout, state);
+                        dataState.Data = rule.Apply(dataState);
+
                         if (rule.Terminal)
                         {
-                            return false;
+                            break;
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception ex)
                     {
-
+                        GlobalLogger.Error(ex, "exception occurred when applying rule");
                     }
                 }
             }
 
-            return true;
-        }
+            State.ApplyColorState(dataState.ExtractedColors);
 
-        internal void Build(Formatter formatter)
-        {
-            for (var i = 0; i < _rules.Count; i++)
-            {
-                _rules[i].Build(formatter);
-            }
+            return dataState.Data;
         }
+    }
+
+    public void Split(out Profile stdoutProfile, out Profile stderrProfile)
+    {
+        stdoutProfile = CopyProperties(true);
+        stderrProfile = CopyProperties(false);
+
+        Profile CopyProperties(bool stdout)
+        {
+            var profile = new Profile
+            {
+                ProfileName = ProfileName,
+                PseudoTty = PseudoTty,
+                Flush = Flush,
+                BufferSize = BufferSize,
+                OutputFlushInterval = OutputFlushInterval,
+                Interactive = Interactive,
+                InteractiveFlushInterval = InteractiveFlushInterval,
+                State = State,
+                _formatter = _formatter,
+            };
+
+            for (var i = 0; i < Rules.Count; i++)
+            {
+                var rule = Rules[i];
+                if (stdout ? !rule.StderrOnly : !rule.StdoutOnly)
+                {
+                    profile.Rules.Add(rule.Copy());
+                }
+            }
+
+            foreach (var (key, val) in CustomColors)
+            {
+                profile.CustomColors[key] = val;
+            }
+
+            return profile;
+        }
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        State.Dispose();
+    }
+
+    internal void Build(Formatter formatter)
+    {
+        _formatter = formatter;
+
+        for (var i = 0; i < Rules.Count; i++)
+        {
+            Rules[i].Build(this, formatter);
+        }
+    }
+
+    internal CompiledFormat CompileFormat(string format)
+    {
+        return _formatter.CompileFormat(format, this);
     }
 }
